@@ -37,6 +37,7 @@ import coil.compose.AsyncImage
 import com.example.vigorly.data.model.WorkoutDetail
 import com.example.vigorly.data.model.WorkoutType
 import com.example.vigorly.ui.components.GlassCard
+import com.example.vigorly.ui.components.WorkoutChip
 import com.example.vigorly.ui.iconForName
 import com.example.vigorly.ui.theme.BodyLg
 import com.example.vigorly.ui.theme.BodyMd
@@ -77,8 +78,8 @@ fun WorkoutDetailScreen(
             )
             Column(Modifier.align(Alignment.BottomStart).padding(Dimens.ContainerMargin)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Chip(workout.type.name)
-                    Chip("${workout.durationMinutes} MIN", primary = true)
+                    WorkoutChip(workout.type.name)
+                    WorkoutChip("${workout.durationMinutes} MIN", primary = true)
                 }
                 Text(
                     workout.name.uppercase(),
@@ -189,17 +190,4 @@ fun WorkoutDetailScreen(
             }
         }
     }
-}
-
-@Composable
-private fun Chip(text: String, primary: Boolean = false) {
-    Text(
-        text = text,
-        style = LabelCaps,
-        color = if (primary) Primary else OnSurface,
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(Color.White.copy(alpha = 0.1f))
-            .padding(horizontal = 12.dp, vertical = 4.dp)
-    )
 }
