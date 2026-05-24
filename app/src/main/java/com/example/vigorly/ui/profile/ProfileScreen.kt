@@ -53,6 +53,7 @@ import androidx.compose.material3.Icon
 @Composable
 fun ProfileScreen(
     repository: VigorlyRepository,
+    onViewAllMilestones: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val profile by repository.profile.collectAsState()
@@ -133,7 +134,7 @@ fun ProfileScreen(
             Column(Modifier.padding(Dimens.Lg)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Milestones", style = HeadlineMd, color = OnSurface)
-                    TextButton(onClick = {}) { Text("View All", style = ButtonText, color = Primary) }
+                    TextButton(onClick = onViewAllMilestones) { Text("View All", style = ButtonText, color = Primary) }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     milestones.forEach { m ->
