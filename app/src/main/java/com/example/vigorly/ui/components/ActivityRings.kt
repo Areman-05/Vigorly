@@ -4,7 +4,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -28,6 +30,10 @@ fun ActivityRings(
     centerPercent: Int,
     modifier: Modifier = Modifier
 ) {
+    val animatedMove by animateFloatAsState(moveProgress, tween(800), label = "move")
+    val animatedExercise by animateFloatAsState(exerciseProgress, tween(800), label = "exercise")
+    val animatedStand by animateFloatAsState(standProgress, tween(800), label = "stand")
+
     Box(modifier = modifier.size(256.dp), contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.matchParentSize()) {
             val stroke = 16f
@@ -54,9 +60,9 @@ fun ActivityRings(
                     style = Stroke(width = stroke, cap = StrokeCap.Round)
                 )
             }
-            drawRing(0.84f, moveProgress, PrimaryAccent)
-            drawRing(0.60f, exerciseProgress, PrimaryContainer)
-            drawRing(0.36f, standProgress, Primary)
+            drawRing(0.84f, animatedMove, PrimaryAccent)
+            drawRing(0.60f, animatedExercise, PrimaryContainer)
+            drawRing(0.36f, animatedStand, Primary)
         }
         androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
