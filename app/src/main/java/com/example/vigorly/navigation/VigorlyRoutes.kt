@@ -5,7 +5,11 @@ object VigorlyRoutes {
     const val Workouts = "workouts"
     const val History = "history"
     const val Profile = "profile"
+    const val Settings = "settings"
+    const val Milestones = "milestones"
     const val WorkoutDetail = "workout/{workoutId}"
+    const val ActiveSession = "session/{workoutId}"
 
     fun workoutDetail(workoutId: String) = "workout/$workoutId"
+    fun activeSession(workoutId: String) = "session/$workoutId"
 }
