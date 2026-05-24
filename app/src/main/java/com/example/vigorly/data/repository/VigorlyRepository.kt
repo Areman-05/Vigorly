@@ -1,27 +1,52 @@
 package com.example.vigorly.data.repository
 
+import android.content.Context
+import com.example.vigorly.data.catalog.WorkoutCatalog
+import com.example.vigorly.data.local.VigorlyPreferencesDataStore
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
 import com.example.vigorly.data.model.Exercise
 import com.example.vigorly.data.model.Milestone
 import com.example.vigorly.data.model.RecentActivity
 import com.example.vigorly.data.model.UserProfile
-import com.example.vigorly.data.model.WorkoutBlock
 import com.example.vigorly.data.model.WorkoutDetail
 import com.example.vigorly.data.model.WorkoutHistoryItem
-import com.example.vigorly.data.model.WorkoutType
+import com.example.vigorly.data.model.WorkoutSessionState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
-class VigorlyRepository {
+class VigorlyRepository(context: Context) {
 
-    private val _profile = MutableStateFlow(defaultProfile())
-    val profile: StateFlow<UserProfile> = _profile.asStateFlow()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val preferences = VigorlyPreferencesDataStore(context.applicationContext)
+    private val workouts = WorkoutCatalog.allWorkouts()
 
-    private val _dailyGoals = MutableStateFlow(defaultDailyGoals())
-    val dailyGoals: StateFlow<DailyGoals> = _dailyGoals.asStateFlow()
+    val profile: StateFlow<UserProfile> = preferences.userProfile.stateIn(
+        scope, SharingStarted.Eagerly, defaultProfile()
+    )
+
+    val dailyGoals: StateFlow<DailyGoals> = preferences.dailyGoals.stateIn(
+        scope, SharingStarted.Eagerly, defaultDailyGoals()
+    )
+
+    val notificationsEnabled: StateFlow<Boolean> = preferences.notificationsEnabled.stateIn(
+        scope, SharingStarted.Eagerly, true
+    )
+
+    val unitsMetric: StateFlow<Boolean> = preferences.unitsMetric.stateIn(
+        scope, SharingStarted.Eagerly, true
+    )
 
     private val _athleticStats = MutableStateFlow(defaultAthleticStats())
     val athleticStats: StateFlow<List<AthleticStat>> = _athleticStats.asStateFlow()
@@ -35,20 +60,139 @@ class VigorlyRepository {
     private val _recentActivity = MutableStateFlow(defaultRecentActivity())
     val recentActivity: StateFlow<List<RecentActivity>> = _recentActivity.asStateFlow()
 
-    private val workouts = defaultWorkouts()
+    private val _activeSession = MutableStateFlow<WorkoutSessionState?>(null)
+    val activeSession: StateFlow<WorkoutSessionState?> = _activeSession.asStateFlow()
 
     fun getWorkout(id: String): WorkoutDetail? = workouts[id]
 
     fun listWorkoutIds(): List<String> = workouts.keys.toList()
 
-    fun recordWorkoutCompletion(workoutId: String) {
-        _profile.update { it.copy(totalWorkouts = it.totalWorkouts + 1) }
-        _dailyGoals.update { goals ->
-            goals.copy(
-                moveProgress = (goals.moveProgress + 0.05f).coerceAtMost(1f),
-                exerciseProgress = (goals.exerciseProgress + 0.08f).coerceAtMost(1f)
+    fun listWorkouts(): List<WorkoutDetail> = workouts.values.toList()
+
+    fun flatExercises(workout: WorkoutDetail): List<Exercise> =
+        workout.blocks.flatMap { it.exercises }
+
+    fun startWorkoutSession(workoutId: String): WorkoutSessionState? {
+        val workout = getWorkout(workoutId) ?: return null
+        val exercises = flatExercises(workout)
+        if (exercises.isEmpty()) return null
+        val session = WorkoutSessionState(
+            workoutId = workoutId,
+            workoutName = workout.name,
+            currentExerciseIndex = 0,
+            totalExercises = exercises.size,
+            elapsedSeconds = 0,
+            isPaused = false
+        )
+        _activeSession.value = session
+        return session
+    }
+
+    fun tickSession() {
+        _activeSession.updateSession { it.copy(elapsedSeconds = it.elapsedSeconds + 1) }
+    }
+
+    fun toggleSessionPause() {
+        _activeSession.updateSession { it.copy(isPaused = !it.isPaused) }
+    }
+
+    fun nextExercise() {
+        _activeSession.updateSession { session ->
+            if (session.currentExerciseIndex < session.totalExercises - 1) {
+                session.copy(currentExerciseIndex = session.currentExerciseIndex + 1)
+            } else session
+        }
+    }
+
+    fun previousExercise() {
+        _activeSession.updateSession { session ->
+            if (session.currentExerciseIndex > 0) {
+                session.copy(currentExerciseIndex = session.currentExerciseIndex - 1)
+            } else session
+        }
+    }
+
+    fun completeWorkoutSession() {
+        val session = _activeSession.value ?: return
+        val workout = getWorkout(session.workoutId) ?: return
+        recordWorkoutCompletion(session.workoutId, workout.durationMinutes, workout.estimatedCalories)
+        _activeSession.value = null
+    }
+
+    fun cancelWorkoutSession() {
+        _activeSession.value = null
+    }
+
+    fun recordWorkoutCompletion(workoutId: String, durationMinutes: Int? = null, calories: Int? = null) {
+        val workout = getWorkout(workoutId) ?: return
+        val duration = durationMinutes ?: workout.durationMinutes
+        val kcal = calories ?: workout.estimatedCalories
+        val nowLabel = SimpleDateFormat("'Today,' hh:mm a", Locale.getDefault()).format(Date())
+
+        scope.launch {
+            val currentProfile = profile.value
+            preferences.updateProfile(
+                currentProfile.copy(
+                    totalWorkouts = currentProfile.totalWorkouts + 1,
+                    activeStreakDays = currentProfile.activeStreakDays + 1
+                )
+            )
+            val goals = dailyGoals.value
+            preferences.updateDailyGoals(
+                goals.copy(
+                    moveProgress = (goals.moveProgress + 0.05f).coerceAtMost(1f),
+                    exerciseProgress = (goals.exerciseProgress + 0.08f).coerceAtMost(1f),
+                    moveCalories = (goals.moveCalories + kcal / 10).coerceAtMost(goals.moveCaloriesGoal)
+                )
             )
         }
+
+        val historyItem = WorkoutHistoryItem(
+            id = UUID.randomUUID().toString(),
+            title = workout.name,
+            timestampLabel = nowLabel,
+            durationMinutes = duration,
+            calories = kcal,
+            iconName = iconForWorkoutType(workout.type.name)
+        )
+        _history.value = listOf(historyItem) + _history.value
+
+        val recent = RecentActivity(
+            id = historyItem.id,
+            title = workout.name,
+            timeLabel = nowLabel.uppercase(Locale.getDefault()),
+            durationMinutes = duration,
+            iconName = historyItem.iconName
+        )
+        _recentActivity.value = listOf(recent) + _recentActivity.value.take(4)
+    }
+
+    fun updateDisplayName(name: String) {
+        scope.launch {
+            preferences.updateProfile(profile.value.copy(displayName = name))
+        }
+    }
+
+    fun setNotificationsEnabled(enabled: Boolean) {
+        scope.launch { preferences.setNotificationsEnabled(enabled) }
+    }
+
+    fun setUnitsMetric(metric: Boolean) {
+        scope.launch { preferences.setUnitsMetric(metric) }
+    }
+
+    private fun MutableStateFlow<WorkoutSessionState?>.updateSession(
+        transform: (WorkoutSessionState) -> WorkoutSessionState
+    ) {
+        value?.let { value = transform(it) }
+    }
+
+    private fun iconForWorkoutType(type: String): String = when (type) {
+        "HIIT" -> "directions_run"
+        "RECOVERY" -> "self_improvement"
+        "CARDIO" -> "directions_run"
+        "SWIM" -> "pool"
+        else -> "fitness_center"
     }
 
     companion object {
@@ -101,62 +245,5 @@ class VigorlyRepository {
         fun defaultRecentActivity() = listOf(
             RecentActivity("r1", "Morning Swim", "TODAY, 6:00 AM", 45, "pool")
         )
-
-        fun defaultWorkouts(): Map<String, WorkoutDetail> {
-            val hero =
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuBd3x6wDhs4mvlSe6KRxaf0AmxSxvC3I_RXu8RSfCAO3FoX2jJg6HWH3_Eifc7cO0_IP1GRxu8Vc38rAxZH8WzJz7pDH7LO6y_b0V20O6GivmKOPKilmUd2pV5WtIUZZTmgLAeRstDQJJBgS6sURHeKicXGZm4sxk6UXJ_dDoErD6EhHiAU_vIWRTPu8iuLh-FBW0WEeIqJRAOWC6i1EGv2imVu8LodYUjEqkm562BgosyImUlmQ6k9I7Te42yfpWZw89XngMZ8xHo"
-            val anatomy =
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuDWqRccaSnKeyBIBV-wNPyo7S2RP65O4NgOz1N_KNdqBZtawRnUPcrhxVGn46CWHNJVTMzoRzZbMSf1N_cmWTQqE4IEsvFkE8DenS7u-9z9hTD6_4COq0upPONL1fst5YVFMeK6p_EF5Xw4662DlXDIrViVxf5T9uV9KKncyIgDDG88qhExt9wtDQVF7bx2pCKkazL3e8UY34eKiKcCznxbj8dR1t9ROSIN1a_jv1KfC2MYW7nKFX2XYRaiqPLxWkBpn6XyPua1x0s"
-            return mapOf(
-                "titan_protocol" to WorkoutDetail(
-                    id = "titan_protocol",
-                    name = "Titan Protocol",
-                    description = "A high-volume hypertrophy session focusing on compound movements to build raw power and dense muscle tissue.",
-                    type = WorkoutType.STRENGTH,
-                    durationMinutes = 45,
-                    heroImageUrl = hero,
-                    targetMuscles = "Back & Biceps",
-                    targetDescription = "Back & Biceps",
-                    anatomyImageUrl = anatomy,
-                    intensity = "High",
-                    estimatedCalories = 450,
-                    blocks = listOf(
-                        WorkoutBlock(
-                            id = "a",
-                            label = "A",
-                            title = "Heavy Pull",
-                            exercises = listOf(
-                                Exercise(
-                                    "e1",
-                                    "Barbell Pendlay Row",
-                                    "4 Sets • 8-10 Reps",
-                                    "https://lh3.googleusercontent.com/aida-public/AB6AXuDzdXhpA66A7ywqOov7Db9EVkOl7Xw9V7dMk7vDcamU-9OyyW-cZHLbJ46kOvMl878unvhDeH6xoe8k6ZWj0rtXA3AU9F19SXpsKS345peSeHxXb0HwoN16hqZUL0Tp-ueGfLOYeTEyNGjx4Lp7b4OrdzBUWGpr8MmebEJQVoacnfu7EGc494ie9iLUqcTAIl99am1c_Q2__2zQEzjVErKPJ2VPdOre4e0fM1CT5jikfxtgBgHt20E9cplviXRBvw-XjU1UNOOB08E"
-                                ),
-                                Exercise(
-                                    "e2",
-                                    "Weighted Pull-ups",
-                                    "3 Sets • 6-8 Reps",
-                                    "https://lh3.googleusercontent.com/aida-public/AB6AXuC5_mzpDek8339Xw2H0EQnxrj8kLPgaZxYsmHKQ6zkyqgg0Mxc2IHSfbIAExiqWT-Pl7wiapgd-J1964dxsVL-zLkv3B797Rj4NKkty5vYO9y9Ym0sfyN_zQaCaMUkqYLohNr5hmwcgAJsxu_F3QWM4dpp7N2uocaxRM5mpNxDRQD3QgqqTHoF1kGbO1HLhdgSHI3244Az27k3eKUdg7sXBDTor5qlSqx1PnWVf9opET907sVGxhc1F9UBisyQ8i_3thzXAVR7fDWs"
-                                )
-                            )
-                        ),
-                        WorkoutBlock(
-                            id = "b",
-                            label = "B",
-                            title = "Hypertrophy Focus",
-                            exercises = listOf(
-                                Exercise(
-                                    "e3",
-                                    "Dumbbell Hammer Curls",
-                                    "3 Sets • 12-15 Reps",
-                                    null,
-                                    "fitness_center"
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        }
     }
 }
