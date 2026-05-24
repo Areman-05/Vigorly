@@ -2,6 +2,7 @@ package com.example.vigorly.ui
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -16,6 +17,7 @@ fun iconForName(name: String): ImageVector = when (name) {
     "timer" -> Icons.Default.Timer
     "emoji_events" -> Icons.Default.EmojiEvents
     "directions_run" -> Icons.Default.DirectionsRun
+    "directions_walk" -> Icons.Default.DirectionsWalk
     "self_improvement" -> Icons.Default.SelfImprovement
     "pool" -> Icons.Default.Pool
     else -> Icons.Default.FitnessCenter
