@@ -9,10 +9,11 @@ import com.example.vigorly.ui.theme.VigorlyTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val repository = (application as VigorlyApplication).repository
         enableEdgeToEdge()
         setContent {
             VigorlyTheme {
-                VigorlyApp()
+                VigorlyApp(repository = repository)
             }
         }
     }
