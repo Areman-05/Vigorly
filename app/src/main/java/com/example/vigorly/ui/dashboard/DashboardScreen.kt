@@ -1,10 +1,6 @@
 package com.example.vigorly.ui.dashboard
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import com.example.vigorly.ui.components.PulsingButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +23,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,7 +31,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -59,7 +53,7 @@ import com.example.vigorly.ui.theme.PrimaryContainer
 import com.example.vigorly.ui.theme.SurfaceContainer
 import com.example.vigorly.ui.theme.SurfaceContainerLow
 import com.example.vigorly.ui.theme.Tertiary
-import iconForName
+import com.example.vigorly.ui.iconForName
 
 @Composable
 fun DashboardScreen(
@@ -125,19 +119,7 @@ fun DashboardScreen(
 
 @Composable
 private fun PulseStartButton(onClick: () -> Unit) {
-    val transition = rememberInfiniteTransition(label = "pulse")
-    val scale by transition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.04f,
-        animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse),
-        label = "scale"
-    )
-    Button(
-        onClick = onClick,
-        modifier = Modifier.scale(scale),
-        shape = RoundedCornerShape(999.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent, contentColor = OnSurface)
-    ) {
+    PulsingButton(onClick = onClick) {
         Icon(Icons.Default.PlayArrow, contentDescription = null)
         Text("START WORKOUT", style = ButtonText, modifier = Modifier.padding(start = 4.dp))
     }
