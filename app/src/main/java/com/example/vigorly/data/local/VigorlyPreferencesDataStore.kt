@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.vigorly.data.model.DailyGoals
 import com.example.vigorly.data.model.UserProfile
+import com.example.vigorly.data.model.WorkoutHistoryItem
 import com.example.vigorly.data.repository.VigorlyRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -49,6 +50,12 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         it[PreferenceKeys.UNITS_METRIC] ?: true
     }
 
+    val workoutHistory: Flow<List<WorkoutHistoryItem>> = context.vigorlyDataStore.data.map { prefs ->
+        val raw = prefs[PreferenceKeys.WORKOUT_HISTORY]
+        val decoded = HistoryCodec.decode(raw)
+        decoded.ifEmpty { VigorlyRepository.defaultHistory() }
+    }
+
     suspend fun updateProfile(profile: UserProfile) {
         context.vigorlyDataStore.edit { prefs ->
             prefs[PreferenceKeys.DISPLAY_NAME] = profile.displayName
@@ -80,5 +87,11 @@ class VigorlyPreferencesDataStore(private val context: Context) {
 
     suspend fun setUnitsMetric(metric: Boolean) {
         context.vigorlyDataStore.edit { it[PreferenceKeys.UNITS_METRIC] = metric }
+    }
+
+    suspend fun saveWorkoutHistory(items: List<WorkoutHistoryItem>) {
+        context.vigorlyDataStore.edit { prefs ->
+            prefs[PreferenceKeys.WORKOUT_HISTORY] = HistoryCodec.encode(items)
+        }
     }
 }
