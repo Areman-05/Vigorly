@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.data.model.RecentActivity
 import com.example.vigorly.data.repository.VigorlyRepository
+import com.example.vigorly.util.MetricFormatter
 import com.example.vigorly.ui.components.ActivityRings
 import com.example.vigorly.ui.components.GlassCard
 import com.example.vigorly.ui.theme.BodyMd
@@ -63,6 +64,8 @@ fun DashboardScreen(
 ) {
     val goals by repository.dailyGoals.collectAsState()
     val recent by repository.recentActivity.collectAsState()
+    val profile by repository.profile.collectAsState()
+    val firstName = profile.displayName.substringBefore(" ").ifBlank { profile.displayName }
 
     Column(
         modifier = modifier
@@ -70,6 +73,19 @@ fun DashboardScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
     ) {
+        Text(
+            text = "Hey, $firstName",
+            style = HeadlineLgMobile,
+            color = OnSurface,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = Dimens.Sm)
+        )
+        Text(
+            text = "Ready to train?",
+            style = BodyMd,
+            color = OnSurfaceVariant,
+            modifier = Modifier.padding(bottom = Dimens.Md)
+        )
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -97,7 +113,7 @@ fun DashboardScreen(
                 modifier = Modifier.weight(1f),
                 label = "STEPS",
                 value = "%,d".format(goals.steps),
-                suffix = "/ 10k",
+                suffix = "/ ${if (goals.stepsGoal >= 1000) "${goals.stepsGoal / 1000}k" else goals.stepsGoal}",
                 icon = Icons.Default.DirectionsWalk,
                 glowColor = PrimaryContainer
             )
@@ -108,7 +124,7 @@ fun DashboardScreen(
             SmallMetricCard(
                 Modifier.weight(1f),
                 Icons.Default.Bedtime,
-                "${goals.sleepHours.toInt()}h",
+                MetricFormatter.formatSleepHours(goals.sleepHours),
                 "SLEEP"
             )
         }
