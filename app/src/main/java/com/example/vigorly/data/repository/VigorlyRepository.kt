@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -63,6 +65,21 @@ class VigorlyRepository(context: Context) {
     private val _activeSession = MutableStateFlow<WorkoutSessionState?>(null)
     val activeSession: StateFlow<WorkoutSessionState?> = _activeSession.asStateFlow()
 
+    init {
+        preferences.workoutHistory.onEach { stored ->
+            _history.value = stored
+            _recentActivity.value = stored.take(5).map { item ->
+                RecentActivity(
+                    id = item.id,
+                    title = item.title,
+                    timeLabel = item.timestampLabel.uppercase(Locale.getDefault()),
+                    durationMinutes = item.durationMinutes,
+                    iconName = item.iconName
+                )
+            }.ifEmpty { defaultRecentActivity() }
+        }.launchIn(scope)
+    }
+
     fun getWorkout(id: String): WorkoutDetail? = workouts[id]
 
     fun listWorkoutIds(): List<String> = workouts.keys.toList()
@@ -89,7 +106,13 @@ class VigorlyRepository(context: Context) {
     }
 
     fun tickSession() {
-        _activeSession.updateSession { it.copy(elapsedSeconds = it.elapsedSeconds + 1) }
+        _activeSession.updateSession { session ->
+            if (session.restSecondsRemaining > 0) {
+                session.copy(restSecondsRemaining = session.restSecondsRemaining - 1)
+            } else {
+                session.copy(elapsedSeconds = session.elapsedSeconds + 1)
+            }
+        }
     }
 
     fun toggleSessionPause() {
@@ -99,9 +122,16 @@ class VigorlyRepository(context: Context) {
     fun nextExercise() {
         _activeSession.updateSession { session ->
             if (session.currentExerciseIndex < session.totalExercises - 1) {
-                session.copy(currentExerciseIndex = session.currentExerciseIndex + 1)
+                session.copy(
+                    currentExerciseIndex = session.currentExerciseIndex + 1,
+                    restSecondsRemaining = REST_SECONDS_BETWEEN_EXERCISES
+                )
             } else session
         }
+    }
+
+    fun skipRest() {
+        _activeSession.updateSession { it.copy(restSecondsRemaining = 0) }
     }
 
     fun previousExercise() {
@@ -165,6 +195,10 @@ class VigorlyRepository(context: Context) {
             iconName = historyItem.iconName
         )
         _recentActivity.value = listOf(recent) + _recentActivity.value.take(4)
+
+        scope.launch {
+            preferences.saveWorkoutHistory(_history.value)
+        }
     }
 
     fun updateDisplayName(name: String) {
@@ -196,6 +230,8 @@ class VigorlyRepository(context: Context) {
     }
 
     companion object {
+        const val REST_SECONDS_BETWEEN_EXERCISES = 45
+
         private const val AVATAR =
             "https://lh3.googleusercontent.com/aida-public/AB6AXuDzR2WvctnwBapv2J6FHSJYaIFfmcx4nHOnSfxS9s9DsMaU2qiczrCg6K6NhCslo0gLmFhJeFxgq3ulqD3z4hn_iwC2SqplrHuVXc8M4dX42iQoUArvxVD8coCeO-eFvEm0nH01AT0YTr7lBWOj1x6PxWej2M0mb_di0SpnHD5YQlNDE8HN_mFBd0v7fi8YXV3vimrg4QhfnOvZyF67cIrb0UZsn17KmNEg51BL1vdtc5iKyvmZjwee-hzGVEGko2Qxq_iTKNCuwcM"
 
