@@ -15,7 +15,9 @@ object WorkoutCatalog {
     fun allWorkouts(): Map<String, WorkoutDetail> = mapOf(
         titanProtocol(),
         hiitSprint(),
-        recoveryYoga()
+        recoveryYoga(),
+        upperBodyPower(),
+        morningSwim()
     )
 
     fun titanProtocol() = WorkoutDetail(
@@ -90,6 +92,65 @@ object WorkoutCatalog {
                 exercises = listOf(
                     Exercise("h3", "30s Sprint / 30s Rest", "8 rounds", null, "directions_run"),
                     Exercise("h4", "Cool Down Walk", "5 min", null, "directions_walk")
+                )
+            )
+        )
+    )
+
+    fun upperBodyPower() = WorkoutDetail(
+        id = "upper_body_power",
+        name = "Upper Body Power",
+        description = "Heavy pressing and pulling to build upper-body strength and muscle density.",
+        type = WorkoutType.STRENGTH,
+        durationMinutes = 60,
+        heroImageUrl = HERO_STRENGTH,
+        targetMuscles = "Chest & Triceps",
+        targetDescription = "Push focus",
+        anatomyImageUrl = null,
+        intensity = "High",
+        estimatedCalories = 540,
+        blocks = listOf(
+            WorkoutBlock(
+                id = "a",
+                label = "A",
+                title = "Push Strength",
+                exercises = listOf(
+                    Exercise("u1", "Barbell Bench Press", "4 Sets • 6-8 Reps", null, "fitness_center"),
+                    Exercise("u2", "Incline Dumbbell Press", "3 Sets • 10 Reps", null, "fitness_center")
+                )
+            ),
+            WorkoutBlock(
+                id = "b",
+                label = "B",
+                title = "Accessory",
+                exercises = listOf(
+                    Exercise("u3", "Tricep Pushdown", "3 Sets • 12-15 Reps", null, "fitness_center")
+                )
+            )
+        )
+    )
+
+    fun morningSwim() = WorkoutDetail(
+        id = "morning_swim",
+        name = "Morning Swim",
+        description = "Steady-state pool session for cardiovascular endurance and active recovery.",
+        type = WorkoutType.SWIM,
+        durationMinutes = 45,
+        heroImageUrl = HERO_STRENGTH,
+        targetMuscles = "Full Body",
+        targetDescription = "Cardio endurance",
+        anatomyImageUrl = null,
+        intensity = "Moderate",
+        estimatedCalories = 380,
+        blocks = listOf(
+            WorkoutBlock(
+                id = "a",
+                label = "A",
+                title = "Main Set",
+                exercises = listOf(
+                    Exercise("s1", "Freestyle Warm-up", "400m easy", null, "pool"),
+                    Exercise("s2", "Interval 50m", "8 x 50m moderate", null, "pool"),
+                    Exercise("s3", "Cool Down", "200m easy", null, "pool")
                 )
             )
         )
