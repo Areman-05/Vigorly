@@ -6,10 +6,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -31,16 +31,24 @@ import com.example.vigorly.ui.session.ActiveWorkoutScreen
 import com.example.vigorly.ui.settings.SettingsScreen
 import com.example.vigorly.ui.workout.WorkoutDetailScreen
 import com.example.vigorly.ui.workout.WorkoutsScreen
-import kotlinx.coroutines.launch
+import com.example.vigorly.ui.VigorlyViewModel
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
-fun VigorlyApp(repository: VigorlyRepository) {
+fun VigorlyApp(
+    repository: VigorlyRepository,
+    viewModel: VigorlyViewModel
+) {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route ?: VigorlyRoutes.Dashboard
     val profile by repository.profile.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+    LaunchedEffect(viewModel) {
+        viewModel.messages.collectLatest { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     val mainTabs = listOf(
         VigorlyRoutes.Dashboard,
@@ -139,9 +147,7 @@ fun VigorlyApp(repository: VigorlyRepository) {
                     repository = repository,
                     workoutId = id,
                     onComplete = {
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Workout completed!")
-                        }
+                        viewModel.showMessage("Workout completed!")
                         navController.popBackStack(VigorlyRoutes.Dashboard, false)
                     },
                     onCancel = { navController.popBackStack() }
