@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,7 +41,6 @@ import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryContainer
 import com.example.vigorly.util.TimeFormatter
-
 import kotlinx.coroutines.delay
 
 @Composable
@@ -55,11 +55,14 @@ fun ActiveWorkoutScreen(
     val workout = repository.getWorkout(workoutId)
 
     LaunchedEffect(workoutId) {
-        if (session == null) repository.startWorkoutSession(workoutId)
+        if (repository.activeSession.value == null) {
+            repository.startWorkoutSession(workoutId)
+        }
     }
 
-    LaunchedEffect(session?.isPaused) {
-        while (true) {
+    LaunchedEffect(session?.workoutId, session?.isPaused) {
+        val activeId = session?.workoutId ?: return@LaunchedEffect
+        while (repository.activeSession.value?.workoutId == activeId) {
             delay(1000)
             if (repository.activeSession.value?.isPaused != true) {
                 repository.tickSession()
@@ -70,6 +73,7 @@ fun ActiveWorkoutScreen(
     val current = session ?: return
     val exercises = workout?.let { repository.flatExercises(it) } ?: emptyList()
     val exercise = exercises.getOrNull(current.currentExerciseIndex)
+    val isResting = current.restSecondsRemaining > 0
 
     Column(
         modifier = modifier
@@ -80,40 +84,61 @@ fun ActiveWorkoutScreen(
         Text(current.workoutName, style = HeadlineLgMobile, color = OnSurface)
         Text(TimeFormatter.formatElapsed(current.elapsedSeconds), style = DisplayStat, color = Primary)
         Text(
-            "EXERCISE ${current.currentExerciseIndex + 1} / ${current.totalExercises}",
+            if (isResting) "REST" else "EXERCISE ${current.currentExerciseIndex + 1} / ${current.totalExercises}",
             style = LabelCaps,
             color = OnSurfaceVariant
         )
-        LinearProgressIndicator(
-            progress = { (current.currentExerciseIndex + 1f) / current.totalExercises },
-            modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.Lg),
-            color = Primary,
-            trackColor = OnSurfaceVariant.copy(alpha = 0.2f)
-        )
-        GlassCard(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(Dimens.Lg), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(exercise?.name ?: "—", style = HeadlineLgMobile, color = OnSurface)
-                Text(exercise?.setsRepsLabel ?: "", style = BodyMd, color = OnSurfaceVariant)
+        if (isResting) {
+            GlassCard(Modifier.fillMaxWidth().padding(vertical = Dimens.Lg)) {
+                Column(
+                    Modifier.padding(Dimens.Lg),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        TimeFormatter.formatElapsed(current.restSecondsRemaining),
+                        style = DisplayStat,
+                        color = Primary
+                    )
+                    Text("Rest before next exercise", style = BodyMd, color = OnSurfaceVariant)
+                    TextButton(onClick = repository::skipRest) {
+                        Text("Skip rest", style = ButtonText, color = Primary)
+                    }
+                }
+            }
+        } else {
+            LinearProgressIndicator(
+                progress = { (current.currentExerciseIndex + 1f) / current.totalExercises },
+                modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.Lg),
+                color = Primary,
+                trackColor = OnSurfaceVariant.copy(alpha = 0.2f)
+            )
+            GlassCard(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(Dimens.Lg), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(exercise?.name ?: "—", style = HeadlineLgMobile, color = OnSurface)
+                    Text(exercise?.setsRepsLabel ?: "", style = BodyMd, color = OnSurfaceVariant)
+                }
             }
         }
         Spacer(Modifier.height(Dimens.Lg))
-        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Md)) {
-            IconButton(onClick = repository::previousExercise) {
-                Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = OnSurfaceVariant)
-            }
-            IconButton(onClick = repository::toggleSessionPause) {
-                Icon(
-                    if (current.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                    contentDescription = "Pause",
-                    tint = Primary
-                )
-            }
-            IconButton(onClick = repository::nextExercise) {
-                Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = OnSurfaceVariant)
+        if (!isResting) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Md)) {
+                IconButton(onClick = repository::previousExercise) {
+                    Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = OnSurfaceVariant)
+                }
+                IconButton(onClick = repository::toggleSessionPause) {
+                    Icon(
+                        if (current.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                        contentDescription = "Pause",
+                        tint = Primary
+                    )
+                }
+                IconButton(onClick = repository::nextExercise) {
+                    Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = OnSurfaceVariant)
+                }
             }
         }
         Spacer(Modifier.weight(1f))
-        if (current.currentExerciseIndex >= current.totalExercises - 1) {
+        if (current.currentExerciseIndex >= current.totalExercises - 1 && !isResting) {
             Button(
                 onClick = {
                     repository.completeWorkoutSession()
@@ -121,11 +146,14 @@ fun ActiveWorkoutScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainer, contentColor = OnPrimaryContainer)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryContainer,
+                    contentColor = OnPrimaryContainer
+                )
             ) {
                 Text("FINISH WORKOUT", style = ButtonText)
             }
-        } else {
+        } else if (!isResting) {
             Button(
                 onClick = {
                     repository.cancelWorkoutSession()
