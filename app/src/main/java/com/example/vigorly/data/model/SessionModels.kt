@@ -6,7 +6,8 @@ data class WorkoutSessionState(
     val currentExerciseIndex: Int,
     val totalExercises: Int,
     val elapsedSeconds: Int,
-    val isPaused: Boolean
+    val isPaused: Boolean,
+    val restSecondsRemaining: Int = 0
 )
 
 data class AppSettings(
