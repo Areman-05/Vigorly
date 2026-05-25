@@ -34,6 +34,7 @@ import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.SurfaceVariant
+import com.example.vigorly.util.HistoryGrouper
 
 @Composable
 fun HistoryScreen(
@@ -41,6 +42,7 @@ fun HistoryScreen(
     modifier: Modifier = Modifier
 ) {
     val history by repository.history.collectAsState()
+    val sections = HistoryGrouper.group(history)
 
     Column(
         modifier = modifier
@@ -55,25 +57,33 @@ fun HistoryScreen(
                 message = "Complete a session to see your training history here."
             )
         } else {
-            history.forEach { item ->
-                GlassCard(modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.Sm)) {
-                    Row(
-                        Modifier.padding(Dimens.Md),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(SurfaceVariant),
-                            contentAlignment = Alignment.Center
+            sections.forEach { section ->
+                Text(
+                    section.title.uppercase(),
+                    style = LabelCaps,
+                    color = OnSurfaceVariant,
+                    modifier = Modifier.padding(vertical = Dimens.Sm)
+                )
+                section.items.forEach { item ->
+                    GlassCard(modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.Sm)) {
+                        Row(
+                            Modifier.padding(Dimens.Md),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(iconForName(item.iconName), null, tint = OnSurface)
-                        }
-                        Column(Modifier.weight(1f).padding(horizontal = Dimens.Md)) {
-                            Text(item.title, style = BodyLg, color = OnSurface)
-                            Text(item.timestampLabel, style = BodyMd, color = OnSurfaceVariant)
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text("${item.durationMinutes} MIN", style = ButtonText, color = Primary)
-                            Text("${item.calories} KCAL", style = LabelCaps, color = OnSurfaceVariant)
+                            Box(
+                                Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(SurfaceVariant),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(iconForName(item.iconName), null, tint = OnSurface)
+                            }
+                            Column(Modifier.weight(1f).padding(horizontal = Dimens.Md)) {
+                                Text(item.title, style = BodyLg, color = OnSurface)
+                                Text(item.timestampLabel, style = BodyMd, color = OnSurfaceVariant)
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text("${item.durationMinutes} MIN", style = ButtonText, color = Primary)
+                                Text("${item.calories} KCAL", style = LabelCaps, color = OnSurfaceVariant)
+                            }
                         }
                     }
                 }
