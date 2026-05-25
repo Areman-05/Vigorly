@@ -23,4 +23,5 @@ object PreferenceKeys {
     val SLEEP_HOURS = floatPreferencesKey("sleep_hours")
     val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
     val UNITS_METRIC = booleanPreferencesKey("units_metric")
+    val WORKOUT_HISTORY = stringPreferencesKey("workout_history")
 }
