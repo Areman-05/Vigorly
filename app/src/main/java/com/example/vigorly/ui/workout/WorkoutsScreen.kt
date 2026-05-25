@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import com.example.vigorly.data.model.WorkoutType
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.GlassCard
+import com.example.vigorly.ui.components.IntensityBadge
 import com.example.vigorly.ui.components.WorkoutChip
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
@@ -84,11 +85,14 @@ fun WorkoutsScreen(
                         WorkoutChip("${workout.durationMinutes} MIN", primary = true)
                     }
                     Text(workout.name, style = HeadlineMd, color = OnSurface, modifier = Modifier.padding(top = Dimens.Sm))
-                    Text(
-                        "${workout.intensity} • ${workout.estimatedCalories} kcal",
-                        style = BodyMd,
-                        color = OnSurfaceVariant
-                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
+                        IntensityBadge(workout.intensity)
+                        Text(
+                            "${workout.estimatedCalories} kcal",
+                            style = BodyMd,
+                            color = OnSurfaceVariant
+                        )
+                    }
                 }
             }
         }
