@@ -95,7 +95,7 @@ fun ActiveWorkoutScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        TimeFormatter.formatElapsed(current.restSecondsRemaining),
+                        "${TimeFormatter.formatRestCountdown(current.restSecondsRemaining)}s",
                         style = DisplayStat,
                         color = Primary
                     )

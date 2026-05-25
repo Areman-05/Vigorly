@@ -15,4 +15,9 @@ class TimeFormatterTest {
     fun formatElapsed_ninetySeconds() {
         assertEquals("01:30", TimeFormatter.formatElapsed(90))
     }
+
+    @Test
+    fun formatRestCountdown_formatsSeconds() {
+        assertEquals("45", TimeFormatter.formatRestCountdown(45))
+    }
 }
