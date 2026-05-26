@@ -10,4 +10,10 @@
     <string name="finish_workout">FINISH WORKOUT</string>
     <string name="daily_goal">DAILY GOAL</string>
     <string name="workout_completed">Workout completed!</string>
+    <string name="sync_activity">Sync activity</string>
+    <string name="search_workouts">Search workouts</string>
+    <string name="clear_history">Clear workout history</string>
+    <string name="mark_exercise_done">Mark exercise done</string>
+    <string name="exercise_completed">Exercise completed</string>
+    <string name="no_workouts_found">No workouts match your search.</string>
 </resources>
