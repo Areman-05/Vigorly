@@ -24,4 +24,5 @@ object PreferenceKeys {
     val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
     val UNITS_METRIC = booleanPreferencesKey("units_metric")
     val WORKOUT_HISTORY = stringPreferencesKey("workout_history")
+    val ATHLETIC_STATS = stringPreferencesKey("athletic_stats")
 }
