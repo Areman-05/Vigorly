@@ -34,7 +34,16 @@ import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
+import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.SurfaceContainer
+
+private fun milestoneHint(id: String): String? = when (id) {
+    "streak_100" -> "Reach a 100-day streak"
+    "lift_10k" -> "Log 200+ strength sessions"
+    "run_5k" -> "Complete 150+ workouts"
+    "elite" -> "350+ workouts as Pro member"
+    else -> null
+}
 
 @Composable
 fun MilestonesScreen(
@@ -92,6 +101,11 @@ fun MilestonesScreen(
                             color = if (milestone.unlocked) OnSurface else OnSurfaceVariant,
                             modifier = Modifier.padding(top = Dimens.Sm)
                         )
+                        if (!milestone.unlocked) {
+                            milestoneHint(milestone.id)?.let { hint ->
+                                Text(hint, style = BodyMd, color = OnSurfaceVariant, modifier = Modifier.padding(top = Dimens.Xs))
+                            }
+                        }
                     }
                 }
             }
