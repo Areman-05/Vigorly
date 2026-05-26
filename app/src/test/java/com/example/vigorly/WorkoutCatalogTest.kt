@@ -11,12 +11,14 @@ class WorkoutCatalogTest {
     @Test
     fun catalog_allWorkouts_containsThreePrograms() {
         val workouts = WorkoutCatalog.allWorkouts()
-        assertEquals(5, workouts.size)
+        assertEquals(7, workouts.size)
         assertTrue(workouts.containsKey("titan_protocol"))
         assertTrue(workouts.containsKey("hiit_sprint"))
         assertTrue(workouts.containsKey("recovery_yoga"))
         assertTrue(workouts.containsKey("upper_body_power"))
         assertTrue(workouts.containsKey("morning_swim"))
+        assertTrue(workouts.containsKey("core_blast"))
+        assertTrue(workouts.containsKey("leg_day"))
     }
 
     @Test
