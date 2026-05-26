@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -74,6 +75,7 @@ fun ActiveWorkoutScreen(
     val exercises = workout?.let { repository.flatExercises(it) } ?: emptyList()
     val exercise = exercises.getOrNull(current.currentExerciseIndex)
     val isResting = current.restSecondsRemaining > 0
+    val isExerciseDone = exercise?.id in current.completedExerciseIds
 
     Column(
         modifier = modifier
@@ -116,11 +118,27 @@ fun ActiveWorkoutScreen(
                 Column(Modifier.padding(Dimens.Lg), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(exercise?.name ?: "—", style = HeadlineLgMobile, color = OnSurface)
                     Text(exercise?.setsRepsLabel ?: "", style = BodyMd, color = OnSurfaceVariant)
+                    if (isExerciseDone) {
+                        Icon(Icons.Default.CheckCircle, null, tint = Primary, modifier = Modifier.padding(top = Dimens.Sm))
+                    }
                 }
             }
         }
         Spacer(Modifier.height(Dimens.Lg))
         if (!isResting) {
+            Button(
+                onClick = repository::markCurrentExerciseComplete,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isExerciseDone,
+                colors = ButtonDefaults.buttonColors(containerColor = Primary.copy(alpha = 0.2f))
+            ) {
+                Text(
+                    if (isExerciseDone) "Exercise completed" else "Mark exercise done",
+                    style = ButtonText,
+                    color = Primary
+                )
+            }
+            Spacer(Modifier.height(Dimens.Sm))
             Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Md)) {
                 IconButton(onClick = repository::previousExercise) {
                     Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = OnSurfaceVariant)
