@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.EmptyState
 import com.example.vigorly.ui.components.GlassCard
+import com.example.vigorly.ui.components.StatRow
 import com.example.vigorly.ui.iconForName
 import com.example.vigorly.ui.theme.BodyLg
 import com.example.vigorly.ui.theme.BodyMd
@@ -35,6 +36,7 @@ import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.SurfaceVariant
 import com.example.vigorly.util.HistoryGrouper
+import com.example.vigorly.util.HistorySummaryCalculator
 
 @Composable
 fun HistoryScreen(
@@ -43,6 +45,7 @@ fun HistoryScreen(
 ) {
     val history by repository.history.collectAsState()
     val sections = HistoryGrouper.group(history)
+    val summary = HistorySummaryCalculator.from(history)
 
     Column(
         modifier = modifier
@@ -51,6 +54,15 @@ fun HistoryScreen(
             .padding(Dimens.ContainerMargin)
     ) {
         Text("History", style = HeadlineMd, color = OnSurface, modifier = Modifier.padding(bottom = Dimens.Md))
+        if (history.isNotEmpty()) {
+            GlassCard(Modifier.fillMaxWidth().padding(bottom = Dimens.Md)) {
+                Column(Modifier.padding(Dimens.Md)) {
+                    StatRow("Sessions", "${summary.totalSessions}", highlight = true)
+                    StatRow("Total time", "${summary.totalMinutes} min")
+                    StatRow("Calories", "%,d kcal".format(summary.totalCalories))
+                }
+            }
+        }
         if (history.isEmpty()) {
             EmptyState(
                 title = "No workouts yet",
