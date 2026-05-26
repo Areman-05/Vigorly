@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -29,6 +33,7 @@ import com.example.vigorly.ui.theme.HeadlineMd
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
+import com.example.vigorly.ui.theme.PrimaryContainer
 
 @Composable
 fun SettingsScreen(
@@ -47,6 +52,20 @@ fun SettingsScreen(
             .padding(Dimens.ContainerMargin)
     ) {
         Text("Settings", style = HeadlineMd, color = OnSurface)
+        if (profile.isProMember) {
+            GlassCard(Modifier.fillMaxWidth().padding(top = Dimens.Md)) {
+                Row(
+                    Modifier.padding(Dimens.Md),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.WorkspacePremium, null, tint = Primary)
+                    Column(Modifier.padding(start = Dimens.Sm)) {
+                        Text("Vigorly Pro", style = HeadlineMd, color = OnSurface)
+                        Text("All premium features unlocked", style = BodyMd, color = OnSurfaceVariant)
+                    }
+                }
+            }
+        }
         GlassCard(Modifier.fillMaxWidth().padding(top = Dimens.Md)) {
             Column(Modifier.padding(Dimens.Md)) {
                 Text("Profile", style = HeadlineMd, color = OnSurface)
@@ -70,6 +89,13 @@ fun SettingsScreen(
                 SettingToggle("Workout reminders", notifications, repository::setNotificationsEnabled)
                 SettingToggle("Metric units", unitsMetric, repository::setUnitsMetric)
             }
+        }
+        Button(
+            onClick = repository::clearWorkoutHistory,
+            modifier = Modifier.fillMaxWidth().padding(top = Dimens.Md),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainer)
+        ) {
+            Text("Clear workout history", style = ButtonText)
         }
         Text(
             "Version 1.0 — Vigorly",
