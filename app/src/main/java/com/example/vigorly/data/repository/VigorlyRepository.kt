@@ -1,8 +1,11 @@
 package com.example.vigorly.data.repository
 
 import android.content.Context
+import com.example.vigorly.data.AthleticStatBooster
+import com.example.vigorly.data.MilestoneUnlocker
 import com.example.vigorly.data.catalog.WorkoutCatalog
 import com.example.vigorly.data.local.VigorlyPreferencesDataStore
+import com.example.vigorly.data.model.WorkoutType
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
 import com.example.vigorly.data.model.Exercise
@@ -66,6 +69,7 @@ class VigorlyRepository(context: Context) {
     val activeSession: StateFlow<WorkoutSessionState?> = _activeSession.asStateFlow()
 
     init {
+        preferences.athleticStats.onEach { _athleticStats.value = it }.launchIn(scope)
         preferences.workoutHistory.onEach { stored ->
             _history.value = stored
             _recentActivity.value = stored.take(5).map { item ->
@@ -77,7 +81,13 @@ class VigorlyRepository(context: Context) {
                     iconName = item.iconName
                 )
             }.ifEmpty { defaultRecentActivity() }
+            refreshMilestones()
         }.launchIn(scope)
+        preferences.userProfile.onEach { refreshMilestones() }.launchIn(scope)
+    }
+
+    private fun refreshMilestones() {
+        _milestones.value = MilestoneUnlocker.apply(profile.value, defaultMilestones())
     }
 
     fun getWorkout(id: String): WorkoutDetail? = workouts[id]
@@ -134,6 +144,16 @@ class VigorlyRepository(context: Context) {
         _activeSession.updateSession { it.copy(restSecondsRemaining = 0) }
     }
 
+    fun markCurrentExerciseComplete() {
+        val workout = _activeSession.value?.workoutId?.let { getWorkout(it) } ?: return
+        val exercises = flatExercises(workout)
+        val current = _activeSession.value ?: return
+        val exerciseId = exercises.getOrNull(current.currentExerciseIndex)?.id ?: return
+        _activeSession.updateSession {
+            it.copy(completedExerciseIds = it.completedExerciseIds + exerciseId)
+        }
+    }
+
     fun previousExercise() {
         _activeSession.updateSession { session ->
             if (session.currentExerciseIndex > 0) {
@@ -159,6 +179,9 @@ class VigorlyRepository(context: Context) {
         val kcal = calories ?: workout.estimatedCalories
         val nowLabel = SimpleDateFormat("'Today,' hh:mm a", Locale.getDefault()).format(Date())
 
+        val boostedStats = AthleticStatBooster.bump(_athleticStats.value, workout.type)
+        _athleticStats.value = boostedStats
+
         scope.launch {
             val currentProfile = profile.value
             preferences.updateProfile(
@@ -172,10 +195,14 @@ class VigorlyRepository(context: Context) {
                 goals.copy(
                     moveProgress = (goals.moveProgress + 0.05f).coerceAtMost(1f),
                     exerciseProgress = (goals.exerciseProgress + 0.08f).coerceAtMost(1f),
-                    moveCalories = (goals.moveCalories + kcal / 10).coerceAtMost(goals.moveCaloriesGoal)
+                    standProgress = (goals.standProgress + 0.03f).coerceAtMost(1f),
+                    moveCalories = (goals.moveCalories + kcal / 10).coerceAtMost(goals.moveCaloriesGoal),
+                    steps = (goals.steps + 500).coerceAtMost(goals.stepsGoal)
                 )
             )
+            preferences.saveAthleticStats(boostedStats)
         }
+        refreshMilestones()
 
         val historyItem = WorkoutHistoryItem(
             id = UUID.randomUUID().toString(),
@@ -213,6 +240,24 @@ class VigorlyRepository(context: Context) {
 
     fun setUnitsMetric(metric: Boolean) {
         scope.launch { preferences.setUnitsMetric(metric) }
+    }
+
+    fun clearWorkoutHistory() {
+        _history.value = emptyList()
+        _recentActivity.value = emptyList()
+        scope.launch { preferences.saveWorkoutHistory(emptyList()) }
+    }
+
+    fun refreshDailyGoalsFromActivity() {
+        scope.launch {
+            val goals = dailyGoals.value
+            preferences.updateDailyGoals(
+                goals.copy(
+                    steps = (goals.steps + 120).coerceAtMost(goals.stepsGoal),
+                    heartRateBpm = (68..78).random()
+                )
+            )
+        }
     }
 
     private fun MutableStateFlow<WorkoutSessionState?>.updateSession(
