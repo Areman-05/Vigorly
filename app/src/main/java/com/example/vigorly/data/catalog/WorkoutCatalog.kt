@@ -17,7 +17,9 @@ object WorkoutCatalog {
         hiitSprint(),
         recoveryYoga(),
         upperBodyPower(),
-        morningSwim()
+        morningSwim(),
+        coreBlast(),
+        legDay()
     )
 
     fun titanProtocol() = WorkoutDetail(
@@ -151,6 +153,65 @@ object WorkoutCatalog {
                     Exercise("s1", "Freestyle Warm-up", "400m easy", null, "pool"),
                     Exercise("s2", "Interval 50m", "8 x 50m moderate", null, "pool"),
                     Exercise("s3", "Cool Down", "200m easy", null, "pool")
+                )
+            )
+        )
+    )
+
+    fun coreBlast() = WorkoutDetail(
+        id = "core_blast",
+        name = "Core Blast",
+        description = "Focused core circuit to build stability and midline strength for compound lifts.",
+        type = WorkoutType.STRENGTH,
+        durationMinutes = 30,
+        heroImageUrl = HERO_STRENGTH,
+        targetMuscles = "Core & Abs",
+        targetDescription = "Core focus",
+        anatomyImageUrl = null,
+        intensity = "Moderate",
+        estimatedCalories = 280,
+        blocks = listOf(
+            WorkoutBlock(
+                id = "a",
+                label = "A",
+                title = "Core Circuit",
+                exercises = listOf(
+                    Exercise("c1", "Hanging Leg Raises", "3 Sets • 12 Reps", null, "fitness_center"),
+                    Exercise("c2", "Cable Woodchops", "3 Sets • 15 each side", null, "fitness_center"),
+                    Exercise("c3", "Plank Hold", "3 Sets • 60 sec", null, "self_improvement")
+                )
+            )
+        )
+    )
+
+    fun legDay() = WorkoutDetail(
+        id = "leg_day",
+        name = "Leg Day Destroyer",
+        description = "High-volume lower body session targeting quads, hamstrings, and glutes.",
+        type = WorkoutType.STRENGTH,
+        durationMinutes = 55,
+        heroImageUrl = HERO_STRENGTH,
+        targetMuscles = "Legs & Glutes",
+        targetDescription = "Lower body",
+        anatomyImageUrl = null,
+        intensity = "High",
+        estimatedCalories = 520,
+        blocks = listOf(
+            WorkoutBlock(
+                id = "a",
+                label = "A",
+                title = "Squat Focus",
+                exercises = listOf(
+                    Exercise("l1", "Back Squat", "5 Sets • 5 Reps", null, "fitness_center"),
+                    Exercise("l2", "Romanian Deadlift", "4 Sets • 8 Reps", null, "fitness_center")
+                )
+            ),
+            WorkoutBlock(
+                id = "b",
+                label = "B",
+                title = "Accessories",
+                exercises = listOf(
+                    Exercise("l3", "Walking Lunges", "3 Sets • 20 steps", null, "directions_walk")
                 )
             )
         )
