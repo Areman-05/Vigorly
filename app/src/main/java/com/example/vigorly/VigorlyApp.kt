@@ -11,6 +11,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -39,6 +41,7 @@ fun VigorlyApp(
     repository: VigorlyRepository,
     viewModel: VigorlyViewModel
 ) {
+    val workoutCompletedMessage = stringResource(R.string.workout_completed)
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route ?: VigorlyRoutes.Dashboard
@@ -147,7 +150,7 @@ fun VigorlyApp(
                     repository = repository,
                     workoutId = id,
                     onComplete = {
-                        viewModel.showMessage("Workout completed!")
+                        viewModel.showMessage(workoutCompletedMessage)
                         navController.popBackStack(VigorlyRoutes.Dashboard, false)
                     },
                     onCancel = { navController.popBackStack() }
