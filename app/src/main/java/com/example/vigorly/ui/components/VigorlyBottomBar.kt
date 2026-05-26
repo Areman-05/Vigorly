@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.navigation.VigorlyRoutes
@@ -64,7 +65,8 @@ fun VigorlyBottomBar(
                         Icon(
                             item.icon,
                             contentDescription = item.label,
-                            tint = if (selected) OnPrimary else OnSurfaceVariant
+                            tint = if (selected) OnPrimary else OnSurfaceVariant,
+                            modifier = Modifier.scale(if (selected) 1.1f else 1f)
                         )
                     },
                     label = {
