@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
 import com.example.vigorly.data.model.UserProfile
 import com.example.vigorly.data.model.WorkoutHistoryItem
@@ -50,6 +51,11 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         it[PreferenceKeys.UNITS_METRIC] ?: true
     }
 
+    val athleticStats: Flow<List<AthleticStat>> = context.vigorlyDataStore.data.map { prefs ->
+        val decoded = AthleticStatsCodec.decode(prefs[PreferenceKeys.ATHLETIC_STATS])
+        decoded.ifEmpty { VigorlyRepository.defaultAthleticStats() }
+    }
+
     val workoutHistory: Flow<List<WorkoutHistoryItem>> = context.vigorlyDataStore.data.map { prefs ->
         val raw = prefs[PreferenceKeys.WORKOUT_HISTORY]
         val decoded = HistoryCodec.decode(raw)
@@ -92,6 +98,12 @@ class VigorlyPreferencesDataStore(private val context: Context) {
     suspend fun saveWorkoutHistory(items: List<WorkoutHistoryItem>) {
         context.vigorlyDataStore.edit { prefs ->
             prefs[PreferenceKeys.WORKOUT_HISTORY] = HistoryCodec.encode(items)
+        }
+    }
+
+    suspend fun saveAthleticStats(stats: List<AthleticStat>) {
+        context.vigorlyDataStore.edit { prefs ->
+            prefs[PreferenceKeys.ATHLETIC_STATS] = AthleticStatsCodec.encode(stats)
         }
     }
 }
