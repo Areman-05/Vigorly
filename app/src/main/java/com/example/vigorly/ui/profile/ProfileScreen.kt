@@ -32,6 +32,8 @@ import coil.compose.AsyncImage
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.AthleticRadarChart
 import com.example.vigorly.ui.components.GlassCard
+import com.example.vigorly.ui.components.LevelProgressBar
+import com.example.vigorly.util.LevelCalculator
 import com.example.vigorly.ui.iconForName
 import com.example.vigorly.ui.theme.BodyLg
 import com.example.vigorly.ui.theme.BodyMd
@@ -105,6 +107,15 @@ fun ProfileScreen(
                     }
                 }
             }
+        }
+        Spacer(Modifier.height(Dimens.Md))
+        GlassCard(Modifier.fillMaxWidth()) {
+            LevelProgressBar(
+                level = profile.level,
+                progress = LevelCalculator.progressToNextLevel(profile.totalWorkouts),
+                workoutsUntilNext = LevelCalculator.workoutsUntilNextLevel(profile.totalWorkouts),
+                modifier = Modifier.padding(Dimens.Md)
+            )
         }
         Spacer(Modifier.height(Dimens.Md))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.Md)) {
