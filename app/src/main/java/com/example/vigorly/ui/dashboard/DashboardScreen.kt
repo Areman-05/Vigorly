@@ -40,6 +40,8 @@ import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.util.MetricFormatter
 import com.example.vigorly.ui.components.ActivityRings
 import com.example.vigorly.ui.components.GlassCard
+import com.example.vigorly.ui.components.StreakCard
+import androidx.compose.material3.TextButton
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.ButtonText
 import com.example.vigorly.ui.theme.Dimens
@@ -80,12 +82,17 @@ fun DashboardScreen(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = Dimens.Sm)
         )
-        Text(
-            text = "Ready to train?",
-            style = BodyMd,
-            color = OnSurfaceVariant,
-            modifier = Modifier.padding(bottom = Dimens.Md)
-        )
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Ready to train?", style = BodyMd, color = OnSurfaceVariant)
+            TextButton(onClick = repository::refreshDailyGoalsFromActivity) {
+                Text("Sync activity", style = ButtonText, color = Primary)
+            }
+        }
+        StreakCard(streakDays = profile.activeStreakDays, modifier = Modifier.padding(bottom = Dimens.Md))
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
