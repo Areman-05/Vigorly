@@ -85,3 +85,11 @@ data class WorkoutDetail(
     val estimatedCalories: Int,
     val blocks: List<WorkoutBlock>
 )
+
+data class WeeklyGoal(
+    val targetSessions: Int,
+    val completedSessions: Int
+) {
+    val progress: Float
+        get() = (completedSessions / targetSessions.toFloat()).coerceIn(0f, 1f)
+}
