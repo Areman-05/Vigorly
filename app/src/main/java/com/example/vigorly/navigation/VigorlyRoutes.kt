@@ -5,6 +5,7 @@ object VigorlyRoutes {
     const val Workouts = "workouts"
     const val History = "history"
     const val Profile = "profile"
+    const val Insights = "insights"
     const val Settings = "settings"
     const val Milestones = "milestones"
     const val WorkoutDetail = "workout/{workoutId}"
