@@ -126,7 +126,10 @@ fun VigorlyApp(
                 )
             }
             composable(VigorlyRoutes.Settings) {
-                SettingsScreen(repository = repository)
+                SettingsScreen(
+                    repository = repository,
+                    onOpenInsights = { navController.navigate(VigorlyRoutes.Insights) }
+                )
             }
             composable(VigorlyRoutes.Milestones) {
                 MilestonesScreen(repository = repository)
