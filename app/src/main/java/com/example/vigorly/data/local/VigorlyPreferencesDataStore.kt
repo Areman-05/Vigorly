@@ -8,6 +8,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
 import com.example.vigorly.data.model.UserProfile
+import com.example.vigorly.data.model.WeeklyGoal
 import com.example.vigorly.data.model.WorkoutHistoryItem
 import com.example.vigorly.data.repository.VigorlyRepository
 import kotlinx.coroutines.flow.Flow
@@ -62,6 +63,13 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         decoded.ifEmpty { VigorlyRepository.defaultHistory() }
     }
 
+    val weeklyGoal: Flow<WeeklyGoal> = context.vigorlyDataStore.data.map { prefs ->
+        WeeklyGoal(
+            targetSessions = prefs[PreferenceKeys.WEEKLY_TARGET_SESSIONS] ?: 5,
+            completedSessions = prefs[PreferenceKeys.WEEKLY_COMPLETED_SESSIONS] ?: 0
+        )
+    }
+
     suspend fun updateProfile(profile: UserProfile) {
         context.vigorlyDataStore.edit { prefs ->
             prefs[PreferenceKeys.DISPLAY_NAME] = profile.displayName
@@ -104,6 +112,13 @@ class VigorlyPreferencesDataStore(private val context: Context) {
     suspend fun saveAthleticStats(stats: List<AthleticStat>) {
         context.vigorlyDataStore.edit { prefs ->
             prefs[PreferenceKeys.ATHLETIC_STATS] = AthleticStatsCodec.encode(stats)
+        }
+    }
+
+    suspend fun saveWeeklyGoal(goal: WeeklyGoal) {
+        context.vigorlyDataStore.edit { prefs ->
+            prefs[PreferenceKeys.WEEKLY_TARGET_SESSIONS] = goal.targetSessions
+            prefs[PreferenceKeys.WEEKLY_COMPLETED_SESSIONS] = goal.completedSessions
         }
     }
 }
