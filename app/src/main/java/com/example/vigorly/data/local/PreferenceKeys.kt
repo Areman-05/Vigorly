@@ -25,4 +25,6 @@ object PreferenceKeys {
     val UNITS_METRIC = booleanPreferencesKey("units_metric")
     val WORKOUT_HISTORY = stringPreferencesKey("workout_history")
     val ATHLETIC_STATS = stringPreferencesKey("athletic_stats")
+    val WEEKLY_TARGET_SESSIONS = intPreferencesKey("weekly_target_sessions")
+    val WEEKLY_COMPLETED_SESSIONS = intPreferencesKey("weekly_completed_sessions")
 }
