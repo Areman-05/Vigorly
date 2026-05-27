@@ -33,8 +33,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.vigorly.R
 import com.example.vigorly.data.model.RecentActivity
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.util.MetricFormatter
@@ -91,7 +93,7 @@ fun DashboardScreen(
         ) {
             Text("Ready to train?", style = BodyMd, color = OnSurfaceVariant)
             TextButton(onClick = repository::refreshDailyGoalsFromActivity) {
-                Text("Sync activity", style = ButtonText, color = Primary)
+                Text(stringResource(R.string.sync_activity), style = ButtonText, color = Primary)
             }
         }
         StreakCard(streakDays = profile.activeStreakDays, modifier = Modifier.padding(bottom = Dimens.Md))
