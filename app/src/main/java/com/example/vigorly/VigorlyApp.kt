@@ -27,6 +27,7 @@ import com.example.vigorly.ui.components.VigorlyDetailTopBar
 import com.example.vigorly.ui.components.VigorlyMainTopBar
 import com.example.vigorly.ui.dashboard.DashboardScreen
 import com.example.vigorly.ui.history.HistoryScreen
+import com.example.vigorly.ui.insights.InsightsScreen
 import com.example.vigorly.ui.milestones.MilestonesScreen
 import com.example.vigorly.ui.profile.ProfileScreen
 import com.example.vigorly.ui.session.ActiveWorkoutScreen
@@ -62,7 +63,7 @@ fun VigorlyApp(
     val showBottomBar = currentRoute in mainTabs
     val isDetailOrSession = currentRoute?.startsWith("workout/") == true ||
         currentRoute?.startsWith("session/") == true
-    val isSubScreen = currentRoute in listOf(VigorlyRoutes.Settings, VigorlyRoutes.Milestones)
+    val isSubScreen = currentRoute in listOf(VigorlyRoutes.Settings, VigorlyRoutes.Milestones, VigorlyRoutes.Insights)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -129,6 +130,9 @@ fun VigorlyApp(
             }
             composable(VigorlyRoutes.Milestones) {
                 MilestonesScreen(repository = repository)
+            }
+            composable(VigorlyRoutes.Insights) {
+                InsightsScreen(repository = repository)
             }
             composable(
                 route = VigorlyRoutes.WorkoutDetail,
