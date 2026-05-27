@@ -12,6 +12,7 @@ import com.example.vigorly.data.model.Exercise
 import com.example.vigorly.data.model.Milestone
 import com.example.vigorly.data.model.RecentActivity
 import com.example.vigorly.data.model.UserProfile
+import com.example.vigorly.data.model.WeeklyGoal
 import com.example.vigorly.data.model.WorkoutDetail
 import com.example.vigorly.data.model.WorkoutHistoryItem
 import com.example.vigorly.data.model.WorkoutSessionState
@@ -51,6 +52,10 @@ class VigorlyRepository(context: Context) {
 
     val unitsMetric: StateFlow<Boolean> = preferences.unitsMetric.stateIn(
         scope, SharingStarted.Eagerly, true
+    )
+
+    val weeklyGoal: StateFlow<WeeklyGoal> = preferences.weeklyGoal.stateIn(
+        scope, SharingStarted.Eagerly, WeeklyGoal(targetSessions = 5, completedSessions = 0)
     )
 
     private val _athleticStats = MutableStateFlow(defaultAthleticStats())
@@ -201,6 +206,8 @@ class VigorlyRepository(context: Context) {
                 )
             )
             preferences.saveAthleticStats(boostedStats)
+            val goal = weeklyGoal.value
+            preferences.saveWeeklyGoal(goal.copy(completedSessions = goal.completedSessions + 1))
         }
         refreshMilestones()
 
@@ -246,6 +253,19 @@ class VigorlyRepository(context: Context) {
         _history.value = emptyList()
         _recentActivity.value = emptyList()
         scope.launch { preferences.saveWorkoutHistory(emptyList()) }
+    }
+
+    fun setWeeklyTargetSessions(target: Int) {
+        if (target <= 0) return
+        scope.launch {
+            val current = weeklyGoal.value
+            preferences.saveWeeklyGoal(
+                current.copy(
+                    targetSessions = target,
+                    completedSessions = current.completedSessions.coerceAtMost(target)
+                )
+            )
+        }
     }
 
     fun refreshDailyGoalsFromActivity() {
