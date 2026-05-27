@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -38,11 +39,13 @@ import com.example.vigorly.ui.theme.PrimaryContainer
 @Composable
 fun SettingsScreen(
     repository: VigorlyRepository,
+    onOpenInsights: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val profile by repository.profile.collectAsState()
     val notifications by repository.notificationsEnabled.collectAsState()
     val unitsMetric by repository.unitsMetric.collectAsState()
+    val weeklyGoal by repository.weeklyGoal.collectAsState()
     var nameInput by remember(profile.displayName) { mutableStateOf(profile.displayName) }
 
     Column(
@@ -89,6 +92,31 @@ fun SettingsScreen(
                 SettingToggle("Workout reminders", notifications, repository::setNotificationsEnabled)
                 SettingToggle("Metric units", unitsMetric, repository::setUnitsMetric)
             }
+        }
+        GlassCard(Modifier.fillMaxWidth().padding(top = Dimens.Md)) {
+            Column(Modifier.padding(Dimens.Md)) {
+                Text("Weekly target sessions", style = BodyMd, color = OnSurface)
+                Row(
+                    Modifier.fillMaxWidth().padding(top = Dimens.Sm),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(onClick = { repository.setWeeklyTargetSessions((weeklyGoal.targetSessions - 1).coerceAtLeast(1)) }) {
+                        Text("-")
+                    }
+                    Text("${weeklyGoal.targetSessions}", style = HeadlineMd, color = Primary)
+                    Button(onClick = { repository.setWeeklyTargetSessions(weeklyGoal.targetSessions + 1) }) {
+                        Text("+")
+                    }
+                }
+            }
+        }
+        Button(
+            onClick = onOpenInsights,
+            modifier = Modifier.fillMaxWidth().padding(top = Dimens.Md)
+        ) {
+            Icon(Icons.Default.Insights, null, modifier = Modifier.padding(end = Dimens.Sm))
+            Text("Open insights", style = ButtonText)
         }
         Button(
             onClick = repository::clearWorkoutHistory,
