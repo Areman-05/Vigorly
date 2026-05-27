@@ -41,6 +41,7 @@ import com.example.vigorly.util.MetricFormatter
 import com.example.vigorly.ui.components.ActivityRings
 import com.example.vigorly.ui.components.GlassCard
 import com.example.vigorly.ui.components.StreakCard
+import com.example.vigorly.ui.components.WeeklyGoalCard
 import androidx.compose.material3.TextButton
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.ButtonText
@@ -65,6 +66,7 @@ fun DashboardScreen(
     modifier: Modifier = Modifier
 ) {
     val goals by repository.dailyGoals.collectAsState()
+    val weeklyGoal by repository.weeklyGoal.collectAsState()
     val recent by repository.recentActivity.collectAsState()
     val profile by repository.profile.collectAsState()
     val firstName = profile.displayName.substringBefore(" ").ifBlank { profile.displayName }
@@ -93,6 +95,7 @@ fun DashboardScreen(
             }
         }
         StreakCard(streakDays = profile.activeStreakDays, modifier = Modifier.padding(bottom = Dimens.Md))
+        WeeklyGoalCard(goal = weeklyGoal, modifier = Modifier.padding(bottom = Dimens.Md))
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
