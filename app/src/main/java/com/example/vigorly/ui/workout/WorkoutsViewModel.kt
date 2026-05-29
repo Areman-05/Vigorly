@@ -17,6 +17,9 @@ class WorkoutsViewModel : ViewModel() {
     private val _sort = MutableStateFlow(WorkoutSort.DURATION_ASC)
     val sort: StateFlow<WorkoutSort> = _sort.asStateFlow()
 
+    private val _favoritesOnly = MutableStateFlow(false)
+    val favoritesOnly: StateFlow<Boolean> = _favoritesOnly.asStateFlow()
+
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -31,5 +34,9 @@ class WorkoutsViewModel : ViewModel() {
             WorkoutSort.DURATION_DESC -> WorkoutSort.NAME_ASC
             WorkoutSort.NAME_ASC -> WorkoutSort.DURATION_ASC
         }
+    }
+
+    fun toggleFavoritesOnly() {
+        _favoritesOnly.value = !_favoritesOnly.value
     }
 }
