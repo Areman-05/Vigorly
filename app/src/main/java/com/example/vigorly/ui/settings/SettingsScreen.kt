@@ -25,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.GlassCard
 import com.example.vigorly.ui.theme.BodyMd
@@ -117,6 +119,25 @@ fun SettingsScreen(
         ) {
             Icon(Icons.Default.Insights, null, modifier = Modifier.padding(end = Dimens.Sm))
             Text("Open insights", style = ButtonText)
+        }
+        Button(
+            onClick = repository::resetOnboarding,
+            modifier = Modifier.fillMaxWidth().padding(top = Dimens.Md),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainer)
+        ) {
+            Text(stringResource(R.string.reset_onboarding), style = ButtonText)
+        }
+        Button(
+            onClick = repository::resetDailyGoals,
+            modifier = Modifier.fillMaxWidth().padding(top = Dimens.Sm)
+        ) {
+            Text(stringResource(R.string.reset_daily_goals), style = ButtonText)
+        }
+        Button(
+            onClick = repository::resetWeeklyProgress,
+            modifier = Modifier.fillMaxWidth().padding(top = Dimens.Sm)
+        ) {
+            Text(stringResource(R.string.reset_weekly_progress), style = ButtonText)
         }
         Button(
             onClick = repository::clearWorkoutHistory,
