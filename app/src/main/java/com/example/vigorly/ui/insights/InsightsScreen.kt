@@ -16,6 +16,7 @@ import com.example.vigorly.ui.components.SectionHeader
 import com.example.vigorly.ui.components.StatRow
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.util.HistorySummaryCalculator
+import com.example.vigorly.util.WeeklyActivityCalculator
 
 @Composable
 fun InsightsScreen(
@@ -25,6 +26,7 @@ fun InsightsScreen(
     val history by repository.history.collectAsState()
     val stats by repository.athleticStats.collectAsState()
     val summary = HistorySummaryCalculator.from(history)
+    val weeklyDays = WeeklyActivityCalculator.fromHistory(history)
 
     Column(
         modifier = modifier
@@ -38,6 +40,11 @@ fun InsightsScreen(
                 StatRow("Sessions", "${summary.totalSessions}")
                 StatRow("Minutes", "${summary.totalMinutes}")
                 StatRow("Calories", "${summary.totalCalories}")
+            }
+        }
+        GlassCard(modifier = Modifier.padding(top = Dimens.Md)) {
+            Column(Modifier.padding(Dimens.Md)) {
+                WeeklyActivityBars(days = weeklyDays)
             }
         }
         GlassCard(modifier = Modifier.padding(top = Dimens.Md)) {
