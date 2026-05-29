@@ -5,6 +5,9 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
+import com.example.vigorly.ui.components.FavoriteToggle
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -44,13 +47,18 @@ fun WorkoutsScreen(
     val searchQuery by workoutsViewModel.searchQuery.collectAsState()
     val selectedFilter by workoutsViewModel.selectedType.collectAsState()
     val sort by workoutsViewModel.sort.collectAsState()
+    val favoritesOnly by workoutsViewModel.favoritesOnly.collectAsState()
+    val favorites by repository.favorites.collectAsState()
 
-    val workouts = WorkoutFilter.filter(
+    var workouts = WorkoutFilter.filter(
         repository.listWorkouts(),
         searchQuery,
         selectedFilter,
         sort
     )
+    if (favoritesOnly) {
+        workouts = WorkoutFilter.filterFavorites(workouts, favorites)
+    }
 
     val sortLabel = when (sort) {
         WorkoutSort.DURATION_ASC -> "Duration ↑"
@@ -86,6 +94,12 @@ fun WorkoutsScreen(
             horizontalArrangement = Arrangement.spacedBy(Dimens.Sm)
         ) {
             FilterChip(
+                selected = favoritesOnly,
+                onClick = workoutsViewModel::toggleFavoritesOnly,
+                label = { Text(stringResource(R.string.favorites_only)) },
+                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Primary.copy(0.2f))
+            )
+            FilterChip(
                 selected = selectedFilter == null,
                 onClick = { workoutsViewModel.setSelectedType(null) },
                 label = { Text("All") },
@@ -111,9 +125,19 @@ fun WorkoutsScreen(
                     .clickable { onWorkoutClick(workout.id) }
             ) {
                 Column(Modifier.padding(Dimens.Md)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
-                        WorkoutChip(workout.type.name)
-                        WorkoutChip("${workout.durationMinutes} MIN", primary = true)
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
+                            WorkoutChip(workout.type.name)
+                            WorkoutChip("${workout.durationMinutes} MIN", primary = true)
+                        }
+                        FavoriteToggle(
+                            isFavorite = favorites.contains(workout.id),
+                            onToggle = { repository.toggleFavorite(workout.id) }
+                        )
                     }
                     Text(workout.name, style = HeadlineMd, color = OnSurface, modifier = Modifier.padding(top = Dimens.Sm))
                     Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
