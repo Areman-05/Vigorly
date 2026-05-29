@@ -1,6 +1,7 @@
 package com.example.vigorly.ui.history
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,6 +42,7 @@ import com.example.vigorly.util.HistorySummaryCalculator
 @Composable
 fun HistoryScreen(
     repository: VigorlyRepository,
+    onHistoryItemClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val history by repository.history.collectAsState()
@@ -77,7 +79,12 @@ fun HistoryScreen(
                     modifier = Modifier.padding(vertical = Dimens.Sm)
                 )
                 section.items.forEach { item ->
-                    GlassCard(modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.Sm)) {
+                    GlassCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = Dimens.Sm)
+                            .clickable { onHistoryItemClick(item.id) }
+                    ) {
                         Row(
                             Modifier.padding(Dimens.Md),
                             verticalAlignment = Alignment.CenterVertically
