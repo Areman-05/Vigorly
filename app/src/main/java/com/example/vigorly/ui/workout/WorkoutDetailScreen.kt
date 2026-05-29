@@ -24,6 +24,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
@@ -36,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.vigorly.data.model.WorkoutDetail
 import com.example.vigorly.data.model.WorkoutType
+import com.example.vigorly.data.repository.VigorlyRepository
+import com.example.vigorly.ui.components.FavoriteToggle
 import com.example.vigorly.ui.components.GlassCard
 import com.example.vigorly.ui.components.WorkoutChip
 import com.example.vigorly.ui.iconForName
@@ -59,9 +63,11 @@ import com.example.vigorly.ui.theme.SurfaceContainerHigh
 @Composable
 fun WorkoutDetailScreen(
     workout: WorkoutDetail,
+    repository: VigorlyRepository,
     onStartWorkout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val favorites by repository.favorites.collectAsState()
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Box(Modifier.fillMaxWidth().height(400.dp)) {
             AsyncImage(
@@ -76,6 +82,12 @@ fun WorkoutDetailScreen(
                     .fillMaxSize()
                     .background(Brush.verticalGradient(listOf(Color.Transparent, Surface.copy(0.5f), Surface)))
             )
+            Box(Modifier.align(Alignment.TopEnd).padding(Dimens.ContainerMargin)) {
+                FavoriteToggle(
+                    isFavorite = favorites.contains(workout.id),
+                    onToggle = { repository.toggleFavorite(workout.id) }
+                )
+            }
             Column(Modifier.align(Alignment.BottomStart).padding(Dimens.ContainerMargin)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     WorkoutChip(workout.type.name)
