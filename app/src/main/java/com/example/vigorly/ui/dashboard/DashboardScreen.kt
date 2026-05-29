@@ -41,7 +41,9 @@ import com.example.vigorly.data.model.RecentActivity
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.util.MetricFormatter
 import com.example.vigorly.ui.components.ActivityRings
+import com.example.vigorly.ui.components.DailyTipCard
 import com.example.vigorly.ui.components.GlassCard
+import com.example.vigorly.ui.components.RecommendedWorkoutCard
 import com.example.vigorly.ui.components.StreakCard
 import com.example.vigorly.ui.components.WeeklyGoalCard
 import androidx.compose.material3.TextButton
@@ -65,12 +67,15 @@ import com.example.vigorly.ui.iconForName
 fun DashboardScreen(
     repository: VigorlyRepository,
     onStartWorkout: () -> Unit,
+    onRecommendedWorkoutClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val goals by repository.dailyGoals.collectAsState()
     val weeklyGoal by repository.weeklyGoal.collectAsState()
     val recent by repository.recentActivity.collectAsState()
     val profile by repository.profile.collectAsState()
+    val dailyTip by repository.dailyTip.collectAsState()
+    val recommended = repository.getRecommendedWorkout()
     val firstName = profile.displayName.substringBefore(" ").ifBlank { profile.displayName }
 
     Column(
@@ -97,6 +102,14 @@ fun DashboardScreen(
             }
         }
         StreakCard(streakDays = profile.activeStreakDays, modifier = Modifier.padding(bottom = Dimens.Md))
+        DailyTipCard(tip = dailyTip, modifier = Modifier.padding(bottom = Dimens.Md))
+        recommended?.let { workout ->
+            RecommendedWorkoutCard(
+                workout = workout,
+                onClick = { onRecommendedWorkoutClick(workout.id) },
+                modifier = Modifier.padding(bottom = Dimens.Md)
+            )
+        }
         WeeklyGoalCard(goal = weeklyGoal, modifier = Modifier.padding(bottom = Dimens.Md))
         Column(
             modifier = Modifier.fillMaxWidth(),
