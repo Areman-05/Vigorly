@@ -56,6 +56,8 @@ import androidx.compose.material3.Icon
 fun ProfileScreen(
     repository: VigorlyRepository,
     onViewAllMilestones: () -> Unit = {},
+    onOpenWorkouts: () -> Unit = {},
+    onOpenInsights: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val profile by repository.profile.collectAsState()
@@ -69,6 +71,11 @@ fun ProfileScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
     ) {
+        ProfileQuickActions(
+            onOpenWorkouts = onOpenWorkouts,
+            onOpenInsights = onOpenInsights,
+            modifier = Modifier.padding(bottom = Dimens.Md)
+        )
         GlassCard(Modifier.fillMaxWidth()) {
             Box {
                 Box(
