@@ -16,4 +16,19 @@
     <string name="mark_exercise_done">Mark exercise done</string>
     <string name="exercise_completed">Exercise completed</string>
     <string name="no_workouts_found">No workouts match your search.</string>
+    <string name="onboarding_welcome_title">Welcome to Vigorly</string>
+    <string name="onboarding_welcome_body">Track workouts, hit daily goals, and build your athletic profile.</string>
+    <string name="onboarding_goals_title">Set your rhythm</string>
+    <string name="onboarding_goals_body">Move rings, weekly sessions, and coaching tips keep you on track.</string>
+    <string name="onboarding_ready_title">You are ready</string>
+    <string name="onboarding_ready_body">Start your first session from the dashboard whenever you are.</string>
+    <string name="onboarding_next">Continue</string>
+    <string name="onboarding_start">Get started</string>
+    <string name="session_complete">SESSION COMPLETE</string>
+    <string name="session_done">Back to dashboard</string>
+    <string name="session_saved_hint">Your progress has been saved.</string>
+    <string name="favorites_only">Favorites</string>
+    <string name="reset_onboarding">Show onboarding again</string>
+    <string name="reset_daily_goals">Reset daily goals</string>
+    <string name="reset_weekly_progress">Reset weekly progress</string>
 </resources>
