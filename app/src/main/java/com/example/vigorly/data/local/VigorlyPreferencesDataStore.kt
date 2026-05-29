@@ -70,6 +70,18 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         )
     }
 
+    val onboardingCompleted: Flow<Boolean> = context.vigorlyDataStore.data.map {
+        it[PreferenceKeys.ONBOARDING_COMPLETED] ?: false
+    }
+
+    val favoriteWorkoutIds: Flow<Set<String>> = context.vigorlyDataStore.data.map { prefs ->
+        FavoritesCodec.decode(prefs[PreferenceKeys.FAVORITE_WORKOUTS])
+    }
+
+    val dailyTipIndex: Flow<Int> = context.vigorlyDataStore.data.map {
+        it[PreferenceKeys.DAILY_TIP_INDEX] ?: 0
+    }
+
     suspend fun updateProfile(profile: UserProfile) {
         context.vigorlyDataStore.edit { prefs ->
             prefs[PreferenceKeys.DISPLAY_NAME] = profile.displayName
@@ -119,6 +131,36 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         context.vigorlyDataStore.edit { prefs ->
             prefs[PreferenceKeys.WEEKLY_TARGET_SESSIONS] = goal.targetSessions
             prefs[PreferenceKeys.WEEKLY_COMPLETED_SESSIONS] = goal.completedSessions
+        }
+    }
+
+    suspend fun setOnboardingCompleted(completed: Boolean) {
+        context.vigorlyDataStore.edit { it[PreferenceKeys.ONBOARDING_COMPLETED] = completed }
+    }
+
+    suspend fun setFavoriteWorkoutIds(ids: Set<String>) {
+        context.vigorlyDataStore.edit { it[PreferenceKeys.FAVORITE_WORKOUTS] = FavoritesCodec.encode(ids) }
+    }
+
+    suspend fun advanceDailyTip(tipCount: Int) {
+        if (tipCount <= 0) return
+        context.vigorlyDataStore.edit { prefs ->
+            val current = prefs[PreferenceKeys.DAILY_TIP_INDEX] ?: 0
+            prefs[PreferenceKeys.DAILY_TIP_INDEX] = (current + 1) % tipCount
+        }
+    }
+
+    suspend fun resetDailyGoals() {
+        val defaults = VigorlyRepository.defaultDailyGoals()
+        updateDailyGoals(defaults)
+    }
+
+    suspend fun resetWeeklyProgress() {
+        val current = weeklyGoal
+        context.vigorlyDataStore.edit { prefs ->
+            val target = prefs[PreferenceKeys.WEEKLY_TARGET_SESSIONS] ?: 5
+            prefs[PreferenceKeys.WEEKLY_COMPLETED_SESSIONS] = 0
+            prefs[PreferenceKeys.WEEKLY_TARGET_SESSIONS] = target
         }
     }
 }
