@@ -29,4 +29,7 @@ object WorkoutFilter {
         }
         return result
     }
+
+    fun filterFavorites(workouts: List<WorkoutDetail>, favoriteIds: Set<String>): List<WorkoutDetail> =
+        workouts.filter { favoriteIds.contains(it.id) }
 }
