@@ -28,6 +28,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.GlassCard
 import com.example.vigorly.ui.theme.BodyMd
@@ -169,7 +171,7 @@ fun ActiveWorkoutScreen(
                     contentColor = OnPrimaryContainer
                 )
             ) {
-                Text("FINISH WORKOUT", style = ButtonText)
+                Text(stringResource(R.string.finish_workout), style = ButtonText)
             }
         } else if (!isResting) {
             Button(
