@@ -4,8 +4,13 @@ import android.content.Context
 import com.example.vigorly.data.AthleticStatBooster
 import com.example.vigorly.data.MilestoneUnlocker
 import com.example.vigorly.data.catalog.WorkoutCatalog
+import com.example.vigorly.data.local.CoachingTipLoader
 import com.example.vigorly.data.local.VigorlyPreferencesDataStore
+import com.example.vigorly.data.model.CoachingTip
+import com.example.vigorly.data.model.SessionSummary
 import com.example.vigorly.data.model.WorkoutType
+import com.example.vigorly.util.DailyTipSelector
+import com.example.vigorly.util.WorkoutRecommender
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
 import com.example.vigorly.data.model.Exercise
@@ -35,8 +40,10 @@ import java.util.UUID
 class VigorlyRepository(context: Context) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val preferences = VigorlyPreferencesDataStore(context.applicationContext)
+    private val appContext = context.applicationContext
+    private val preferences = VigorlyPreferencesDataStore(appContext)
     private val workouts = WorkoutCatalog.allWorkouts()
+    private val coachingTips: List<CoachingTip> = CoachingTipLoader.load(appContext)
 
     val profile: StateFlow<UserProfile> = preferences.userProfile.stateIn(
         scope, SharingStarted.Eagerly, defaultProfile()
@@ -73,8 +80,30 @@ class VigorlyRepository(context: Context) {
     private val _activeSession = MutableStateFlow<WorkoutSessionState?>(null)
     val activeSession: StateFlow<WorkoutSessionState?> = _activeSession.asStateFlow()
 
+    private val _dailyTip = MutableStateFlow(coachingTips.firstOrNull() ?: CoachingTip("tip-001", ""))
+    val dailyTip: StateFlow<CoachingTip> = _dailyTip.asStateFlow()
+
+    private val _favorites = MutableStateFlow<Set<String>>(emptySet())
+    val favorites: StateFlow<Set<String>> = _favorites.asStateFlow()
+
+    private val _onboardingCompleted = MutableStateFlow(false)
+    val onboardingCompleted: StateFlow<Boolean> = _onboardingCompleted.asStateFlow()
+
+    private val _lastSessionSummary = MutableStateFlow<SessionSummary?>(null)
+    val lastSessionSummary: StateFlow<SessionSummary?> = _lastSessionSummary.asStateFlow()
+
     init {
         preferences.athleticStats.onEach { _athleticStats.value = it }.launchIn(scope)
+        preferences.favoriteWorkoutIds.onEach { _favorites.value = it }.launchIn(scope)
+        preferences.onboardingCompleted.onEach { _onboardingCompleted.value = it }.launchIn(scope)
+        preferences.dailyTipIndex.onEach { index ->
+            _dailyTip.value = DailyTipSelector.pick(coachingTips, index)
+        }.launchIn(scope)
+        scope.launch {
+            if (coachingTips.isNotEmpty()) {
+                preferences.advanceDailyTip(coachingTips.size)
+            }
+        }
         preferences.workoutHistory.onEach { stored ->
             _history.value = stored
             _recentActivity.value = stored.take(5).map { item ->
@@ -170,9 +199,45 @@ class VigorlyRepository(context: Context) {
     fun completeWorkoutSession() {
         val session = _activeSession.value ?: return
         val workout = getWorkout(session.workoutId) ?: return
+        _lastSessionSummary.value = SessionSummaryFactory.from(session, workout)
         recordWorkoutCompletion(session.workoutId, workout.durationMinutes, workout.estimatedCalories)
         _activeSession.value = null
     }
+
+    fun clearSessionSummary() {
+        _lastSessionSummary.value = null
+    }
+
+    fun getRecommendedWorkout(): WorkoutDetail? =
+        WorkoutRecommender.recommend(workouts, _history.value, _favorites.value)
+
+    fun toggleFavorite(workoutId: String) {
+        val updated = _favorites.value.toMutableSet().apply {
+            if (contains(workoutId)) remove(workoutId) else add(workoutId)
+        }
+        _favorites.value = updated
+        scope.launch { preferences.setFavoriteWorkoutIds(updated) }
+    }
+
+    fun isFavorite(workoutId: String): Boolean = workoutId in _favorites.value
+
+    fun completeOnboarding() {
+        scope.launch { preferences.setOnboardingCompleted(true) }
+    }
+
+    fun resetOnboarding() {
+        scope.launch { preferences.setOnboardingCompleted(false) }
+    }
+
+    fun resetDailyGoals() {
+        scope.launch { preferences.resetDailyGoals() }
+    }
+
+    fun resetWeeklyProgress() {
+        scope.launch { preferences.resetWeeklyProgress() }
+    }
+
+    fun getHistoryItem(id: String): WorkoutHistoryItem? = _history.value.find { it.id == id }
 
     fun cancelWorkoutSession() {
         _activeSession.value = null
