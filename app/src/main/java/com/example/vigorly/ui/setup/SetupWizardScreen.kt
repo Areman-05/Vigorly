@@ -1,8 +1,6 @@
 package com.example.vigorly.ui.setup
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -21,7 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,8 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.R
 import com.example.vigorly.data.repository.VigorlyRepository
-import com.example.vigorly.ui.components.ActivityRings
-import com.example.vigorly.ui.components.ActivityRingsLogo
+import com.example.vigorly.ui.components.SetupActivityRingsGuide
 import com.example.vigorly.ui.components.SetupRhythmVisual
 import com.example.vigorly.ui.theme.BodyLg
 import com.example.vigorly.ui.components.AuthGradientBackground
@@ -79,7 +74,6 @@ fun SetupWizardScreen(
     var workoutLocations by remember { mutableStateOf(emptySet<String>()) }
     var preferredTimes by remember { mutableStateOf(emptySet<String>()) }
     var weeklySessions by remember { mutableStateOf<Int?>(null) }
-    var notifications by remember { mutableStateOf(true) }
 
     val introSteps = listOf(
         IntroStep(R.string.onboarding_welcome_title, R.string.onboarding_welcome_body, IntroVisual.WELCOME),
@@ -121,6 +115,9 @@ fun SetupWizardScreen(
     val progress = (step + 1) / totalSteps.toFloat()
     val introCount = introSteps.size
     val isSelectionStep = step in introCount..introCount + 3
+    val isWeeklyStep = step == introCount + 4
+    val isRingsStep = step == introCount + 5
+    val isWideContentStep = isSelectionStep || isWeeklyStep || isRingsStep
     val canContinue = when {
         step < introCount -> true
         step == introCount -> fitnessGoals.isNotEmpty()
@@ -137,7 +134,7 @@ fun SetupWizardScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .padding(top = Dimens.Lg)
-                .padding(horizontal = if (isSelectionStep) Dimens.Sm else Dimens.ContainerMargin)
+                .padding(horizontal = if (isWideContentStep) Dimens.Sm else Dimens.ContainerMargin)
                 .padding(bottom = Dimens.ContainerMargin)
         ) {
             SetupProgressBar(
@@ -156,16 +153,17 @@ fun SetupWizardScreen(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
+                val scrollState = rememberScrollState()
                 Column(
                     Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
+                        .then(if (isRingsStep) Modifier else Modifier.verticalScroll(scrollState))
                         .padding(
-                            top = if (isSelectionStep) Dimens.Sm else Dimens.Lg,
+                            top = if (isWideContentStep) Dimens.Sm else Dimens.Lg,
                             bottom = Dimens.Lg
                         ),
-                    verticalArrangement = if (isSelectionStep) Arrangement.Top else Arrangement.Center,
-                    horizontalAlignment = if (isSelectionStep) Alignment.Start else Alignment.CenterHorizontally
+                    verticalArrangement = if (isWideContentStep) Arrangement.Top else Arrangement.Center,
+                    horizontalAlignment = if (isWideContentStep) Alignment.Start else Alignment.CenterHorizontally
                 ) {
                     when {
                         step < introCount -> IntroStepContent(introSteps[step])
@@ -198,7 +196,7 @@ fun SetupWizardScreen(
                             onToggle = { preferredTimes = toggleInSet(preferredTimes, it) }
                         )
                         step == introCount + 4 -> WeeklyStep(weeklySessions, sessionOptions) { weeklySessions = it }
-                        step == introCount + 5 -> RingsStep(notifications) { notifications = it }
+                        step == introCount + 5 -> RingsStep()
                         else -> CompleteStepContent()
                     }
                 }
@@ -235,7 +233,7 @@ fun SetupWizardScreen(
                                 fitnessGoals.joinToString(","),
                                 activityLevels.joinToString(","),
                                 sessions,
-                                notifications,
+                                notifications = false,
                                 workoutLocations.joinToString(","),
                                 preferredTimes.joinToString(",")
                             )
@@ -330,9 +328,7 @@ private fun MultiSelectionStep(
     onToggle: (String) -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Dimens.Md)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
@@ -374,113 +370,93 @@ private fun MultiSelectionStep(
 @Composable
 private fun WeeklyStep(sessions: Int?, options: List<Int>, onChange: (Int) -> Unit) {
     Column(
-        Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.Md)
     ) {
-        Text(stringResource(R.string.setup_step_weekly_title), style = HeadlineMd, color = OnSurface)
-        Text(
-            stringResource(R.string.setup_step_weekly_body),
-            style = BodyMd,
-            color = OnSurfaceVariant,
-            modifier = Modifier.padding(top = Dimens.Sm, bottom = Dimens.Lg)
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
+            Text(
+                stringResource(R.string.setup_step_weekly_title),
+                style = HeadlineLg.copy(fontWeight = FontWeight.Bold),
+                color = OnSurface
+            )
+            Text(
+                stringResource(R.string.setup_step_weekly_body),
+                style = BodyLg,
+                color = OnSurfaceVariant
+            )
+            Text(
+                stringResource(R.string.setup_weekly_select_hint),
+                style = LabelCaps,
+                color = PrimaryAccent.copy(0.8f),
+                modifier = Modifier.padding(top = Dimens.Xs)
+            )
+        }
         Column(
-            Modifier
-                .weight(1f)
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Dimens.Md)
         ) {
-            options.chunked(3).forEach { row ->
-                Row(
-                    Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.Md)
-                ) {
-                    row.forEach { count ->
-                        WeeklySessionCard(
-                            count = count,
-                            selected = sessions == count,
-                            onClick = { onChange(count) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
-                }
+            options.forEach { count ->
+                SetupOptionCard(
+                    title = stringResource(R.string.setup_weekly_option_title, count),
+                    subtitle = weeklySessionDescription(count),
+                    icon = SetupStepIcons.weeklySessions(count),
+                    selected = sessions == count,
+                    onClick = { onChange(count) },
+                    modifier = Modifier.fillMaxWidth(),
+                    badgeSize = 56.dp,
+                    iconSize = 30.dp,
+                    contentPadding = Dimens.Lg,
+                    minHeight = 80.dp
+                )
             }
         }
     }
 }
 
 @Composable
-private fun WeeklySessionCard(
-    count: Int,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val shape = RoundedCornerShape(18.dp)
-    Column(
-        modifier = modifier
-            .fillMaxHeight()
-            .heightIn(min = 100.dp)
-            .clip(shape)
-            .border(
-                width = if (selected) 2.dp else 1.dp,
-                color = if (selected) PrimaryAccent else Primary.copy(0.2f),
-                shape = shape
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = Dimens.Sm, vertical = Dimens.Md),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            "$count",
-            style = HeadlineLg.copy(fontWeight = FontWeight.ExtraBold),
-            color = if (selected) PrimaryAccent else OnSurface
-        )
-        Text(
-            stringResource(R.string.setup_sessions_per_week),
-            style = BodyMd,
-            color = if (selected) PrimaryAccent.copy(0.85f) else OnSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = Dimens.Xs)
-        )
+private fun weeklySessionDescription(count: Int): String {
+    val descRes = when (count) {
+        2 -> R.string.setup_weekly_2_desc
+        3 -> R.string.setup_weekly_3_desc
+        4 -> R.string.setup_weekly_4_desc
+        5 -> R.string.setup_weekly_5_desc
+        6 -> R.string.setup_weekly_6_desc
+        else -> R.string.setup_weekly_7_desc
     }
+    return stringResource(descRes)
 }
 
 @Composable
-private fun RingsStep(notifications: Boolean, onNotificationsChange: (Boolean) -> Unit) {
+private fun RingsStep() {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.Lg)
     ) {
-        ActivityRingsLogo(size = 120.dp, strokeWidth = 7.dp)
-        Text(
-            stringResource(R.string.setup_step_rings_title),
-            style = HeadlineMd,
-            color = OnSurface,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = Dimens.Md)
-        )
-        Text(
-            stringResource(R.string.setup_step_rings_body),
-            style = BodyMd,
-            color = OnSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = Dimens.Sm, bottom = Dimens.Lg)
-        )
-        ActivityRings(0.7f, 0.5f, 0.8f, 67)
-        Row(
-            Modifier.fillMaxWidth().padding(top = Dimens.Xl),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(stringResource(R.string.settings_reminders), style = BodyMd, color = OnSurface)
-            Switch(checked = notifications, onCheckedChange = onNotificationsChange)
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
+            Text(
+                stringResource(R.string.setup_step_rings_title),
+                style = HeadlineLg.copy(fontWeight = FontWeight.Bold),
+                color = OnSurface
+            )
+            Text(
+                stringResource(R.string.setup_step_rings_body),
+                style = BodyLg,
+                color = OnSurfaceVariant
+            )
         }
+        SetupActivityRingsGuide(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        )
+        Text(
+            stringResource(R.string.setup_rings_how_it_works),
+            style = BodyLg,
+            color = OnSurfaceVariant,
+            modifier = Modifier.padding(bottom = Dimens.Sm)
+        )
     }
 }
 

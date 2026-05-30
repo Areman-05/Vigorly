@@ -89,7 +89,7 @@
     <string name="auth_error_password">La contrasenya ha de tenir almenys 6 caràcters</string>
     <string name="setup_progress">Pas %1$d de %2$d</string>
     <string name="setup_continue">Continuar</string>
-    <string name="setup_finish">Començar a entrenar</string>
+    <string name="setup_finish">Començar</string>
     <string name="setup_step_goal_title">Quin és el teu objectiu?</string>
     <string name="setup_step_goal_body">Personalitzarem les teves recomanacions segons la teva meta principal.</string>
     <string name="setup_goal_strength">Força</string>
@@ -105,7 +105,7 @@
     <string name="setup_step_weekly_title">Objectiu setmanal</string>
     <string name="setup_step_weekly_body">Quantes sessions vols completar per setmana?</string>
     <string name="setup_step_rings_title">Els teus anells d\'activitat</string>
-    <string name="setup_step_rings_body">Mou-te, exercici i aixeca\'t — com a Apple Fitness.</string>
+    <string name="setup_step_rings_body">Tres anells mesuren la teva activitat diària. Tanca\'ls movent-te, entrenant i mantenint-te actiu.</string>
     <string name="setup_step_ready_title">Tot a punt!</string>
     <string name="setup_step_ready_body">La teva experiència està personalitzada. És hora d\'entrenar.</string>
     <string name="lang_es">Castellano</string>

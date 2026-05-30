@@ -60,6 +60,15 @@ object SetupStepIcons {
         else -> Icons.Rounded.Schedule
     }
 
+    fun weeklySessions(count: Int): ImageVector = when (count) {
+        2 -> Icons.Rounded.Spa
+        3 -> Icons.Rounded.DirectionsWalk
+        4 -> Icons.Rounded.FitnessCenter
+        5 -> Icons.Rounded.Speed
+        6 -> Icons.Rounded.DirectionsRun
+        else -> Icons.Rounded.EmojiEvents
+    }
+
     val introWelcome: ImageVector = Icons.Rounded.AccessibilityNew
     val introReady: ImageVector = Icons.Rounded.RocketLaunch
     val introComplete: ImageVector = Icons.Rounded.CheckCircle

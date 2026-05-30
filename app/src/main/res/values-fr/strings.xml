@@ -89,7 +89,7 @@
     <string name="auth_error_password">Le mot de passe doit contenir au moins 6 caractères</string>
     <string name="setup_progress">Étape %1$d sur %2$d</string>
     <string name="setup_continue">Continuer</string>
-    <string name="setup_finish">Commencer à s\'entraîner</string>
+    <string name="setup_finish">Commencer</string>
     <string name="setup_step_goal_title">Quel est votre objectif ?</string>
     <string name="setup_step_goal_body">Nous personnaliserons vos recommandations selon votre objectif principal.</string>
     <string name="setup_goal_strength">Force</string>
@@ -105,7 +105,7 @@
     <string name="setup_step_weekly_title">Objectif hebdomadaire</string>
     <string name="setup_step_weekly_body">Combien de séances souhaitez-vous compléter par semaine ?</string>
     <string name="setup_step_rings_title">Vos anneaux d\'activité</string>
-    <string name="setup_step_rings_body">Bouger, Exercice et Se lever — comme sur Apple Fitness.</string>
+    <string name="setup_step_rings_body">Trois anneaux mesurent votre activité quotidienne. Fermez-les en bougeant, en vous entraînant et en restant actif.</string>
     <string name="setup_step_ready_title">Tout est prêt !</string>
     <string name="setup_step_ready_body">Votre expérience est personnalisée. Il est temps de vous entraîner.</string>
     <string name="lang_es">Castellano</string>

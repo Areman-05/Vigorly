@@ -89,7 +89,7 @@
     <string name="auth_error_password">Password must be at least 6 characters</string>
     <string name="setup_progress">Step %1$d of %2$d</string>
     <string name="setup_continue">Continue</string>
-    <string name="setup_finish">Start training</string>
+    <string name="setup_finish">Start</string>
     <string name="setup_step_goal_title">What is your goal?</string>
     <string name="setup_step_goal_body">We will tailor recommendations to your main focus.</string>
     <string name="setup_goal_strength">Strength</string>
@@ -105,7 +105,7 @@
     <string name="setup_step_weekly_title">Weekly goal</string>
     <string name="setup_step_weekly_body">How many sessions do you want per week?</string>
     <string name="setup_step_rings_title">Your activity rings</string>
-    <string name="setup_step_rings_body">Move, Exercise, and Stand — inspired by Apple Fitness.</string>
+    <string name="setup_step_rings_body">Three rings track your daily activity. Close them by moving, training, and staying active.</string>
     <string name="setup_step_ready_title">All set!</string>
     <string name="setup_step_ready_body">Your experience is personalized. Time to train.</string>
     <string name="lang_es">Castellano</string>
