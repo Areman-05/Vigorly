@@ -18,6 +18,8 @@ object AccountsCodec {
                     .put("username", account.username)
                     .put("birthDate", account.birthDate)
                     .put("createdAtMillis", account.createdAtMillis)
+                    .put("authProvider", account.authProvider)
+                    .apply { account.googleId?.let { put("googleId", it) } }
             )
         }
         return array.toString()
@@ -38,7 +40,9 @@ object AccountsCodec {
                             passwordSalt = json.optString("passwordSalt"),
                             username = json.getString("username"),
                             birthDate = json.getString("birthDate"),
-                            createdAtMillis = json.optLong("createdAtMillis", System.currentTimeMillis())
+                            createdAtMillis = json.optLong("createdAtMillis", System.currentTimeMillis()),
+                            authProvider = json.optString("authProvider", "email"),
+                            googleId = json.optString("googleId").takeIf { it.isNotBlank() }
                         )
                     )
                 } else {
@@ -52,7 +56,9 @@ object AccountsCodec {
                             passwordSalt = salt,
                             username = json.getString("username"),
                             birthDate = json.getString("birthDate"),
-                            createdAtMillis = json.optLong("createdAtMillis", System.currentTimeMillis())
+                            createdAtMillis = json.optLong("createdAtMillis", System.currentTimeMillis()),
+                            authProvider = json.optString("authProvider", "email"),
+                            googleId = json.optString("googleId").takeIf { it.isNotBlank() }
                         )
                     )
                 }

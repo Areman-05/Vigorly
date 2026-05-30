@@ -14,6 +14,7 @@ import com.example.vigorly.data.model.AuthResult
 import com.example.vigorly.data.model.UserAccount
 import com.example.vigorly.data.model.UserSessionSnapshot
 import com.example.vigorly.ui.setup.SetupDevFlags
+import com.example.vigorly.auth.GoogleUserInfo
 import com.example.vigorly.util.AuthValidator
 import com.example.vigorly.util.LocaleManager
 import com.example.vigorly.util.PasswordHasher
@@ -295,12 +296,64 @@ class VigorlyRepository(context: Context) {
         val account = _accounts.value.find {
             it.email.equals(normalizedEmail, ignoreCase = true)
         } ?: return AuthResult.Error(AuthError.INVALID_CREDENTIALS)
+        if (account.authProvider == "google" && account.passwordHash.isBlank()) {
+            return AuthResult.Error(AuthError.INVALID_CREDENTIALS)
+        }
         if (!PasswordHasher.verify(password, account.passwordSalt, account.passwordHash)) {
             return AuthResult.Error(AuthError.INVALID_CREDENTIALS)
         }
         persistCurrentUserSessionIfNeeded()
         val upgradedAccount = upgradeLegacyPasswordIfNeeded(account, password)
         return completeLogin(upgradedAccount)
+    }
+
+    suspend fun loginWithGoogle(info: GoogleUserInfo): AuthResult {
+        persistCurrentUserSessionIfNeeded()
+        val normalizedEmail = info.email.trim().lowercase()
+
+        _accounts.value.find { it.googleId == info.id }?.let { return completeLogin(it) }
+
+        val existingByEmail = _accounts.value.find {
+            it.email.equals(normalizedEmail, ignoreCase = true)
+        }
+        if (existingByEmail != null) {
+            val linked = if (existingByEmail.googleId == null) {
+                existingByEmail.copy(googleId = info.id)
+            } else {
+                existingByEmail
+            }
+            if (linked != existingByEmail) {
+                val updated = _accounts.value.map { if (it.id == linked.id) linked else it }
+                _accounts.value = updated
+                preferences.saveRegisteredAccounts(updated)
+            }
+            return completeLogin(linked)
+        }
+
+        val account = UserAccount(
+            id = UUID.randomUUID().toString(),
+            email = normalizedEmail,
+            passwordHash = "",
+            passwordSalt = "",
+            username = usernameFromGoogle(info.displayName, normalizedEmail),
+            birthDate = "",
+            createdAtMillis = System.currentTimeMillis(),
+            authProvider = "google",
+            googleId = info.id
+        )
+        val updated = _accounts.value + account
+        _accounts.value = updated
+        preferences.saveRegisteredAccounts(updated)
+        return completeLogin(account, isNewUser = true)
+    }
+
+    private fun usernameFromGoogle(displayName: String?, email: String): String {
+        displayName?.trim()?.takeIf { AuthValidator.validateUsername(it) == null }?.let { return it }
+        val fromEmail = email.substringBefore("@")
+            .replace(Regex("[^\\p{L}0-9._-]"), "")
+            .take(30)
+        if (fromEmail.length >= 3) return fromEmail
+        return "user${email.hashCode().toUInt().toString(16).take(6)}"
     }
 
     suspend fun register(

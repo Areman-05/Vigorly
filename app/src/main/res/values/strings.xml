@@ -94,6 +94,14 @@
     <string name="auth_error_invalid_username">Nombre: 3–30 caracteres, letras y números</string>
     <string name="auth_error_invalid_birth_date">Fecha en formato DD/MM/AAAA</string>
     <string name="auth_password_req_summary">La contraseña debe tener 8 caracteres, números y símbolos</string>
+    <string name="auth_or_divider">o</string>
+    <string name="auth_google_button">Continuar con Google</string>
+    <string name="auth_error_google_failed">No se pudo iniciar sesión con Google</string>
+    <string name="auth_error_google_cancelled">Inicio de sesión con Google cancelado</string>
+    <string name="auth_error_google_not_configured">Google Sign-In aún no está configurado</string>
+    <string name="auth_error_google_no_account">Añade una cuenta de Google al dispositivo/emulador (Ajustes → Cuentas)</string>
+    <string name="auth_error_google_config">Error de configuración OAuth. Revisa SHA-1 y clientes en Google Cloud</string>
+    <string name="google_web_client_id">298341869130-d6q5salpstv1nrfic3hl5kfm2b25ki4r.apps.googleusercontent.com</string>
     <string name="setup_progress">Paso %1$d de %2$d</string>
     <string name="setup_back">Atrás</string>
     <string name="setup_continue">Continuar</string>
