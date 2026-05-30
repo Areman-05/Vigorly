@@ -36,4 +36,6 @@ object PreferenceKeys {
     val REGISTERED_ACCOUNTS = stringPreferencesKey("registered_accounts")
     val FITNESS_GOAL = stringPreferencesKey("fitness_goal")
     val ACTIVITY_LEVEL = stringPreferencesKey("activity_level")
+    val WORKOUT_LOCATION = stringPreferencesKey("workout_location")
+    val PREFERRED_TIME = stringPreferencesKey("preferred_time")
 }

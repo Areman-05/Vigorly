@@ -355,11 +355,15 @@ class VigorlyRepository(context: Context) {
         fitnessGoal: String,
         activityLevel: String,
         weeklySessions: Int,
-        notifications: Boolean
+        notifications: Boolean,
+        workoutLocation: String,
+        preferredTime: String
     ) {
         scope.launch {
             preferences.setFitnessGoal(fitnessGoal)
             preferences.setActivityLevel(activityLevel)
+            preferences.setWorkoutLocation(workoutLocation)
+            preferences.setPreferredTime(preferredTime)
             preferences.setNotificationsEnabled(notifications)
             preferences.saveWeeklyGoal(
                 weeklyGoal.value.copy(
