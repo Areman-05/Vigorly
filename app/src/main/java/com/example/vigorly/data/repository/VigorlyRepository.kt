@@ -9,8 +9,13 @@ import com.example.vigorly.data.local.VigorlyPreferencesDataStore
 import com.example.vigorly.data.model.CoachingTip
 import com.example.vigorly.data.model.SessionSummary
 import com.example.vigorly.data.model.WorkoutType
+import com.example.vigorly.data.model.AuthError
+import com.example.vigorly.data.model.AuthResult
+import com.example.vigorly.data.model.UserAccount
+import com.example.vigorly.util.LocaleManager
 import com.example.vigorly.util.DailyTipSelector
 import com.example.vigorly.util.WorkoutRecommender
+import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
 import com.example.vigorly.data.model.Exercise
@@ -28,6 +33,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -92,7 +98,19 @@ class VigorlyRepository(context: Context) {
     private val _lastSessionSummary = MutableStateFlow<SessionSummary?>(null)
     val lastSessionSummary: StateFlow<SessionSummary?> = _lastSessionSummary.asStateFlow()
 
+    private val _isLoggedIn = MutableStateFlow(false)
+    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
+
+    private val _appLocale = MutableStateFlow("es")
+    val appLocale: StateFlow<String> = _appLocale.asStateFlow()
+
+    private val _accounts = MutableStateFlow<List<UserAccount>>(emptyList())
+    private var appDataPreloaded = false
+
     init {
+        preferences.isLoggedIn.onEach { _isLoggedIn.value = it }.launchIn(scope)
+        preferences.appLocale.onEach { _appLocale.value = it }.launchIn(scope)
+        preferences.registeredAccounts.onEach { _accounts.value = it }.launchIn(scope)
         preferences.athleticStats.onEach { _athleticStats.value = it }.launchIn(scope)
         preferences.favoriteWorkoutIds.onEach { _favorites.value = it }.launchIn(scope)
         preferences.onboardingCompleted.onEach { _onboardingCompleted.value = it }.launchIn(scope)
@@ -235,6 +253,123 @@ class VigorlyRepository(context: Context) {
 
     fun resetWeeklyProgress() {
         scope.launch { preferences.resetWeeklyProgress() }
+    }
+
+    fun resolveStartDestination(): AppDestination = when {
+        !_isLoggedIn.value -> com.example.vigorly.navigation.AppDestination.Login
+        !_onboardingCompleted.value -> com.example.vigorly.navigation.AppDestination.Setup
+        else -> com.example.vigorly.navigation.AppDestination.Main
+    }
+
+    suspend fun preloadAppData() {
+        if (appDataPreloaded) return
+        listWorkouts()
+        coachingTips.size
+        preferences.registeredAccounts.first()
+        appDataPreloaded = true
+    }
+
+    suspend fun initializeLocale() {
+        val locale = preferences.getAppLocaleSync()
+        LocaleManager.applyLocale(locale)
+        _appLocale.value = locale
+    }
+
+    fun setAppLocale(code: String) {
+        scope.launch {
+            preferences.setAppLocale(code)
+            LocaleManager.applyLocale(code)
+            _appLocale.value = code
+        }
+    }
+
+    suspend fun login(email: String, password: String): AuthResult {
+        val normalizedEmail = email.trim().lowercase()
+        val account = _accounts.value.find {
+            it.email.equals(normalizedEmail, ignoreCase = true) && it.password == password
+        } ?: return AuthResult.Error(AuthError.INVALID_CREDENTIALS)
+        return completeLogin(account)
+    }
+
+    suspend fun register(
+        email: String,
+        password: String,
+        username: String,
+        birthDate: String
+    ): AuthResult {
+        val normalizedEmail = email.trim().lowercase()
+        val cleanUsername = username.trim()
+        if (normalizedEmail.isBlank() || password.isBlank() || cleanUsername.isBlank() || birthDate.isBlank()) {
+            return AuthResult.Error(AuthError.FIELDS_REQUIRED)
+        }
+        if (password.length < 6) return AuthResult.Error(AuthError.PASSWORD_TOO_SHORT)
+        if (_accounts.value.any { it.email.equals(normalizedEmail, ignoreCase = true) }) {
+            return AuthResult.Error(AuthError.EMAIL_ALREADY_EXISTS)
+        }
+        val account = UserAccount(
+            id = UUID.randomUUID().toString(),
+            email = normalizedEmail,
+            password = password,
+            username = cleanUsername,
+            birthDate = birthDate
+        )
+        val updated = _accounts.value + account
+        _accounts.value = updated
+        preferences.saveRegisteredAccounts(updated)
+        return completeLogin(account, isNewUser = true)
+    }
+
+    fun logout() {
+        scope.launch {
+            preferences.setLoggedIn(loggedIn = false, userId = null)
+            _isLoggedIn.value = false
+        }
+    }
+
+    private suspend fun completeLogin(account: UserAccount, isNewUser: Boolean = false): AuthResult {
+        preferences.setLoggedIn(loggedIn = true, userId = account.id)
+        _isLoggedIn.value = true
+        if (isNewUser) {
+            preferences.setOnboardingCompleted(false)
+            _onboardingCompleted.value = false
+            preferences.updateProfile(
+                UserProfile(
+                    displayName = account.username,
+                    avatarUrl = defaultProfile().avatarUrl,
+                    isProMember = false,
+                    totalWorkouts = 0,
+                    activeStreakDays = 0,
+                    level = 1
+                )
+            )
+            preferences.saveWorkoutHistory(emptyList())
+            _history.value = emptyList()
+            _recentActivity.value = emptyList()
+        } else {
+            preferences.updateProfile(profile.value.copy(displayName = account.username))
+        }
+        return AuthResult.Success
+    }
+
+    fun saveSetupPreferences(
+        fitnessGoal: String,
+        activityLevel: String,
+        weeklySessions: Int,
+        notifications: Boolean
+    ) {
+        scope.launch {
+            preferences.setFitnessGoal(fitnessGoal)
+            preferences.setActivityLevel(activityLevel)
+            preferences.setNotificationsEnabled(notifications)
+            preferences.saveWeeklyGoal(
+                weeklyGoal.value.copy(
+                    targetSessions = weeklySessions.coerceIn(1, 14),
+                    completedSessions = 0
+                )
+            )
+            preferences.setOnboardingCompleted(true)
+            _onboardingCompleted.value = true
+        }
     }
 
     fun getHistoryItem(id: String): WorkoutHistoryItem? = _history.value.find { it.id == id }

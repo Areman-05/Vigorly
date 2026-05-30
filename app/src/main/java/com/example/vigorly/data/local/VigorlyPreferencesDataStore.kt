@@ -12,6 +12,7 @@ import com.example.vigorly.data.model.WeeklyGoal
 import com.example.vigorly.data.model.WorkoutHistoryItem
 import com.example.vigorly.data.repository.VigorlyRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.vigorlyDataStore: DataStore<Preferences> by preferencesDataStore(name = "vigorly_prefs")
@@ -80,6 +81,63 @@ class VigorlyPreferencesDataStore(private val context: Context) {
 
     val dailyTipIndex: Flow<Int> = context.vigorlyDataStore.data.map {
         it[PreferenceKeys.DAILY_TIP_INDEX] ?: 0
+    }
+
+    val appLocale: Flow<String> = context.vigorlyDataStore.data.map {
+        it[PreferenceKeys.APP_LOCALE] ?: "es"
+    }
+
+    val isLoggedIn: Flow<Boolean> = context.vigorlyDataStore.data.map {
+        it[PreferenceKeys.IS_LOGGED_IN] ?: false
+    }
+
+    val currentUserId: Flow<String?> = context.vigorlyDataStore.data.map {
+        it[PreferenceKeys.CURRENT_USER_ID]
+    }
+
+    val registeredAccounts: Flow<List<com.example.vigorly.data.model.UserAccount>> =
+        context.vigorlyDataStore.data.map { prefs ->
+            AccountsCodec.decode(prefs[PreferenceKeys.REGISTERED_ACCOUNTS])
+        }
+
+    val fitnessGoal: Flow<String> = context.vigorlyDataStore.data.map {
+        it[PreferenceKeys.FITNESS_GOAL] ?: "wellness"
+    }
+
+    val activityLevel: Flow<String> = context.vigorlyDataStore.data.map {
+        it[PreferenceKeys.ACTIVITY_LEVEL] ?: "moderate"
+    }
+
+    suspend fun getAppLocaleSync(): String =
+        appLocale.first()
+
+    suspend fun setAppLocale(code: String) {
+        context.vigorlyDataStore.edit { it[PreferenceKeys.APP_LOCALE] = code }
+    }
+
+    suspend fun setLoggedIn(loggedIn: Boolean, userId: String?) {
+        context.vigorlyDataStore.edit { prefs ->
+            prefs[PreferenceKeys.IS_LOGGED_IN] = loggedIn
+            if (userId != null) {
+                prefs[PreferenceKeys.CURRENT_USER_ID] = userId
+            } else {
+                prefs.remove(PreferenceKeys.CURRENT_USER_ID)
+            }
+        }
+    }
+
+    suspend fun saveRegisteredAccounts(accounts: List<com.example.vigorly.data.model.UserAccount>) {
+        context.vigorlyDataStore.edit {
+            it[PreferenceKeys.REGISTERED_ACCOUNTS] = AccountsCodec.encode(accounts)
+        }
+    }
+
+    suspend fun setFitnessGoal(goal: String) {
+        context.vigorlyDataStore.edit { it[PreferenceKeys.FITNESS_GOAL] = goal }
+    }
+
+    suspend fun setActivityLevel(level: String) {
+        context.vigorlyDataStore.edit { it[PreferenceKeys.ACTIVITY_LEVEL] = level }
     }
 
     suspend fun updateProfile(profile: UserProfile) {
