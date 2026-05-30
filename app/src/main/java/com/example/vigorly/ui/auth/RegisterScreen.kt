@@ -33,9 +33,8 @@ import com.example.vigorly.R
 import com.example.vigorly.data.model.AuthError
 import com.example.vigorly.data.model.AuthResult
 import com.example.vigorly.data.repository.VigorlyRepository
+import com.example.vigorly.ui.components.ActivityRingsLogo
 import com.example.vigorly.ui.components.AuthGradientBackground
-import com.example.vigorly.ui.components.FitnessPose
-import com.example.vigorly.ui.components.FitnessSilhouette
 import com.example.vigorly.ui.components.GlassCard
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.ButtonText
@@ -73,8 +72,8 @@ fun RegisterScreen(
                 .padding(Dimens.ContainerMargin),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(Dimens.Lg))
-            FitnessSilhouette(pose = FitnessPose.HERO, size = 120.dp)
+            Spacer(Modifier.height(Dimens.Md))
+            ActivityRingsLogo(size = 140.dp, strokeWidth = 7.dp)
             Text(
                 stringResource(R.string.auth_register_title),
                 style = DisplayStat.copy(fontWeight = FontWeight.Bold),

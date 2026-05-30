@@ -275,6 +275,8 @@ class VigorlyRepository(context: Context) {
         _appLocale.value = locale
     }
 
+    suspend fun effectiveLocale(): String = preferences.getAppLocaleSync()
+
     fun setAppLocale(code: String) {
         scope.launch {
             preferences.setAppLocale(code)

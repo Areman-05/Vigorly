@@ -83,8 +83,12 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         it[PreferenceKeys.DAILY_TIP_INDEX] ?: 0
     }
 
-    val appLocale: Flow<String> = context.vigorlyDataStore.data.map {
-        it[PreferenceKeys.APP_LOCALE] ?: "es"
+    val appLocale: Flow<String> = context.vigorlyDataStore.data.map { prefs ->
+        if (prefs[PreferenceKeys.LOCALE_USER_SELECTED] == true) {
+            prefs[PreferenceKeys.APP_LOCALE] ?: "es"
+        } else {
+            "es"
+        }
     }
 
     val isLoggedIn: Flow<Boolean> = context.vigorlyDataStore.data.map {
@@ -109,16 +113,27 @@ class VigorlyPreferencesDataStore(private val context: Context) {
     }
 
     suspend fun getAppLocaleSync(): String {
-        context.vigorlyDataStore.edit { prefs ->
-            if (prefs[PreferenceKeys.APP_LOCALE] == null) {
-                prefs[PreferenceKeys.APP_LOCALE] = "es"
+        val prefs = context.vigorlyDataStore.data.first()
+        val userSelected = prefs[PreferenceKeys.LOCALE_USER_SELECTED] == true
+        val locale = if (userSelected) {
+            prefs[PreferenceKeys.APP_LOCALE] ?: "es"
+        } else {
+            "es"
+        }
+        context.vigorlyDataStore.edit {
+            it[PreferenceKeys.APP_LOCALE] = locale
+            if (!userSelected) {
+                it[PreferenceKeys.LOCALE_USER_SELECTED] = false
             }
         }
-        return appLocale.first()
+        return locale
     }
 
     suspend fun setAppLocale(code: String) {
-        context.vigorlyDataStore.edit { it[PreferenceKeys.APP_LOCALE] = code }
+        context.vigorlyDataStore.edit {
+            it[PreferenceKeys.APP_LOCALE] = code
+            it[PreferenceKeys.LOCALE_USER_SELECTED] = true
+        }
     }
 
     suspend fun setLoggedIn(loggedIn: Boolean, userId: String?) {

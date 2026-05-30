@@ -31,6 +31,7 @@ object PreferenceKeys {
     val FAVORITE_WORKOUTS = stringPreferencesKey("favorite_workouts")
     val DAILY_TIP_INDEX = intPreferencesKey("daily_tip_index")
     val APP_LOCALE = stringPreferencesKey("app_locale")
+    val LOCALE_USER_SELECTED = booleanPreferencesKey("locale_user_selected")
     val IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
     val CURRENT_USER_ID = stringPreferencesKey("current_user_id")
     val REGISTERED_ACCOUNTS = stringPreferencesKey("registered_accounts")

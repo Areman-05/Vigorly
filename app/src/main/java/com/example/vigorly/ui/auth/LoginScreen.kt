@@ -34,6 +34,7 @@ import com.example.vigorly.R
 import com.example.vigorly.data.model.AuthError
 import com.example.vigorly.data.model.AuthResult
 import com.example.vigorly.data.repository.VigorlyRepository
+import com.example.vigorly.ui.components.ActivityRingsLogo
 import com.example.vigorly.ui.components.AuthGradientBackground
 import com.example.vigorly.ui.components.GlassCard
 import com.example.vigorly.ui.theme.BodyMd
@@ -71,6 +72,7 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            ActivityRingsLogo(size = 160.dp, strokeWidth = 8.dp)
             Text(
                 stringResource(R.string.brand_name),
                 style = DisplayStat.copy(fontWeight = FontWeight.Black),
