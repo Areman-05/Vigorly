@@ -39,6 +39,7 @@ import com.example.vigorly.ui.profile.ProfileScreen
 import com.example.vigorly.ui.session.ActiveWorkoutScreen
 import com.example.vigorly.ui.session.SessionSummaryScreen
 import com.example.vigorly.ui.settings.SettingsScreen
+import com.example.vigorly.ui.setup.SetupDevFlags
 import com.example.vigorly.ui.setup.SetupWizardScreen
 import com.example.vigorly.ui.splash.SplashScreen
 import com.example.vigorly.ui.workout.WorkoutDetailScreen
@@ -157,7 +158,11 @@ fun VigorlyApp(
                 LoginScreen(
                     repository = repository,
                     onLoginSuccess = { needsSetup ->
-                        val target = if (needsSetup) VigorlyRoutes.Setup else VigorlyRoutes.Dashboard
+                        val target = if (SetupDevFlags.FORCE_SETUP_AFTER_LOGIN || needsSetup) {
+                            VigorlyRoutes.Setup
+                        } else {
+                            VigorlyRoutes.Dashboard
+                        }
                         navController.navigate(target) {
                             popUpTo(VigorlyRoutes.Login) { inclusive = true }
                         }
