@@ -22,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.vigorly.di.AppViewModelFactory
 import com.example.vigorly.data.model.WorkoutType
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.GlassCard
@@ -42,7 +43,7 @@ fun WorkoutsScreen(
     repository: VigorlyRepository,
     onWorkoutClick: (String) -> Unit,
     modifier: Modifier = Modifier,
-    workoutsViewModel: WorkoutsViewModel = viewModel()
+    workoutsViewModel: WorkoutsViewModel = viewModel(factory = AppViewModelFactory(repository))
 ) {
     val searchQuery by workoutsViewModel.searchQuery.collectAsState()
     val selectedFilter by workoutsViewModel.selectedType.collectAsState()
