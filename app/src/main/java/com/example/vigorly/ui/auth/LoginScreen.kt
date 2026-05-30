@@ -14,7 +14,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,20 +28,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.R
 import com.example.vigorly.data.model.AuthError
 import com.example.vigorly.data.model.AuthResult
 import com.example.vigorly.data.repository.VigorlyRepository
-import com.example.vigorly.ui.components.ActivityRingsLogo
 import com.example.vigorly.ui.components.AuthGradientBackground
-import com.example.vigorly.ui.components.GlassCard
+import com.example.vigorly.ui.components.AuthHeroVisual
+import com.example.vigorly.ui.theme.BodyLg
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.ButtonText
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.DisplayStat
 import com.example.vigorly.ui.theme.HeadlineMd
-import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnPrimaryContainer
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
@@ -72,66 +71,83 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            ActivityRingsLogo(size = 160.dp, strokeWidth = 8.dp)
+            AuthHeroVisual(size = 200.dp)
             Text(
                 stringResource(R.string.brand_name),
                 style = DisplayStat.copy(fontWeight = FontWeight.Black),
                 color = PrimaryAccent,
-                modifier = Modifier.padding(top = Dimens.Sm)
+                modifier = Modifier.padding(top = Dimens.Md)
             )
             Text(
                 stringResource(R.string.auth_login_title),
                 style = HeadlineMd,
                 color = OnSurface,
-                modifier = Modifier.padding(top = Dimens.Xs, bottom = Dimens.Lg)
+                modifier = Modifier.padding(top = Dimens.Xs)
             )
-            GlassCard(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(Dimens.Lg), verticalArrangement = Arrangement.spacedBy(Dimens.Md)) {
-                    Text(stringResource(R.string.auth_login_subtitle), style = LabelCaps, color = OnSurfaceVariant)
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it; authError = null },
-                        label = { Text(stringResource(R.string.auth_email)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        colors = authFieldColors,
-                        shape = RoundedCornerShape(14.dp)
+            Text(
+                stringResource(R.string.auth_login_subtitle),
+                style = BodyLg,
+                color = OnSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Dimens.Sm, bottom = Dimens.Xl)
+            )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Md)
+            ) {
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it; authError = null },
+                    label = { Text(stringResource(R.string.auth_email)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    colors = authFieldColors,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it; authError = null },
+                    label = { Text(stringResource(R.string.auth_password)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    colors = authFieldColors,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                authError?.let {
+                    Text(
+                        authErrorMessage(it),
+                        style = BodyMd,
+                        color = PrimaryAccent,
+                        modifier = Modifier.padding(start = Dimens.Xs)
                     )
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it; authError = null },
-                        label = { Text(stringResource(R.string.auth_password)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
-                        colors = authFieldColors,
-                        shape = RoundedCornerShape(14.dp)
-                    )
-                    authError?.let {
-                        Text(authErrorMessage(it), style = BodyMd, color = PrimaryAccent)
-                    }
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                when (val result = repository.login(email, password)) {
-                                    is AuthResult.Success -> onLoginSuccess(!repository.onboardingCompleted.value)
-                                    is AuthResult.Error -> authError = result.messageKey
-                                }
+                }
+                Button(
+                    onClick = {
+                        scope.launch {
+                            when (val result = repository.login(email, password)) {
+                                is AuthResult.Success -> onLoginSuccess(!repository.onboardingCompleted.value)
+                                is AuthResult.Error -> authError = result.messageKey
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        shape = RoundedCornerShape(26.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PrimaryContainer,
-                            contentColor = OnPrimaryContainer
-                        )
-                    ) {
-                        Text(stringResource(R.string.auth_login_button), style = ButtonText)
-                    }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .padding(top = Dimens.Xs),
+                    shape = RoundedCornerShape(26.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryContainer,
+                        contentColor = OnPrimaryContainer
+                    )
+                ) {
+                    Text(stringResource(R.string.auth_login_button), style = ButtonText)
                 }
             }
-            Spacer(Modifier.height(Dimens.Md))
+            Spacer(Modifier.height(Dimens.Lg))
             TextButton(onClick = onNavigateRegister) {
                 Text(stringResource(R.string.auth_no_account), style = BodyMd, color = OnSurfaceVariant)
                 Text(" ", style = BodyMd)
@@ -147,4 +163,8 @@ fun authErrorMessage(error: AuthError): String = when (error) {
     AuthError.EMAIL_ALREADY_EXISTS -> stringResource(R.string.auth_error_exists)
     AuthError.FIELDS_REQUIRED -> stringResource(R.string.auth_error_fields)
     AuthError.PASSWORD_TOO_SHORT -> stringResource(R.string.auth_error_password)
+    AuthError.PASSWORD_WEAK -> stringResource(R.string.auth_error_password_weak)
+    AuthError.INVALID_EMAIL -> stringResource(R.string.auth_error_invalid_email)
+    AuthError.INVALID_USERNAME -> stringResource(R.string.auth_error_invalid_username)
+    AuthError.INVALID_BIRTH_DATE -> stringResource(R.string.auth_error_invalid_birth_date)
 }

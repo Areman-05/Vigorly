@@ -1,6 +1,7 @@
 package com.example.vigorly.data.local
 
 import com.example.vigorly.data.model.UserAccount
+import com.example.vigorly.util.PasswordHasher
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -12,9 +13,11 @@ object AccountsCodec {
                 JSONObject()
                     .put("id", account.id)
                     .put("email", account.email)
-                    .put("password", account.password)
+                    .put("passwordHash", account.passwordHash)
+                    .put("passwordSalt", account.passwordSalt)
                     .put("username", account.username)
                     .put("birthDate", account.birthDate)
+                    .put("createdAtMillis", account.createdAtMillis)
             )
         }
         return array.toString()
@@ -26,15 +29,33 @@ object AccountsCodec {
         return buildList {
             for (i in 0 until array.length()) {
                 val json = array.getJSONObject(i)
-                add(
-                    UserAccount(
-                        id = json.getString("id"),
-                        email = json.getString("email"),
-                        password = json.getString("password"),
-                        username = json.getString("username"),
-                        birthDate = json.getString("birthDate")
+                if (json.has("passwordHash")) {
+                    add(
+                        UserAccount(
+                            id = json.getString("id"),
+                            email = json.getString("email"),
+                            passwordHash = json.getString("passwordHash"),
+                            passwordSalt = json.optString("passwordSalt"),
+                            username = json.getString("username"),
+                            birthDate = json.getString("birthDate"),
+                            createdAtMillis = json.optLong("createdAtMillis", System.currentTimeMillis())
+                        )
                     )
-                )
+                } else {
+                    val legacyPassword = json.getString("password")
+                    val (salt, hash) = PasswordHasher.legacyHash(legacyPassword)
+                    add(
+                        UserAccount(
+                            id = json.getString("id"),
+                            email = json.getString("email"),
+                            passwordHash = hash,
+                            passwordSalt = salt,
+                            username = json.getString("username"),
+                            birthDate = json.getString("birthDate"),
+                            createdAtMillis = json.optLong("createdAtMillis", System.currentTimeMillis())
+                        )
+                    )
+                }
             }
         }
     }

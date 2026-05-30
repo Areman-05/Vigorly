@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,26 +29,27 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.R
 import com.example.vigorly.data.model.AuthError
 import com.example.vigorly.data.model.AuthResult
 import com.example.vigorly.data.repository.VigorlyRepository
-import com.example.vigorly.ui.components.ActivityRingsLogo
 import com.example.vigorly.ui.components.AuthGradientBackground
-import com.example.vigorly.ui.components.GlassCard
+import com.example.vigorly.ui.components.AuthRegisterVisual
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.ButtonText
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.DisplayStat
 import com.example.vigorly.ui.theme.HeadlineMd
-import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnPrimaryContainer
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.PrimaryContainer
+import com.example.vigorly.util.AuthValidator
+import com.example.vigorly.util.BirthDateFormatter
 import kotlinx.coroutines.launch
 
 @Composable
@@ -63,97 +65,172 @@ fun RegisterScreen(
     var birthDate by remember { mutableStateOf("") }
     var authError by remember { mutableStateOf<AuthError?>(null) }
     val scope = rememberCoroutineScope()
+    val passwordChecks = AuthValidator.passwordRequirementsMet(password)
+    val canSubmit = AuthValidator.validateRegistration(email, password, username, birthDate) == null
 
     AuthGradientBackground(modifier) {
         Column(
             Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(Dimens.ContainerMargin),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(Dimens.Md))
-            ActivityRingsLogo(size = 140.dp, strokeWidth = 7.dp)
+            AuthRegisterVisual(size = 160.dp)
+            Text(
+                stringResource(R.string.brand_name),
+                style = DisplayStat.copy(fontWeight = FontWeight.Black),
+                color = PrimaryAccent,
+                modifier = Modifier.padding(top = Dimens.Md)
+            )
             Text(
                 stringResource(R.string.auth_register_title),
-                style = DisplayStat.copy(fontWeight = FontWeight.Bold),
-                color = PrimaryAccent
+                style = HeadlineMd,
+                color = OnSurface,
+                modifier = Modifier.padding(top = Dimens.Xs)
             )
             Text(
                 stringResource(R.string.auth_register_subtitle),
-                style = HeadlineMd,
-                color = OnSurface,
-                modifier = Modifier.padding(top = Dimens.Xs, bottom = Dimens.Lg)
+                style = BodyMd,
+                color = OnSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Dimens.Sm, bottom = Dimens.Xl)
             )
-            GlassCard(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(Dimens.Lg), verticalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
-                    Text(stringResource(R.string.auth_register_form_hint), style = LabelCaps, color = OnSurfaceVariant)
-                    OutlinedTextField(
-                        value = username,
-                        onValueChange = { username = it; authError = null },
-                        label = { Text(stringResource(R.string.auth_username)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        colors = authFieldColors,
-                        shape = RoundedCornerShape(14.dp)
-                    )
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it; authError = null },
-                        label = { Text(stringResource(R.string.auth_email)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        colors = authFieldColors,
-                        shape = RoundedCornerShape(14.dp)
-                    )
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it; authError = null },
-                        label = { Text(stringResource(R.string.auth_password)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
-                        colors = authFieldColors,
-                        shape = RoundedCornerShape(14.dp)
-                    )
-                    OutlinedTextField(
-                        value = birthDate,
-                        onValueChange = { birthDate = it; authError = null },
-                        label = { Text(stringResource(R.string.auth_birth_date)) },
-                        placeholder = { Text(stringResource(R.string.auth_birth_date_hint)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        colors = authFieldColors,
-                        shape = RoundedCornerShape(14.dp)
-                    )
-                    authError?.let { Text(authErrorMessage(it), style = BodyMd, color = PrimaryAccent) }
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                when (val result = repository.register(email, password, username, birthDate)) {
-                                    is AuthResult.Success -> onRegisterSuccess()
-                                    is AuthResult.Error -> authError = result.messageKey
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        shape = RoundedCornerShape(26.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PrimaryContainer,
-                            contentColor = OnPrimaryContainer
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Md)
+            ) {
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it; authError = null },
+                    label = { Text(stringResource(R.string.auth_username)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    isError = authError == AuthError.INVALID_USERNAME,
+                    supportingText = if (authError == AuthError.INVALID_USERNAME) {
+                        { Text(authErrorMessage(AuthError.INVALID_USERNAME)) }
+                    } else null,
+                    colors = authFieldColors,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it; authError = null },
+                    label = { Text(stringResource(R.string.auth_email)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    isError = authError == AuthError.INVALID_EMAIL,
+                    supportingText = if (authError == AuthError.INVALID_EMAIL) {
+                        { Text(authErrorMessage(AuthError.INVALID_EMAIL)) }
+                    } else null,
+                    colors = authFieldColors,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it; authError = null },
+                    label = { Text(stringResource(R.string.auth_password)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    isError = authError == AuthError.PASSWORD_WEAK,
+                    supportingText = {
+                        CompactPasswordHint(
+                            checks = passwordChecks,
+                            showError = authError == AuthError.PASSWORD_WEAK
+                        )
+                    },
+                    colors = authFieldColors,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                OutlinedTextField(
+                    value = birthDate,
+                    onValueChange = {
+                        birthDate = BirthDateFormatter.formatInput(it)
+                        authError = null
+                    },
+                    label = { Text(stringResource(R.string.auth_birth_date)) },
+                    placeholder = { Text(stringResource(R.string.auth_birth_date_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = authError == AuthError.INVALID_BIRTH_DATE,
+                    supportingText = if (authError == AuthError.INVALID_BIRTH_DATE) {
+                        { Text(authErrorMessage(AuthError.INVALID_BIRTH_DATE)) }
+                    } else null,
+                    colors = authFieldColors,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                authError?.let { error ->
+                    if (error !in setOf(
+                            AuthError.INVALID_EMAIL,
+                            AuthError.INVALID_USERNAME,
+                            AuthError.PASSWORD_WEAK,
+                            AuthError.INVALID_BIRTH_DATE
                         )
                     ) {
-                        Text(stringResource(R.string.auth_register_button), style = ButtonText)
+                        Text(
+                            authErrorMessage(error),
+                            style = BodyMd,
+                            color = PrimaryAccent,
+                            modifier = Modifier.padding(start = Dimens.Xs)
+                        )
                     }
                 }
+                Button(
+                    onClick = {
+                        val error = AuthValidator.validateRegistration(email, password, username, birthDate)
+                        if (error != null) {
+                            authError = error
+                            return@Button
+                        }
+                        scope.launch {
+                            when (val result = repository.register(email, password, username, birthDate)) {
+                                is AuthResult.Success -> onRegisterSuccess()
+                                is AuthResult.Error -> authError = result.messageKey
+                            }
+                        }
+                    },
+                    enabled = canSubmit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .padding(top = Dimens.Xs),
+                    shape = RoundedCornerShape(26.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryContainer,
+                        contentColor = OnPrimaryContainer
+                    )
+                ) {
+                    Text(stringResource(R.string.auth_register_button), style = ButtonText)
+                }
             }
-            Spacer(Modifier.height(Dimens.Md))
+            Spacer(Modifier.height(Dimens.Lg))
             TextButton(onClick = onNavigateLogin) {
                 Text(stringResource(R.string.auth_has_account), style = BodyMd, color = OnSurfaceVariant)
                 Text(" ", style = BodyMd)
                 Text(stringResource(R.string.auth_login_link), style = ButtonText, color = Primary)
             }
+            Spacer(Modifier.height(Dimens.Md))
         }
     }
+}
+
+@Composable
+private fun CompactPasswordHint(checks: List<Boolean>, showError: Boolean) {
+    val allMet = checks.all { it }
+    Text(
+        text = stringResource(R.string.auth_password_req_summary),
+        style = BodyMd,
+        color = when {
+            showError -> PrimaryAccent
+            allMet -> PrimaryAccent.copy(0.9f)
+            else -> OnSurfaceVariant.copy(0.75f)
+        }
+    )
 }

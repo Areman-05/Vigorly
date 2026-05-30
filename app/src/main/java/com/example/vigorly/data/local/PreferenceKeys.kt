@@ -35,6 +35,7 @@ object PreferenceKeys {
     val IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
     val CURRENT_USER_ID = stringPreferencesKey("current_user_id")
     val REGISTERED_ACCOUNTS = stringPreferencesKey("registered_accounts")
+    val USER_SESSIONS = stringPreferencesKey("user_sessions")
     val FITNESS_GOAL = stringPreferencesKey("fitness_goal")
     val ACTIVITY_LEVEL = stringPreferencesKey("activity_level")
     val WORKOUT_LOCATION = stringPreferencesKey("workout_location")

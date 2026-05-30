@@ -104,12 +104,25 @@ class VigorlyPreferencesDataStore(private val context: Context) {
             AccountsCodec.decode(prefs[PreferenceKeys.REGISTERED_ACCOUNTS])
         }
 
+    val preferredTime: Flow<String> = context.vigorlyDataStore.data.map {
+        it[PreferenceKeys.PREFERRED_TIME] ?: "flexible"
+    }
+
+    val userSessions: Flow<Map<String, com.example.vigorly.data.model.UserSessionSnapshot>> =
+        context.vigorlyDataStore.data.map { prefs ->
+            UserSessionCodec.decode(prefs[PreferenceKeys.USER_SESSIONS])
+        }
+
     val fitnessGoal: Flow<String> = context.vigorlyDataStore.data.map {
         it[PreferenceKeys.FITNESS_GOAL] ?: "wellness"
     }
 
     val activityLevel: Flow<String> = context.vigorlyDataStore.data.map {
         it[PreferenceKeys.ACTIVITY_LEVEL] ?: "moderate"
+    }
+
+    val workoutLocation: Flow<String> = context.vigorlyDataStore.data.map {
+        it[PreferenceKeys.WORKOUT_LOCATION] ?: "home"
     }
 
     suspend fun getAppLocaleSync(): String {
@@ -151,6 +164,19 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         context.vigorlyDataStore.edit {
             it[PreferenceKeys.REGISTERED_ACCOUNTS] = AccountsCodec.encode(accounts)
         }
+    }
+
+    suspend fun saveUserSession(userId: String, snapshot: com.example.vigorly.data.model.UserSessionSnapshot) {
+        context.vigorlyDataStore.edit { prefs ->
+            val current = UserSessionCodec.decode(prefs[PreferenceKeys.USER_SESSIONS]).toMutableMap()
+            current[userId] = snapshot
+            prefs[PreferenceKeys.USER_SESSIONS] = UserSessionCodec.encode(current)
+        }
+    }
+
+    suspend fun loadUserSession(userId: String): com.example.vigorly.data.model.UserSessionSnapshot? {
+        val prefs = context.vigorlyDataStore.data.first()
+        return UserSessionCodec.decode(prefs[PreferenceKeys.USER_SESSIONS])[userId]
     }
 
     suspend fun setFitnessGoal(goal: String) {
@@ -234,6 +260,12 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         context.vigorlyDataStore.edit { prefs ->
             val current = prefs[PreferenceKeys.DAILY_TIP_INDEX] ?: 0
             prefs[PreferenceKeys.DAILY_TIP_INDEX] = (current + 1) % tipCount
+        }
+    }
+
+    suspend fun setDailyTipIndex(index: Int) {
+        context.vigorlyDataStore.edit { prefs ->
+            prefs[PreferenceKeys.DAILY_TIP_INDEX] = index.coerceAtLeast(0)
         }
     }
 

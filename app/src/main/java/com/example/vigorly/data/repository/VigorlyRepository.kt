@@ -12,8 +12,11 @@ import com.example.vigorly.data.model.WorkoutType
 import com.example.vigorly.data.model.AuthError
 import com.example.vigorly.data.model.AuthResult
 import com.example.vigorly.data.model.UserAccount
+import com.example.vigorly.data.model.UserSessionSnapshot
 import com.example.vigorly.ui.setup.SetupDevFlags
+import com.example.vigorly.util.AuthValidator
 import com.example.vigorly.util.LocaleManager
+import com.example.vigorly.util.PasswordHasher
 import com.example.vigorly.util.DailyTipSelector
 import com.example.vigorly.util.WorkoutRecommender
 import com.example.vigorly.navigation.AppDestination
@@ -257,6 +260,7 @@ class VigorlyRepository(context: Context) {
     }
 
     fun resolveStartDestination(): AppDestination = when {
+        SetupDevFlags.FORCE_SPLASH_TO_LOGIN -> AppDestination.Login
         SetupDevFlags.FORCE_SPLASH_TO_SETUP -> AppDestination.Setup
         !_isLoggedIn.value -> AppDestination.Login
         !_onboardingCompleted.value -> AppDestination.Setup
@@ -272,12 +276,11 @@ class VigorlyRepository(context: Context) {
     }
 
     suspend fun initializeLocale() {
-        val locale = preferences.getAppLocaleSync()
-        LocaleManager.applyLocale(locale)
-        _appLocale.value = locale
+        LocaleManager.applyLocale("es")
+        _appLocale.value = "es"
     }
 
-    suspend fun effectiveLocale(): String = preferences.getAppLocaleSync()
+    suspend fun effectiveLocale(): String = "es"
 
     fun setAppLocale(code: String) {
         scope.launch {
@@ -290,9 +293,14 @@ class VigorlyRepository(context: Context) {
     suspend fun login(email: String, password: String): AuthResult {
         val normalizedEmail = email.trim().lowercase()
         val account = _accounts.value.find {
-            it.email.equals(normalizedEmail, ignoreCase = true) && it.password == password
+            it.email.equals(normalizedEmail, ignoreCase = true)
         } ?: return AuthResult.Error(AuthError.INVALID_CREDENTIALS)
-        return completeLogin(account)
+        if (!PasswordHasher.verify(password, account.passwordSalt, account.passwordHash)) {
+            return AuthResult.Error(AuthError.INVALID_CREDENTIALS)
+        }
+        persistCurrentUserSessionIfNeeded()
+        val upgradedAccount = upgradeLegacyPasswordIfNeeded(account, password)
+        return completeLogin(upgradedAccount)
     }
 
     suspend fun register(
@@ -301,21 +309,24 @@ class VigorlyRepository(context: Context) {
         username: String,
         birthDate: String
     ): AuthResult {
+        val validationError = AuthValidator.validateRegistration(email, password, username, birthDate)
+        if (validationError != null) return AuthResult.Error(validationError)
+
         val normalizedEmail = email.trim().lowercase()
         val cleanUsername = username.trim()
-        if (normalizedEmail.isBlank() || password.isBlank() || cleanUsername.isBlank() || birthDate.isBlank()) {
-            return AuthResult.Error(AuthError.FIELDS_REQUIRED)
-        }
-        if (password.length < 6) return AuthResult.Error(AuthError.PASSWORD_TOO_SHORT)
         if (_accounts.value.any { it.email.equals(normalizedEmail, ignoreCase = true) }) {
             return AuthResult.Error(AuthError.EMAIL_ALREADY_EXISTS)
         }
+        persistCurrentUserSessionIfNeeded()
+        val (salt, hash) = PasswordHasher.hash(password)
         val account = UserAccount(
             id = UUID.randomUUID().toString(),
             email = normalizedEmail,
-            password = password,
+            passwordHash = hash,
+            passwordSalt = salt,
             username = cleanUsername,
-            birthDate = birthDate
+            birthDate = birthDate.trim(),
+            createdAtMillis = System.currentTimeMillis()
         )
         val updated = _accounts.value + account
         _accounts.value = updated
@@ -325,32 +336,113 @@ class VigorlyRepository(context: Context) {
 
     fun logout() {
         scope.launch {
+            persistCurrentUserSessionIfNeeded()
             preferences.setLoggedIn(loggedIn = false, userId = null)
             _isLoggedIn.value = false
         }
+    }
+
+    private suspend fun persistCurrentUserSessionIfNeeded() {
+        val userId = preferences.currentUserId.first() ?: return
+        if (!_isLoggedIn.value) return
+        preferences.saveUserSession(userId, captureUserSession())
+    }
+
+    private suspend fun captureUserSession(): UserSessionSnapshot {
+        return UserSessionSnapshot(
+            profile = profile.value,
+            dailyGoals = dailyGoals.value,
+            weeklyGoal = weeklyGoal.value,
+            onboardingCompleted = onboardingCompleted.value,
+            fitnessGoal = preferences.fitnessGoal.first(),
+            activityLevel = preferences.activityLevel.first(),
+            workoutLocation = preferences.workoutLocation.first(),
+            preferredTime = preferences.preferredTime.first(),
+            notificationsEnabled = notificationsEnabled.value,
+            unitsMetric = unitsMetric.value,
+            workoutHistory = history.value,
+            athleticStats = athleticStats.value,
+            favoriteWorkoutIds = favorites.value,
+            dailyTipIndex = preferences.dailyTipIndex.first()
+        )
+    }
+
+    private suspend fun applyUserSession(snapshot: UserSessionSnapshot) {
+        preferences.updateProfile(snapshot.profile)
+        preferences.updateDailyGoals(snapshot.dailyGoals)
+        preferences.saveWeeklyGoal(snapshot.weeklyGoal)
+        preferences.setOnboardingCompleted(snapshot.onboardingCompleted)
+        preferences.setFitnessGoal(snapshot.fitnessGoal)
+        preferences.setActivityLevel(snapshot.activityLevel)
+        preferences.setWorkoutLocation(snapshot.workoutLocation)
+        preferences.setPreferredTime(snapshot.preferredTime)
+        preferences.setNotificationsEnabled(snapshot.notificationsEnabled)
+        preferences.setUnitsMetric(snapshot.unitsMetric)
+        preferences.saveWorkoutHistory(snapshot.workoutHistory)
+        preferences.saveAthleticStats(snapshot.athleticStats)
+        preferences.setFavoriteWorkoutIds(snapshot.favoriteWorkoutIds)
+        preferences.setDailyTipIndex(snapshot.dailyTipIndex)
+        _history.value = snapshot.workoutHistory
+        _recentActivity.value = snapshot.workoutHistory.take(5).map { item ->
+            RecentActivity(
+                id = item.id,
+                title = item.title,
+                timeLabel = item.timestampLabel.uppercase(Locale.getDefault()),
+                durationMinutes = item.durationMinutes,
+                iconName = item.iconName
+            )
+        }.ifEmpty { defaultRecentActivity() }
+        _athleticStats.value = snapshot.athleticStats
+        _favorites.value = snapshot.favoriteWorkoutIds
+        _onboardingCompleted.value = snapshot.onboardingCompleted
+        refreshMilestones()
+    }
+
+    private suspend fun upgradeLegacyPasswordIfNeeded(account: UserAccount, password: String): UserAccount {
+        if (!PasswordHasher.isLegacy(account.passwordHash)) return account
+        val (salt, hash) = PasswordHasher.hash(password)
+        val upgraded = account.copy(passwordSalt = salt, passwordHash = hash)
+        val updated = _accounts.value.map { if (it.id == account.id) upgraded else it }
+        _accounts.value = updated
+        preferences.saveRegisteredAccounts(updated)
+        return upgraded
     }
 
     private suspend fun completeLogin(account: UserAccount, isNewUser: Boolean = false): AuthResult {
         preferences.setLoggedIn(loggedIn = true, userId = account.id)
         _isLoggedIn.value = true
         if (isNewUser) {
-            preferences.setOnboardingCompleted(false)
-            _onboardingCompleted.value = false
-            preferences.updateProfile(
-                UserProfile(
-                    displayName = account.username,
-                    avatarUrl = defaultProfile().avatarUrl,
-                    isProMember = false,
-                    totalWorkouts = 0,
-                    activeStreakDays = 0,
-                    level = 1
-                )
+            val freshProfile = UserProfile(
+                displayName = account.username,
+                avatarUrl = defaultProfile().avatarUrl,
+                isProMember = false,
+                totalWorkouts = 0,
+                activeStreakDays = 0,
+                level = 1
             )
+            preferences.setOnboardingCompleted(false)
+            preferences.updateProfile(freshProfile)
             preferences.saveWorkoutHistory(emptyList())
+            preferences.setFitnessGoal("wellness")
+            preferences.setActivityLevel("moderate")
+            preferences.setWorkoutLocation("home")
+            preferences.setPreferredTime("flexible")
+            preferences.saveWeeklyGoal(WeeklyGoal(targetSessions = 4, completedSessions = 0))
+            preferences.saveAthleticStats(defaultAthleticStats())
+            preferences.setFavoriteWorkoutIds(emptySet())
+            _onboardingCompleted.value = false
             _history.value = emptyList()
             _recentActivity.value = emptyList()
+            _athleticStats.value = defaultAthleticStats()
+            _favorites.value = emptySet()
+            refreshMilestones()
         } else {
-            preferences.updateProfile(profile.value.copy(displayName = account.username))
+            val saved = preferences.loadUserSession(account.id)
+            if (saved != null) {
+                applyUserSession(saved.copy(profile = saved.profile.copy(displayName = account.username)))
+            } else {
+                preferences.updateProfile(profile.value.copy(displayName = account.username))
+            }
         }
         return AuthResult.Success
     }

@@ -1,6 +1,5 @@
 package com.example.vigorly.ui.settings
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,8 +13,6 @@ import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
@@ -40,7 +37,6 @@ import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryContainer
-import com.example.vigorly.util.AppLocale
 
 @Composable
 fun SettingsScreen(
@@ -53,7 +49,6 @@ fun SettingsScreen(
     val notifications by repository.notificationsEnabled.collectAsState()
     val unitsMetric by repository.unitsMetric.collectAsState()
     val weeklyGoal by repository.weeklyGoal.collectAsState()
-    val appLocale by repository.appLocale.collectAsState()
     var nameInput by remember(profile.displayName) { mutableStateOf(profile.displayName) }
 
     Column(
@@ -92,29 +87,6 @@ fun SettingsScreen(
                     modifier = Modifier.padding(top = Dimens.Sm)
                 ) {
                     Text(stringResource(R.string.settings_save_profile), style = ButtonText)
-                }
-            }
-        }
-        GlassCard(Modifier.fillMaxWidth().padding(top = Dimens.Md)) {
-            Column(Modifier.padding(Dimens.Md)) {
-                Text(stringResource(R.string.settings_language), style = HeadlineMd, color = OnSurface)
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(top = Dimens.Sm),
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.Sm)
-                ) {
-                    AppLocale.entries.forEach { locale ->
-                        FilterChip(
-                            selected = appLocale == locale.code,
-                            onClick = { repository.setAppLocale(locale.code) },
-                            label = { Text(stringResource(localeLabelRes(locale))) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Primary.copy(alpha = 0.25f)
-                            )
-                        )
-                    }
                 }
             }
         }
@@ -189,14 +161,6 @@ fun SettingsScreen(
             Text(stringResource(R.string.settings_logout), style = ButtonText)
         }
     }
-}
-
-private fun localeLabelRes(locale: AppLocale): Int = when (locale) {
-    AppLocale.SPANISH -> R.string.lang_es
-    AppLocale.CATALAN -> R.string.lang_ca
-    AppLocale.ENGLISH -> R.string.lang_en
-    AppLocale.FRENCH -> R.string.lang_fr
-    AppLocale.GERMAN -> R.string.lang_de
 }
 
 @Composable
