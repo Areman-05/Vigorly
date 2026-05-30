@@ -10,6 +10,6 @@ object SetupDevFlags {
     /** Tras la splash, ir siempre al wizard (ignora login y onboarding). */
     const val FORCE_SPLASH_TO_SETUP = false
 
-    /** Tras la splash, ir siempre a login (p. ej. mientras se retoca la home). */
-    const val FORCE_SPLASH_TO_LOGIN = true
+    /** Tras la splash, ir siempre a login (solo depuración). */
+    const val FORCE_SPLASH_TO_LOGIN = false
 }

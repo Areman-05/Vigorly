@@ -141,6 +141,14 @@ class VigorlyRepository(context: Context) {
             refreshMilestones()
         }.launchIn(scope)
         preferences.userProfile.onEach { refreshMilestones() }.launchIn(scope)
+        scope.launch { restoreActiveUserSessionIfNeeded() }
+    }
+
+    private suspend fun restoreActiveUserSessionIfNeeded() {
+        if (!preferences.isLoggedIn.first()) return
+        val userId = preferences.currentUserId.first() ?: return
+        val saved = preferences.loadUserSession(userId) ?: return
+        applyUserSession(saved)
     }
 
     private fun refreshMilestones() {
@@ -260,16 +268,16 @@ class VigorlyRepository(context: Context) {
         scope.launch { preferences.resetWeeklyProgress() }
     }
 
-    fun resolveStartDestination(): AppDestination = when {
+    suspend fun resolveStartDestination(): AppDestination = when {
         SetupDevFlags.FORCE_SPLASH_TO_LOGIN -> AppDestination.Login
         SetupDevFlags.FORCE_SPLASH_TO_SETUP -> AppDestination.Setup
-        !_isLoggedIn.value -> AppDestination.Login
-        !_onboardingCompleted.value -> AppDestination.Setup
-        else -> AppDestination.Main
+        preferences.isLoggedIn.first() -> AppDestination.Main
+        else -> AppDestination.Login
     }
 
     suspend fun preloadAppData() {
         if (appDataPreloaded) return
+        restoreActiveUserSessionIfNeeded()
         listWorkouts()
         coachingTips.size
         preferences.registeredAccounts.first()
@@ -497,7 +505,7 @@ class VigorlyRepository(context: Context) {
                 preferences.updateProfile(profile.value.copy(displayName = account.username))
             }
         }
-        return AuthResult.Success
+        return AuthResult.Success(needsSetup = isNewUser)
     }
 
     fun saveSetupPreferences(

@@ -13,7 +13,7 @@ data class UserAccount(
 )
 
 sealed class AuthResult {
-    data object Success : AuthResult()
+    data class Success(val needsSetup: Boolean = false) : AuthResult()
     data class Error(val messageKey: AuthError) : AuthResult()
 }
 

@@ -152,7 +152,7 @@ fun LoginScreen(
                     onClick = {
                         scope.launch {
                             when (val result = repository.login(email, password)) {
-                                is AuthResult.Success -> onLoginSuccess(!repository.onboardingCompleted.value)
+                                is AuthResult.Success -> onLoginSuccess(result.needsSetup)
                                 is AuthResult.Error -> authError = result.messageKey
                             }
                         }
@@ -182,7 +182,7 @@ fun LoginScreen(
                                 .onSuccess { info ->
                                     when (val result = repository.loginWithGoogle(info)) {
                                         is AuthResult.Success ->
-                                            onLoginSuccess(!repository.onboardingCompleted.value)
+                                            onLoginSuccess(result.needsSetup)
                                         is AuthResult.Error -> authError = result.messageKey
                                     }
                                 }
