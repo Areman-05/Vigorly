@@ -209,7 +209,7 @@ class VigorlyRepository(context: Context) {
     }
 
     fun getRecommendedWorkout(): WorkoutDetail? =
-        WorkoutRecommender.recommend(workouts, _history.value, _favorites.value)
+        WorkoutRecommender.recommend(workouts.values.toList(), _history.value, _favorites.value)
 
     fun toggleFavorite(workoutId: String) {
         val updated = _favorites.value.toMutableSet().apply {

@@ -1,6 +1,7 @@
 package com.example.vigorly.ui.preview
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.vigorly.data.model.DailyGoals
 import com.example.vigorly.data.model.WeeklyGoal

@@ -7,8 +7,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 
-val VigorlyFontFamily = com.example.vigorly.ui.theme.VigorlyFontFamily
-
 val DisplayHero = TextStyle(
     fontFamily = VigorlyFontFamily,
     fontWeight = FontWeight.Black,

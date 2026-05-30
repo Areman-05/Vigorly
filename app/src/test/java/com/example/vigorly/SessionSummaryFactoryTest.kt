@@ -9,7 +9,7 @@ import org.junit.Test
 class SessionSummaryFactoryTest {
     @Test
     fun from_mapsSessionFields() {
-        val workout = WorkoutCatalog.allWorkouts().first()
+        val workout = WorkoutCatalog.allWorkouts().values.first()
         val session = WorkoutSessionState(
             workoutId = workout.id,
             workoutName = workout.name,

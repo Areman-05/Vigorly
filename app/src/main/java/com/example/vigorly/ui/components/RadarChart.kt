@@ -18,7 +18,6 @@ import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import kotlin.math.cos
-import kotlin.math.min
 import kotlin.math.sin
 
 @Composable
@@ -27,11 +26,11 @@ fun AthleticRadarChart(
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth().height(300.dp)) {
-        val chartSize = min(maxWidth, maxHeight)
+        val chartSize = minOf(maxWidth, maxHeight)
         Canvas(modifier = Modifier.fillMaxWidth().height(280.dp)) {
             if (stats.isEmpty()) return@Canvas
             val center = Offset(size.width / 2, size.height / 2)
-            val radius = min(size.width, size.height) / 2f * 0.72f
+            val radius = minOf(size.width, size.height) / 2f * 0.72f
             val count = stats.size
             val gridColor = Color.White.copy(alpha = 0.1f)
 

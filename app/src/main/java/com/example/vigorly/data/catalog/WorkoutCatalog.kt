@@ -12,7 +12,7 @@ object WorkoutCatalog {
     private const val ANATOMY_BACK =
         "https://lh3.googleusercontent.com/aida-public/AB6AXuDWqRccaSnKeyBIBV-wNPyo7S2RP65O4NgOz1N_KNdqBZtawRnUPcrhxVGn46CWHNJVTMzoRzZbMSf1N_cmWTQqE4IEsvFkE8DenS7u-9z9hTD6_4COq0upPONL1fst5YVFMeK6p_EF5Xw4662DlXDIrViVxf5T9uV9KKncyIgDDG88qhExt9wtDQVF7bx2pCKkazL3e8UY34eKiKcCznxbj8dR1t9ROSIN1a_jv1KfC2MYW7nKFX2XYRaiqPLxWkBpn6XyPua1x0s"
 
-    fun allWorkouts(): Map<String, WorkoutDetail> = mapOf(
+    fun allWorkouts(): Map<String, WorkoutDetail> = listOf(
         titanProtocol(),
         hiitSprint(),
         recoveryYoga(),
@@ -20,7 +20,7 @@ object WorkoutCatalog {
         morningSwim(),
         coreBlast(),
         legDay()
-    )
+    ).associateBy { it.id }
 
     fun titanProtocol() = WorkoutDetail(
         id = "titan_protocol",

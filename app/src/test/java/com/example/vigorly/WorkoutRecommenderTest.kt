@@ -9,7 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WorkoutRecommenderTest {
-    private val workouts = WorkoutCatalog.allWorkouts()
+    private val workouts = WorkoutCatalog.allWorkouts().values.toList()
 
     @Test
     fun recommend_prefersFavorite() {

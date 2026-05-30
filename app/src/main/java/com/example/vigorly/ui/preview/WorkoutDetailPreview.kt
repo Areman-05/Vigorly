@@ -20,7 +20,7 @@ import com.example.vigorly.ui.theme.VigorlyTheme
 @Preview(showBackground = true, backgroundColor = 0xFF121317)
 @Composable
 fun WorkoutDetailHeaderPreview() {
-    val workout = WorkoutCatalog.allWorkouts().first()
+    val workout = WorkoutCatalog.allWorkouts().values.first()
     VigorlyTheme {
         GlassCard {
             Column(Modifier.padding(Dimens.Md)) {
@@ -38,7 +38,7 @@ fun WorkoutDetailHeaderPreview() {
 fun WorkoutCatalogPreview() {
     VigorlyTheme {
         Column(Modifier.padding(Dimens.Md)) {
-            WorkoutCatalog.allWorkouts().take(3).forEach { workout ->
+            WorkoutCatalog.allWorkouts().values.toList().take(3).forEach { workout ->
                 Text(workout.name, style = HeadlineMd, color = OnSurface)
             }
         }
