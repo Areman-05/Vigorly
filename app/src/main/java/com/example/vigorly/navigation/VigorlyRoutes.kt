@@ -1,7 +1,11 @@
 package com.example.vigorly.navigation
 
 object VigorlyRoutes {
-    const val Onboarding = "onboarding"
+    const val Splash = "splash"
+    const val Login = "login"
+    const val Register = "register"
+    const val Setup = "setup"
+    const val Onboarding = "setup"
     const val Dashboard = "dashboard"
     const val Workouts = "workouts"
     const val History = "history"

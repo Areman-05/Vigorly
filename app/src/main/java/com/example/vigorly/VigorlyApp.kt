@@ -12,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.example.vigorly.R
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -20,8 +19,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.vigorly.R
 import com.example.vigorly.data.repository.VigorlyRepository
+import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.navigation.VigorlyRoutes
+import com.example.vigorly.ui.VigorlyViewModel
+import com.example.vigorly.ui.auth.LoginScreen
+import com.example.vigorly.ui.auth.RegisterScreen
 import com.example.vigorly.ui.components.RouteFallbackScreen
 import com.example.vigorly.ui.components.VigorlyBottomBar
 import com.example.vigorly.ui.components.VigorlyDetailTopBar
@@ -31,14 +35,14 @@ import com.example.vigorly.ui.history.HistoryDetailScreen
 import com.example.vigorly.ui.history.HistoryScreen
 import com.example.vigorly.ui.insights.InsightsScreen
 import com.example.vigorly.ui.milestones.MilestonesScreen
-import com.example.vigorly.ui.onboarding.OnboardingScreen
 import com.example.vigorly.ui.profile.ProfileScreen
 import com.example.vigorly.ui.session.ActiveWorkoutScreen
 import com.example.vigorly.ui.session.SessionSummaryScreen
 import com.example.vigorly.ui.settings.SettingsScreen
+import com.example.vigorly.ui.setup.SetupWizardScreen
+import com.example.vigorly.ui.splash.SplashScreen
 import com.example.vigorly.ui.workout.WorkoutDetailScreen
 import com.example.vigorly.ui.workout.WorkoutsScreen
-import com.example.vigorly.ui.VigorlyViewModel
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -51,17 +55,8 @@ fun VigorlyApp(
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val profile by repository.profile.collectAsState()
-    val onboardingCompleted by repository.onboardingCompleted.collectAsState()
     val lastSummary by repository.lastSessionSummary.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(onboardingCompleted) {
-        if (!onboardingCompleted && currentRoute != VigorlyRoutes.Onboarding) {
-            navController.navigate(VigorlyRoutes.Onboarding) {
-                popUpTo(0) { inclusive = true }
-            }
-        }
-    }
 
     LaunchedEffect(viewModel) {
         viewModel.messages.collectLatest { message ->
@@ -69,6 +64,12 @@ fun VigorlyApp(
         }
     }
 
+    val authRoutes = setOf(
+        VigorlyRoutes.Splash,
+        VigorlyRoutes.Login,
+        VigorlyRoutes.Register,
+        VigorlyRoutes.Setup
+    )
     val mainTabs = listOf(
         VigorlyRoutes.Dashboard,
         VigorlyRoutes.Workouts,
@@ -76,6 +77,7 @@ fun VigorlyApp(
         VigorlyRoutes.Profile
     )
     val showBottomBar = currentRoute in mainTabs
+    val isAuthFlow = currentRoute in authRoutes
     val isDetailOrSession = currentRoute?.startsWith("workout/") == true ||
         currentRoute?.startsWith("session/") == true
     val isSubScreen = currentRoute in listOf(
@@ -83,16 +85,34 @@ fun VigorlyApp(
         VigorlyRoutes.Milestones,
         VigorlyRoutes.Insights
     )
-    val isOnboarding = currentRoute == VigorlyRoutes.Onboarding
     val isSummary = currentRoute == VigorlyRoutes.SessionSummary
     val isHistoryDetail = currentRoute?.startsWith("history/") == true && currentRoute != VigorlyRoutes.History
+
+    fun navigateFromSplash(destination: AppDestination) {
+        val route = when (destination) {
+            AppDestination.Login -> VigorlyRoutes.Login
+            AppDestination.Setup -> VigorlyRoutes.Setup
+            AppDestination.Main -> VigorlyRoutes.Dashboard
+            AppDestination.Splash -> return
+            AppDestination.Register -> VigorlyRoutes.Register
+        }
+        navController.navigate(route) {
+            popUpTo(VigorlyRoutes.Splash) { inclusive = true }
+        }
+    }
+
+    fun navigateToLogin() {
+        navController.navigate(VigorlyRoutes.Login) {
+            popUpTo(0) { inclusive = true }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             when {
-                isOnboarding || isSummary -> {}
+                isAuthFlow || isSummary -> {}
                 isDetailOrSession || isHistoryDetail -> VigorlyDetailTopBar(
                     onBackClick = { navController.popBackStack() },
                     onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) }
@@ -124,15 +144,46 @@ fun VigorlyApp(
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = if (onboardingCompleted) VigorlyRoutes.Dashboard else VigorlyRoutes.Onboarding,
-            modifier = Modifier.padding(padding)
+            startDestination = VigorlyRoutes.Splash,
+            modifier = if (isAuthFlow) Modifier else Modifier.padding(padding)
         ) {
-            composable(VigorlyRoutes.Onboarding) {
-                OnboardingScreen(
+            composable(VigorlyRoutes.Splash) {
+                SplashScreen(
+                    repository = repository,
+                    onFinished = ::navigateFromSplash
+                )
+            }
+            composable(VigorlyRoutes.Login) {
+                LoginScreen(
+                    repository = repository,
+                    onLoginSuccess = { needsSetup ->
+                        val target = if (needsSetup) VigorlyRoutes.Setup else VigorlyRoutes.Dashboard
+                        navController.navigate(target) {
+                            popUpTo(VigorlyRoutes.Login) { inclusive = true }
+                        }
+                    },
+                    onNavigateRegister = {
+                        navController.navigate(VigorlyRoutes.Register)
+                    }
+                )
+            }
+            composable(VigorlyRoutes.Register) {
+                RegisterScreen(
+                    repository = repository,
+                    onRegisterSuccess = {
+                        navController.navigate(VigorlyRoutes.Setup) {
+                            popUpTo(VigorlyRoutes.Login) { inclusive = true }
+                        }
+                    },
+                    onNavigateLogin = { navController.popBackStack() }
+                )
+            }
+            composable(VigorlyRoutes.Setup) {
+                SetupWizardScreen(
+                    repository = repository,
                     onComplete = {
-                        repository.completeOnboarding()
                         navController.navigate(VigorlyRoutes.Dashboard) {
-                            popUpTo(VigorlyRoutes.Onboarding) { inclusive = true }
+                            popUpTo(VigorlyRoutes.Setup) { inclusive = true }
                         }
                     }
                 )
@@ -171,7 +222,11 @@ fun VigorlyApp(
             composable(VigorlyRoutes.Settings) {
                 SettingsScreen(
                     repository = repository,
-                    onOpenInsights = { navController.navigate(VigorlyRoutes.Insights) }
+                    onOpenInsights = { navController.navigate(VigorlyRoutes.Insights) },
+                    onLogout = {
+                        repository.logout()
+                        navigateToLogin()
+                    }
                 )
             }
             composable(VigorlyRoutes.Milestones) {
