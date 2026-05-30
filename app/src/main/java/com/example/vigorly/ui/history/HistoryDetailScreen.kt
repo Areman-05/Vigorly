@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
 import com.example.vigorly.data.model.WorkoutHistoryItem
 import com.example.vigorly.ui.components.GlassCard
 import com.example.vigorly.ui.components.StatRow
@@ -27,7 +29,7 @@ fun HistoryDetailScreen(
             .fillMaxSize()
             .padding(Dimens.ContainerMargin)
     ) {
-        Text("SESSION DETAIL", style = LabelCaps, color = OnSurfaceVariant)
+        Text(stringResource(R.string.session_detail_label), style = LabelCaps, color = OnSurfaceVariant)
         Text(item.title, style = HeadlineMd, color = OnSurface, modifier = Modifier.padding(top = Dimens.Sm))
         Text(item.timestampLabel, style = BodyMd, color = OnSurfaceVariant, modifier = Modifier.padding(top = Dimens.Xs))
         GlassCard(Modifier.fillMaxWidth().padding(top = Dimens.Lg)) {

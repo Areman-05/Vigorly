@@ -7,6 +7,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.LabelCaps
@@ -21,7 +23,7 @@ fun LevelProgressBar(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text("LEVEL $level", style = LabelCaps, color = OnSurfaceVariant)
+        Text(stringResource(R.string.level_label, level), style = LabelCaps, color = OnSurfaceVariant)
         LinearProgressIndicator(
             progress = { progress.coerceIn(0f, 1f) },
             modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.Sm),
@@ -29,7 +31,7 @@ fun LevelProgressBar(
             trackColor = OnSurfaceVariant.copy(alpha = 0.2f)
         )
         Text(
-            "$workoutsUntilNext workouts to level ${level + 1}",
+            stringResource(R.string.level_progress_hint, workoutsUntilNext, level + 1),
             style = BodyMd,
             color = OnSurfaceVariant
         )

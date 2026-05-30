@@ -21,6 +21,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -58,7 +60,7 @@ fun MilestonesScreen(
             .fillMaxSize()
             .padding(Dimens.ContainerMargin)
     ) {
-        Text("Milestones", style = HeadlineMd, color = OnSurface)
+        Text(stringResource(R.string.profile_milestones), style = HeadlineMd, color = OnSurface)
         Text(
             "$unlocked of ${milestones.size} unlocked",
             style = LabelCaps,

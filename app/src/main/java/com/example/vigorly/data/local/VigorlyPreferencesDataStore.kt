@@ -108,8 +108,14 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         it[PreferenceKeys.ACTIVITY_LEVEL] ?: "moderate"
     }
 
-    suspend fun getAppLocaleSync(): String =
-        appLocale.first()
+    suspend fun getAppLocaleSync(): String {
+        context.vigorlyDataStore.edit { prefs ->
+            if (prefs[PreferenceKeys.APP_LOCALE] == null) {
+                prefs[PreferenceKeys.APP_LOCALE] = "es"
+            }
+        }
+        return appLocale.first()
+    }
 
     suspend fun setAppLocale(code: String) {
         context.vigorlyDataStore.edit { it[PreferenceKeys.APP_LOCALE] = code }
@@ -138,6 +144,14 @@ class VigorlyPreferencesDataStore(private val context: Context) {
 
     suspend fun setActivityLevel(level: String) {
         context.vigorlyDataStore.edit { it[PreferenceKeys.ACTIVITY_LEVEL] = level }
+    }
+
+    suspend fun setWorkoutLocation(location: String) {
+        context.vigorlyDataStore.edit { it[PreferenceKeys.WORKOUT_LOCATION] = location }
+    }
+
+    suspend fun setPreferredTime(time: String) {
+        context.vigorlyDataStore.edit { it[PreferenceKeys.PREFERRED_TIME] = time }
     }
 
     suspend fun updateProfile(profile: UserProfile) {

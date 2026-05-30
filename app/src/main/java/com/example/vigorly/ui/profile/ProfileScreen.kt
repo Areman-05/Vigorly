@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.vigorly.data.repository.VigorlyRepository
@@ -127,16 +129,16 @@ fun ProfileScreen(
         }
         Spacer(Modifier.height(Dimens.Md))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.Md)) {
-            StatCard(Modifier.weight(1f), "Workouts", profile.totalWorkouts.toString(), "total", primaryValue = true)
-            StatCard(Modifier.weight(1f), "Active Streak", profile.activeStreakDays.toString(), "days", primaryValue = false)
+            StatCard(Modifier.weight(1f), stringResource(R.string.profile_workouts_stat), profile.totalWorkouts.toString(), stringResource(R.string.profile_stat_total), primaryValue = true)
+            StatCard(Modifier.weight(1f), stringResource(R.string.profile_streak_stat), profile.activeStreakDays.toString(), stringResource(R.string.profile_stat_days), primaryValue = false)
         }
         Spacer(Modifier.height(Dimens.Md))
         GlassCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(Dimens.Lg)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Athletic Profile", style = HeadlineMd, color = OnSurface)
+                    Text(stringResource(R.string.profile_athletic), style = HeadlineMd, color = OnSurface)
                     Text(
-                        "LVL ${profile.level}",
+                        stringResource(R.string.profile_level_badge, profile.level),
                         style = LabelCaps,
                         color = OnSurfaceVariant,
                         modifier = Modifier
@@ -152,8 +154,8 @@ fun ProfileScreen(
         GlassCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(Dimens.Lg)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Milestones", style = HeadlineMd, color = OnSurface)
-                    TextButton(onClick = onViewAllMilestones) { Text("View All", style = ButtonText, color = Primary) }
+                    Text(stringResource(R.string.profile_milestones), style = HeadlineMd, color = OnSurface)
+                    TextButton(onClick = onViewAllMilestones) { Text(stringResource(R.string.profile_view_all), style = ButtonText, color = Primary) }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     milestones.forEach { m ->
@@ -180,7 +182,7 @@ fun ProfileScreen(
         Spacer(Modifier.height(Dimens.Md))
         GlassCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(Dimens.Lg)) {
-                Text("Recent History", style = HeadlineMd, color = OnSurface)
+                Text(stringResource(R.string.profile_recent_history), style = HeadlineMd, color = OnSurface)
                 Spacer(Modifier.height(Dimens.Md))
                 history.forEach { item ->
                     Row(

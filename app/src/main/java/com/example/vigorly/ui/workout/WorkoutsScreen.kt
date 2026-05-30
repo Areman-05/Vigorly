@@ -62,9 +62,9 @@ fun WorkoutsScreen(
     }
 
     val sortLabel = when (sort) {
-        WorkoutSort.DURATION_ASC -> "Duration ↑"
-        WorkoutSort.DURATION_DESC -> "Duration ↓"
-        WorkoutSort.NAME_ASC -> "Name A–Z"
+        WorkoutSort.DURATION_ASC -> stringResource(R.string.sort_duration_asc)
+        WorkoutSort.DURATION_DESC -> stringResource(R.string.sort_duration_desc)
+        WorkoutSort.NAME_ASC -> stringResource(R.string.sort_name_asc)
     }
 
     Column(
@@ -78,7 +78,7 @@ fun WorkoutsScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
-            Text("Workouts", style = HeadlineMd, color = OnSurface)
+            Text(stringResource(R.string.workouts_title), style = HeadlineMd, color = OnSurface)
             TextButton(onClick = workoutsViewModel::cycleSort) {
                 Text(sortLabel, style = BodyMd, color = Primary)
             }
@@ -103,7 +103,7 @@ fun WorkoutsScreen(
             FilterChip(
                 selected = selectedFilter == null,
                 onClick = { workoutsViewModel.setSelectedType(null) },
-                label = { Text("All") },
+                label = { Text(stringResource(R.string.filter_all)) },
                 colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Primary.copy(0.2f))
             )
             WorkoutType.entries.forEach { type ->
@@ -116,7 +116,7 @@ fun WorkoutsScreen(
             }
         }
         if (workouts.isEmpty()) {
-            Text("No workouts match your search.", style = BodyMd, color = OnSurfaceVariant)
+            Text(stringResource(R.string.no_workouts_found), style = BodyMd, color = OnSurfaceVariant)
         }
         workouts.forEach { workout ->
             GlassCard(

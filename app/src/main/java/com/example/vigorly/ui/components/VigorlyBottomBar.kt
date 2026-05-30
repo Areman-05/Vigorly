@@ -18,7 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.vigorly.R
 import com.example.vigorly.navigation.VigorlyRoutes
 import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnPrimary
@@ -26,17 +28,10 @@ import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.SurfaceContainer
 
-data class BottomNavItem(
+private data class BottomNavItem(
     val route: String,
-    val label: String,
+    val labelRes: Int,
     val icon: ImageVector
-)
-
-val bottomNavItems = listOf(
-    BottomNavItem(VigorlyRoutes.Dashboard, "Dashboard", Icons.Default.Dashboard),
-    BottomNavItem(VigorlyRoutes.Workouts, "Workouts", Icons.Default.FitnessCenter),
-    BottomNavItem(VigorlyRoutes.History, "History", Icons.Default.History),
-    BottomNavItem(VigorlyRoutes.Profile, "Profile", Icons.Default.Person)
 )
 
 @Composable
@@ -45,6 +40,12 @@ fun VigorlyBottomBar(
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val items = listOf(
+        BottomNavItem(VigorlyRoutes.Dashboard, R.string.dashboard_title, Icons.Default.Dashboard),
+        BottomNavItem(VigorlyRoutes.Workouts, R.string.workouts_title, Icons.Default.FitnessCenter),
+        BottomNavItem(VigorlyRoutes.History, R.string.history_title, Icons.Default.History),
+        BottomNavItem(VigorlyRoutes.Profile, R.string.profile_title, Icons.Default.Person)
+    )
     Surface(
         modifier = modifier
             .height(72.dp)
@@ -56,22 +57,23 @@ fun VigorlyBottomBar(
             containerColor = SurfaceContainer.copy(alpha = 0f),
             tonalElevation = 0.dp
         ) {
-            bottomNavItems.forEach { item ->
+            items.forEach { item ->
                 val selected = currentRoute == item.route
+                val label = stringResource(item.labelRes)
                 NavigationBarItem(
                     selected = selected,
                     onClick = { onNavigate(item.route) },
                     icon = {
                         Icon(
                             item.icon,
-                            contentDescription = item.label,
+                            contentDescription = label,
                             tint = if (selected) OnPrimary else OnSurfaceVariant,
                             modifier = Modifier.scale(if (selected) 1.1f else 1f)
                         )
                     },
                     label = {
                         Text(
-                            text = item.label.uppercase(),
+                            text = label.uppercase(),
                             style = LabelCaps,
                             color = if (selected) OnPrimary else OnSurfaceVariant
                         )

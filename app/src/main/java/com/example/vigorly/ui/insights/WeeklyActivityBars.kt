@@ -14,6 +14,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.ui.theme.BodyMd
@@ -32,7 +34,7 @@ fun WeeklyActivityBars(
 ) {
     val maxMinutes = days.maxOfOrNull { it.minutes }?.coerceAtLeast(1) ?: 1
     Column(modifier = modifier.fillMaxWidth()) {
-        Text("WEEKLY MINUTES", style = LabelCaps, color = OnSurfaceVariant)
+        Text(stringResource(R.string.weekly_minutes_label), style = LabelCaps, color = OnSurfaceVariant)
         Row(
             Modifier
                 .fillMaxWidth()

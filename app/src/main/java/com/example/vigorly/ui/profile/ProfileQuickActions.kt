@@ -13,6 +13,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
 import com.example.vigorly.ui.components.GlassCard
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
@@ -29,8 +31,8 @@ fun ProfileQuickActions(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Dimens.Sm)
     ) {
-        QuickActionChip("Workouts", Icons.Default.FitnessCenter, onOpenWorkouts, Modifier.weight(1f))
-        QuickActionChip("Insights", Icons.Default.Insights, onOpenInsights, Modifier.weight(1f))
+        QuickActionChip(stringResource(R.string.workouts_title), Icons.Default.FitnessCenter, onOpenWorkouts, Modifier.weight(1f))
+        QuickActionChip(stringResource(R.string.profile_insights), Icons.Default.Insights, onOpenInsights, Modifier.weight(1f))
     }
 }
 

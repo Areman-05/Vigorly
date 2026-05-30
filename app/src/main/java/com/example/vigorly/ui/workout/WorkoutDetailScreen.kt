@@ -33,7 +33,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.example.vigorly.R
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.vigorly.data.model.WorkoutDetail
@@ -106,7 +108,7 @@ fun WorkoutDetailScreen(
                 Column(Modifier.padding(Dimens.Md), horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
                         Column {
-                            Text("Target", style = HeadlineMd, color = OnSurface)
+                            Text(stringResource(R.string.workout_target), style = HeadlineMd, color = OnSurface)
                             Text(workout.targetMuscles, style = BodyMd, color = OnSurfaceVariant)
                         }
                     }
@@ -123,11 +125,11 @@ fun WorkoutDetailScreen(
             GlassCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(Dimens.Md)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Intensity", style = BodyMd, color = OnSurfaceVariant)
+                        Text(stringResource(R.string.workout_intensity), style = BodyMd, color = OnSurfaceVariant)
                         Text(workout.intensity, style = HeadlineMd, color = Primary)
                     }
                     Row(Modifier.fillMaxWidth().padding(vertical = Dimens.Sm), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Est. Cal", style = BodyMd, color = OnSurfaceVariant)
+                        Text(stringResource(R.string.workout_est_cal), style = BodyMd, color = OnSurfaceVariant)
                         Text("${workout.estimatedCalories} kcal", style = HeadlineMd, color = OnSurface)
                     }
                     Button(
@@ -140,7 +142,7 @@ fun WorkoutDetailScreen(
                         )
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null)
-                        Text("START WORKOUT", style = ButtonText, modifier = Modifier.padding(start = 4.dp))
+                        Text(stringResource(R.string.start_workout), style = ButtonText, modifier = Modifier.padding(start = 4.dp))
                     }
                 }
             }
