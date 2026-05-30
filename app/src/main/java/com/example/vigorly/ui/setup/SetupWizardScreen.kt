@@ -1,9 +1,11 @@
 package com.example.vigorly.ui.setup
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,16 +27,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.R
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.ActivityRings
+import com.example.vigorly.ui.components.ActivityRingsLogo
 import com.example.vigorly.ui.components.AuthGradientBackground
-import com.example.vigorly.ui.components.FitnessPose
-import com.example.vigorly.ui.components.FitnessSilhouette
-import com.example.vigorly.ui.components.GlassCard
+import com.example.vigorly.ui.components.SetupIconBadge
 import com.example.vigorly.ui.components.SetupOptionCard
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.ButtonText
@@ -49,8 +52,11 @@ import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.PrimaryContainer
 
-private data class IntroStep(val titleRes: Int, val bodyRes: Int, val pose: FitnessPose)
-private data class SelectOption(val key: String, val titleRes: Int, val subtitleRes: Int, val pose: FitnessPose)
+private data class IntroStep(val titleRes: Int, val bodyRes: Int, val useRingsLogo: Boolean = false)
+private data class SelectOption(val key: String, val titleRes: Int, val subtitleRes: Int, val icon: (String) -> androidx.compose.ui.graphics.vector.ImageVector)
+
+private fun toggleInSet(current: Set<String>, key: String): Set<String> =
+    if (key in current) current - key else current + key
 
 @Composable
 fun SetupWizardScreen(
@@ -59,46 +65,46 @@ fun SetupWizardScreen(
     modifier: Modifier = Modifier
 ) {
     var step by remember { mutableIntStateOf(0) }
-    var fitnessGoal by remember { mutableStateOf("wellness") }
-    var activityLevel by remember { mutableStateOf("moderate") }
-    var workoutLocation by remember { mutableStateOf("home") }
-    var preferredTime by remember { mutableStateOf("flexible") }
+    var fitnessGoals by remember { mutableStateOf(setOf("wellness")) }
+    var activityLevels by remember { mutableStateOf(setOf("moderate")) }
+    var workoutLocations by remember { mutableStateOf(setOf("home")) }
+    var preferredTimes by remember { mutableStateOf(setOf("flexible")) }
     var weeklySessions by remember { mutableIntStateOf(4) }
     var notifications by remember { mutableStateOf(true) }
 
     val introSteps = listOf(
-        IntroStep(R.string.onboarding_welcome_title, R.string.onboarding_welcome_body, FitnessPose.WELCOME),
-        IntroStep(R.string.onboarding_goals_title, R.string.onboarding_goals_body, FitnessPose.RINGS),
-        IntroStep(R.string.onboarding_ready_title, R.string.onboarding_ready_body, FitnessPose.RUNNER)
+        IntroStep(R.string.onboarding_welcome_title, R.string.onboarding_welcome_body),
+        IntroStep(R.string.onboarding_goals_title, R.string.onboarding_goals_body, useRingsLogo = true),
+        IntroStep(R.string.onboarding_ready_title, R.string.onboarding_ready_body)
     )
     val goalOptions = listOf(
-        SelectOption("strength", R.string.setup_goal_strength, R.string.setup_goal_strength_desc, FitnessPose.LIFT),
-        SelectOption("cardio", R.string.setup_goal_cardio, R.string.setup_goal_cardio_desc, FitnessPose.RUNNER),
-        SelectOption("weight", R.string.setup_goal_weight, R.string.setup_goal_weight_desc, FitnessPose.SQUAT),
-        SelectOption("muscle", R.string.setup_goal_muscle, R.string.setup_goal_muscle_desc, FitnessPose.LIFT),
-        SelectOption("endurance", R.string.setup_goal_endurance, R.string.setup_goal_endurance_desc, FitnessPose.CYCLING),
-        SelectOption("flexibility", R.string.setup_goal_flexibility, R.string.setup_goal_flexibility_desc, FitnessPose.STRETCH),
-        SelectOption("wellness", R.string.setup_goal_wellness, R.string.setup_goal_wellness_desc, FitnessPose.HERO)
+        SelectOption("strength", R.string.setup_goal_strength, R.string.setup_goal_strength_desc, SetupStepIcons::goal),
+        SelectOption("cardio", R.string.setup_goal_cardio, R.string.setup_goal_cardio_desc, SetupStepIcons::goal),
+        SelectOption("weight", R.string.setup_goal_weight, R.string.setup_goal_weight_desc, SetupStepIcons::goal),
+        SelectOption("muscle", R.string.setup_goal_muscle, R.string.setup_goal_muscle_desc, SetupStepIcons::goal),
+        SelectOption("endurance", R.string.setup_goal_endurance, R.string.setup_goal_endurance_desc, SetupStepIcons::goal),
+        SelectOption("flexibility", R.string.setup_goal_flexibility, R.string.setup_goal_flexibility_desc, SetupStepIcons::goal),
+        SelectOption("wellness", R.string.setup_goal_wellness, R.string.setup_goal_wellness_desc, SetupStepIcons::goal)
     )
     val activityOptions = listOf(
-        SelectOption("sedentary", R.string.setup_activity_sedentary, R.string.setup_activity_sedentary_desc, FitnessPose.STRETCH),
-        SelectOption("light", R.string.setup_activity_light, R.string.setup_activity_light_desc, FitnessPose.WELCOME),
-        SelectOption("moderate", R.string.setup_activity_moderate, R.string.setup_activity_moderate_desc, FitnessPose.RUNNER),
-        SelectOption("active", R.string.setup_activity_active, R.string.setup_activity_active_desc, FitnessPose.SQUAT),
-        SelectOption("athlete", R.string.setup_activity_athlete, R.string.setup_activity_athlete_desc, FitnessPose.HERO)
+        SelectOption("sedentary", R.string.setup_activity_sedentary, R.string.setup_activity_sedentary_desc, SetupStepIcons::activity),
+        SelectOption("light", R.string.setup_activity_light, R.string.setup_activity_light_desc, SetupStepIcons::activity),
+        SelectOption("moderate", R.string.setup_activity_moderate, R.string.setup_activity_moderate_desc, SetupStepIcons::activity),
+        SelectOption("active", R.string.setup_activity_active, R.string.setup_activity_active_desc, SetupStepIcons::activity),
+        SelectOption("athlete", R.string.setup_activity_athlete, R.string.setup_activity_athlete_desc, SetupStepIcons::activity)
     )
     val locationOptions = listOf(
-        SelectOption("gym", R.string.setup_location_gym, R.string.setup_location_gym_desc, FitnessPose.LIFT),
-        SelectOption("home", R.string.setup_location_home, R.string.setup_location_home_desc, FitnessPose.HOME_GYM),
-        SelectOption("outdoor", R.string.setup_location_outdoor, R.string.setup_location_outdoor_desc, FitnessPose.OUTDOOR),
-        SelectOption("mixed", R.string.setup_location_mixed, R.string.setup_location_mixed_desc, FitnessPose.CYCLING)
+        SelectOption("gym", R.string.setup_location_gym, R.string.setup_location_gym_desc, SetupStepIcons::location),
+        SelectOption("home", R.string.setup_location_home, R.string.setup_location_home_desc, SetupStepIcons::location),
+        SelectOption("outdoor", R.string.setup_location_outdoor, R.string.setup_location_outdoor_desc, SetupStepIcons::location),
+        SelectOption("mixed", R.string.setup_location_mixed, R.string.setup_location_mixed_desc, SetupStepIcons::location)
     )
     val timeOptions = listOf(
-        SelectOption("morning", R.string.setup_time_morning, R.string.setup_time_morning_desc, FitnessPose.STRETCH),
-        SelectOption("midday", R.string.setup_time_midday, R.string.setup_time_midday_desc, FitnessPose.RUNNER),
-        SelectOption("afternoon", R.string.setup_time_afternoon, R.string.setup_time_afternoon_desc, FitnessPose.SQUAT),
-        SelectOption("evening", R.string.setup_time_evening, R.string.setup_time_evening_desc, FitnessPose.LIFT),
-        SelectOption("flexible", R.string.setup_time_flexible, R.string.setup_time_flexible_desc, FitnessPose.HERO)
+        SelectOption("morning", R.string.setup_time_morning, R.string.setup_time_morning_desc, SetupStepIcons::time),
+        SelectOption("midday", R.string.setup_time_midday, R.string.setup_time_midday_desc, SetupStepIcons::time),
+        SelectOption("afternoon", R.string.setup_time_afternoon, R.string.setup_time_afternoon_desc, SetupStepIcons::time),
+        SelectOption("evening", R.string.setup_time_evening, R.string.setup_time_evening_desc, SetupStepIcons::time),
+        SelectOption("flexible", R.string.setup_time_flexible, R.string.setup_time_flexible_desc, SetupStepIcons::time)
     )
     val sessionOptions = listOf(2, 3, 4, 5, 6, 7)
 
@@ -110,7 +116,6 @@ fun SetupWizardScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(Dimens.ContainerMargin)
         ) {
             LinearProgressIndicator(
@@ -125,122 +130,69 @@ fun SetupWizardScreen(
                 color = OnSurfaceVariant,
                 modifier = Modifier.padding(top = Dimens.Md)
             )
-            Spacer(Modifier.height(Dimens.Lg))
 
-            when {
-                step < introCount -> {
-                    val current = introSteps[step]
-                    GlassCard(Modifier.fillMaxWidth()) {
-                        Column(
-                            Modifier.padding(Dimens.Lg),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            FitnessSilhouette(pose = current.pose, size = 130.dp)
-                            Text(
-                                stringResource(current.titleRes),
-                                style = HeadlineMd.copy(fontWeight = FontWeight.Bold),
-                                color = OnSurface,
-                                modifier = Modifier.padding(top = Dimens.Md)
-                            )
-                            Text(
-                                stringResource(current.bodyRes),
-                                style = BodyMd,
-                                color = OnSurfaceVariant,
-                                modifier = Modifier.padding(top = Dimens.Sm)
-                            )
-                        }
-                    }
-                }
-                step == introCount -> SelectionStep(
-                    titleRes = R.string.setup_step_goal_title,
-                    bodyRes = R.string.setup_step_goal_body,
-                    options = goalOptions,
-                    selected = fitnessGoal,
-                    onSelect = { fitnessGoal = it }
-                )
-                step == introCount + 1 -> SelectionStep(
-                    titleRes = R.string.setup_step_activity_title,
-                    bodyRes = R.string.setup_step_activity_body,
-                    options = activityOptions,
-                    selected = activityLevel,
-                    onSelect = { activityLevel = it }
-                )
-                step == introCount + 2 -> SelectionStep(
-                    titleRes = R.string.setup_step_location_title,
-                    bodyRes = R.string.setup_step_location_body,
-                    options = locationOptions,
-                    selected = workoutLocation,
-                    onSelect = { workoutLocation = it }
-                )
-                step == introCount + 3 -> SelectionStep(
-                    titleRes = R.string.setup_step_time_title,
-                    bodyRes = R.string.setup_step_time_body,
-                    options = timeOptions,
-                    selected = preferredTime,
-                    onSelect = { preferredTime = it }
-                )
-                step == introCount + 4 -> WeeklyStep(weeklySessions, sessionOptions) { weeklySessions = it }
-                step == introCount + 5 -> {
-                    GlassCard(Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(Dimens.Lg), horizontalAlignment = Alignment.CenterHorizontally) {
-                            FitnessSilhouette(pose = FitnessPose.RINGS, size = 100.dp)
-                            Text(
-                                stringResource(R.string.setup_step_rings_title),
-                                style = HeadlineMd,
-                                color = OnSurface,
-                                modifier = Modifier.padding(top = Dimens.Sm)
-                            )
-                            Text(
-                                stringResource(R.string.setup_step_rings_body),
-                                style = BodyMd,
-                                color = OnSurfaceVariant,
-                                modifier = Modifier.padding(top = Dimens.Sm, bottom = Dimens.Md)
-                            )
-                            ActivityRings(0.7f, 0.5f, 0.8f, 67)
-                            Row(
-                                Modifier.fillMaxWidth().padding(top = Dimens.Lg),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(stringResource(R.string.settings_reminders), style = BodyMd, color = OnSurface)
-                                Switch(checked = notifications, onCheckedChange = { notifications = it })
-                            }
-                        }
-                    }
-                }
-                else -> {
-                    GlassCard(Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(Dimens.Lg), horizontalAlignment = Alignment.CenterHorizontally) {
-                            FitnessSilhouette(pose = FitnessPose.HERO, size = 120.dp)
-                            Text(
-                                stringResource(R.string.setup_step_ready_title),
-                                style = DisplayStat.copy(fontWeight = FontWeight.Bold),
-                                color = PrimaryAccent
-                            )
-                            Text(
-                                stringResource(R.string.setup_step_ready_body),
-                                style = BodyMd,
-                                color = OnSurfaceVariant,
-                                modifier = Modifier.padding(top = Dimens.Md)
-                            )
-                        }
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(vertical = Dimens.Lg),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    when {
+                        step < introCount -> IntroStepContent(introSteps[step])
+                        step == introCount -> MultiSelectionStep(
+                            titleRes = R.string.setup_step_goal_title,
+                            bodyRes = R.string.setup_step_goal_body,
+                            options = goalOptions,
+                            selected = fitnessGoals,
+                            onToggle = { fitnessGoals = toggleInSet(fitnessGoals, it) }
+                        )
+                        step == introCount + 1 -> MultiSelectionStep(
+                            titleRes = R.string.setup_step_activity_title,
+                            bodyRes = R.string.setup_step_activity_body,
+                            options = activityOptions,
+                            selected = activityLevels,
+                            onToggle = { activityLevels = toggleInSet(activityLevels, it) }
+                        )
+                        step == introCount + 2 -> MultiSelectionStep(
+                            titleRes = R.string.setup_step_location_title,
+                            bodyRes = R.string.setup_step_location_body,
+                            options = locationOptions,
+                            selected = workoutLocations,
+                            onToggle = { workoutLocations = toggleInSet(workoutLocations, it) }
+                        )
+                        step == introCount + 3 -> MultiSelectionStep(
+                            titleRes = R.string.setup_step_time_title,
+                            bodyRes = R.string.setup_step_time_body,
+                            options = timeOptions,
+                            selected = preferredTimes,
+                            onToggle = { preferredTimes = toggleInSet(preferredTimes, it) }
+                        )
+                        step == introCount + 4 -> WeeklyStep(weeklySessions, sessionOptions) { weeklySessions = it }
+                        step == introCount + 5 -> RingsStep(notifications) { notifications = it }
+                        else -> CompleteStepContent()
                     }
                 }
             }
 
-            Spacer(Modifier.height(Dimens.Xl))
             Button(
                 onClick = {
                     if (step < totalSteps - 1) {
                         step++
                     } else {
                         repository.saveSetupPreferences(
-                            fitnessGoal,
-                            activityLevel,
+                            fitnessGoals.joinToString(","),
+                            activityLevels.joinToString(","),
                             weeklySessions,
                             notifications,
-                            workoutLocation,
-                            preferredTime
+                            workoutLocations.joinToString(","),
+                            preferredTimes.joinToString(",")
                         )
                         onComplete()
                     }
@@ -263,23 +215,65 @@ fun SetupWizardScreen(
 }
 
 @Composable
-private fun SelectionStep(
+private fun IntroStepContent(step: IntroStep) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        if (step.useRingsLogo) {
+            ActivityRingsLogo(size = 160.dp, strokeWidth = 8.dp)
+        } else {
+            val icon = if (step.titleRes == R.string.onboarding_ready_title) {
+                SetupStepIcons.introReady
+            } else {
+                SetupStepIcons.introWelcome
+            }
+            SetupIconBadge(icon = icon, selected = true, modifier = Modifier.padding(bottom = Dimens.Md))
+        }
+        Text(
+            stringResource(step.titleRes),
+            style = HeadlineMd.copy(fontWeight = FontWeight.Bold),
+            color = OnSurface,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = Dimens.Md)
+        )
+        Text(
+            stringResource(step.bodyRes),
+            style = BodyMd,
+            color = OnSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = Dimens.Sm, start = Dimens.Md, end = Dimens.Md)
+        )
+    }
+}
+
+@Composable
+private fun MultiSelectionStep(
     titleRes: Int,
     bodyRes: Int,
     options: List<SelectOption>,
-    selected: String,
-    onSelect: (String) -> Unit
+    selected: Set<String>,
+    onToggle: (String) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.Sm)
+    ) {
         Text(stringResource(titleRes), style = HeadlineMd, color = OnSurface)
         Text(stringResource(bodyRes), style = BodyMd, color = OnSurfaceVariant)
+        Text(
+            stringResource(R.string.setup_multi_select_hint),
+            style = LabelCaps,
+            color = PrimaryAccent.copy(0.8f),
+            modifier = Modifier.padding(bottom = Dimens.Xs)
+        )
         options.forEach { option ->
             SetupOptionCard(
                 title = stringResource(option.titleRes),
                 subtitle = stringResource(option.subtitleRes),
-                pose = option.pose,
-                selected = selected == option.key,
-                onClick = { onSelect(option.key) }
+                icon = option.icon(option.key),
+                selected = option.key in selected,
+                onClick = { onToggle(option.key) }
             )
         }
     }
@@ -287,7 +281,7 @@ private fun SelectionStep(
 
 @Composable
 private fun WeeklyStep(sessions: Int, options: List<Int>, onChange: (Int) -> Unit) {
-    Column {
+    Column(Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.setup_step_weekly_title), style = HeadlineMd, color = OnSurface)
         Text(
             stringResource(R.string.setup_step_weekly_body),
@@ -299,34 +293,98 @@ private fun WeeklyStep(sessions: Int, options: List<Int>, onChange: (Int) -> Uni
             options.chunked(3).forEach { row ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
                     row.forEach { count ->
-                        val selected = sessions == count
-                        GlassCard(
-                            modifier = Modifier.weight(1f).height(72.dp),
-                            onClick = { onChange(count) }
+                        val isSelected = sessions == count
+                        val shape = RoundedCornerShape(14.dp)
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(80.dp)
+                                .clip(shape)
+                                .border(
+                                    width = if (isSelected) 2.dp else 1.dp,
+                                    color = if (isSelected) PrimaryAccent else Primary.copy(0.2f),
+                                    shape = shape
+                                )
+                                .clickable { onChange(count) }
+                                .padding(Dimens.Sm),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Column(
-                                Modifier.fillMaxSize(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    "$count",
-                                    style = DisplayStat,
-                                    color = if (selected) Primary else OnSurface
-                                )
-                                Text(
-                                    stringResource(R.string.setup_sessions_per_week),
-                                    style = LabelCaps,
-                                    color = OnSurfaceVariant
-                                )
-                            }
+                            Text(
+                                "$count",
+                                style = DisplayStat,
+                                color = if (isSelected) PrimaryAccent else OnSurface
+                            )
+                            Text(
+                                stringResource(R.string.setup_sessions_per_week),
+                                style = LabelCaps,
+                                color = OnSurfaceVariant
+                            )
                         }
                     }
-                    repeat(3 - row.size) {
-                        Spacer(Modifier.weight(1f))
-                    }
+                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun RingsStep(notifications: Boolean, onNotificationsChange: (Boolean) -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        ActivityRingsLogo(size = 120.dp, strokeWidth = 7.dp)
+        Text(
+            stringResource(R.string.setup_step_rings_title),
+            style = HeadlineMd,
+            color = OnSurface,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = Dimens.Md)
+        )
+        Text(
+            stringResource(R.string.setup_step_rings_body),
+            style = BodyMd,
+            color = OnSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = Dimens.Sm, bottom = Dimens.Lg)
+        )
+        ActivityRings(0.7f, 0.5f, 0.8f, 67)
+        Row(
+            Modifier.fillMaxWidth().padding(top = Dimens.Xl),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(stringResource(R.string.settings_reminders), style = BodyMd, color = OnSurface)
+            Switch(checked = notifications, onCheckedChange = onNotificationsChange)
+        }
+    }
+}
+
+@Composable
+private fun CompleteStepContent() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        SetupIconBadge(
+            icon = SetupStepIcons.introComplete,
+            selected = true,
+            modifier = Modifier.padding(bottom = Dimens.Md)
+        )
+        Text(
+            stringResource(R.string.setup_step_ready_title),
+            style = DisplayStat.copy(fontWeight = FontWeight.Bold),
+            color = PrimaryAccent,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            stringResource(R.string.setup_step_ready_body),
+            style = BodyMd,
+            color = OnSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = Dimens.Md, start = Dimens.Md, end = Dimens.Md)
+        )
     }
 }
