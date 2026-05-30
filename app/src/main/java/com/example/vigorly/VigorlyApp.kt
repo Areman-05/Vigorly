@@ -22,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.navigation.VigorlyRoutes
+import com.example.vigorly.ui.components.RouteFallbackScreen
 import com.example.vigorly.ui.components.VigorlyBottomBar
 import com.example.vigorly.ui.components.VigorlyDetailTopBar
 import com.example.vigorly.ui.components.VigorlyMainTopBar
@@ -184,12 +185,20 @@ fun VigorlyApp(
                 arguments = listOf(navArgument("workoutId") { type = NavType.StringType })
             ) { entry ->
                 val id = entry.arguments?.getString("workoutId") ?: return@composable
-                val workout = repository.getWorkout(id) ?: return@composable
-                WorkoutDetailScreen(
-                    workout = workout,
-                    repository = repository,
-                    onStartWorkout = { navController.navigate(VigorlyRoutes.activeSession(id)) }
-                )
+                val workout = repository.getWorkout(id)
+                if (workout == null) {
+                    RouteFallbackScreen(
+                        title = stringResource(R.string.fallback_workout_title),
+                        message = stringResource(R.string.fallback_workout_message),
+                        onGoBack = { navController.popBackStack() }
+                    )
+                } else {
+                    WorkoutDetailScreen(
+                        workout = workout,
+                        repository = repository,
+                        onStartWorkout = { navController.navigate(VigorlyRoutes.activeSession(id)) }
+                    )
+                }
             }
             composable(
                 route = VigorlyRoutes.ActiveSession,
@@ -218,6 +227,14 @@ fun VigorlyApp(
                             navController.popBackStack(VigorlyRoutes.Dashboard, false)
                         }
                     )
+                } else {
+                    RouteFallbackScreen(
+                        title = stringResource(R.string.fallback_summary_title),
+                        message = stringResource(R.string.fallback_summary_message),
+                        onGoBack = {
+                            navController.popBackStack(VigorlyRoutes.Dashboard, false)
+                        }
+                    )
                 }
             }
             composable(
@@ -225,8 +242,16 @@ fun VigorlyApp(
                 arguments = listOf(navArgument("historyId") { type = NavType.StringType })
             ) { entry ->
                 val id = entry.arguments?.getString("historyId") ?: return@composable
-                val item = repository.getHistoryItem(id) ?: return@composable
-                HistoryDetailScreen(item = item)
+                val item = repository.getHistoryItem(id)
+                if (item == null) {
+                    RouteFallbackScreen(
+                        title = stringResource(R.string.fallback_history_title),
+                        message = stringResource(R.string.fallback_history_message),
+                        onGoBack = { navController.popBackStack() }
+                    )
+                } else {
+                    HistoryDetailScreen(item = item)
+                }
             }
         }
     }
