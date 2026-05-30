@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
@@ -34,11 +35,13 @@ import com.example.vigorly.ui.theme.PrimaryContainer
 fun SetupIconBadge(
     icon: ImageVector,
     selected: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    size: Dp = 52.dp,
+    iconSize: Dp = 28.dp
 ) {
     Box(
         modifier = modifier
-            .size(52.dp)
+            .size(size)
             .clip(CircleShape)
             .background(
                 if (selected) {
@@ -53,7 +56,7 @@ fun SetupIconBadge(
             imageVector = icon,
             contentDescription = null,
             tint = if (selected) PrimaryAccent else Primary.copy(0.85f),
-            modifier = Modifier.size(28.dp)
+            modifier = Modifier.size(iconSize)
         )
     }
 }

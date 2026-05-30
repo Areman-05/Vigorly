@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +39,8 @@ import com.example.vigorly.R
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.ActivityRings
 import com.example.vigorly.ui.components.ActivityRingsLogo
+import com.example.vigorly.ui.components.SetupRhythmVisual
+import com.example.vigorly.ui.theme.BodyLg
 import com.example.vigorly.ui.components.AuthGradientBackground
 import com.example.vigorly.ui.components.SetupIconBadge
 import com.example.vigorly.ui.components.SetupOptionCard
@@ -43,6 +48,7 @@ import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.ButtonText
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.DisplayStat
+import com.example.vigorly.ui.theme.HeadlineLg
 import com.example.vigorly.ui.theme.HeadlineMd
 import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnPrimaryContainer
@@ -52,7 +58,9 @@ import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.PrimaryContainer
 
-private data class IntroStep(val titleRes: Int, val bodyRes: Int, val useRingsLogo: Boolean = false)
+private enum class IntroVisual { WELCOME, RHYTHM, READY }
+
+private data class IntroStep(val titleRes: Int, val bodyRes: Int, val visual: IntroVisual)
 private data class SelectOption(val key: String, val titleRes: Int, val subtitleRes: Int, val icon: (String) -> androidx.compose.ui.graphics.vector.ImageVector)
 
 private fun toggleInSet(current: Set<String>, key: String): Set<String> =
@@ -73,9 +81,9 @@ fun SetupWizardScreen(
     var notifications by remember { mutableStateOf(true) }
 
     val introSteps = listOf(
-        IntroStep(R.string.onboarding_welcome_title, R.string.onboarding_welcome_body),
-        IntroStep(R.string.onboarding_goals_title, R.string.onboarding_goals_body, useRingsLogo = true),
-        IntroStep(R.string.onboarding_ready_title, R.string.onboarding_ready_body)
+        IntroStep(R.string.onboarding_welcome_title, R.string.onboarding_welcome_body, IntroVisual.WELCOME),
+        IntroStep(R.string.onboarding_goals_title, R.string.onboarding_goals_body, IntroVisual.RHYTHM),
+        IntroStep(R.string.onboarding_ready_title, R.string.onboarding_ready_body, IntroVisual.READY)
     )
     val goalOptions = listOf(
         SelectOption("strength", R.string.setup_goal_strength, R.string.setup_goal_strength_desc, SetupStepIcons::goal),
@@ -181,34 +189,58 @@ fun SetupWizardScreen(
                 }
             }
 
-            Button(
-                onClick = {
-                    if (step < totalSteps - 1) {
-                        step++
-                    } else {
-                        repository.saveSetupPreferences(
-                            fitnessGoals.joinToString(","),
-                            activityLevels.joinToString(","),
-                            weeklySessions,
-                            notifications,
-                            workoutLocations.joinToString(","),
-                            preferredTimes.joinToString(",")
-                        )
-                        onComplete()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(26.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryContainer,
-                    contentColor = OnPrimaryContainer
-                )
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.Md),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    if (step < totalSteps - 1) stringResource(R.string.setup_continue)
-                    else stringResource(R.string.setup_finish),
-                    style = ButtonText
-                )
+                if (step > 0) {
+                    OutlinedButton(
+                        onClick = { step-- },
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        shape = RoundedCornerShape(26.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = OnSurface)
+                    ) {
+                        Text(stringResource(R.string.setup_back), style = ButtonText)
+                    }
+                } else {
+                    Spacer(Modifier.weight(1f))
+                }
+                Button(
+                    onClick = {
+                        if (step < totalSteps - 1) {
+                            step++
+                        } else {
+                            repository.saveSetupPreferences(
+                                fitnessGoals.joinToString(","),
+                                activityLevels.joinToString(","),
+                                weeklySessions,
+                                notifications,
+                                workoutLocations.joinToString(","),
+                                preferredTimes.joinToString(",")
+                            )
+                            onComplete()
+                        }
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    shape = RoundedCornerShape(26.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryContainer,
+                        contentColor = OnPrimaryContainer
+                    )
+                ) {
+                    Text(
+                        if (step < totalSteps - 1) stringResource(R.string.setup_continue)
+                        else stringResource(R.string.setup_finish),
+                        style = ButtonText
+                    )
+                }
             }
         }
     }
@@ -220,29 +252,37 @@ private fun IntroStepContent(step: IntroStep) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
-        if (step.useRingsLogo) {
-            ActivityRingsLogo(size = 160.dp, strokeWidth = 8.dp)
-        } else {
-            val icon = if (step.titleRes == R.string.onboarding_ready_title) {
-                SetupStepIcons.introReady
-            } else {
-                SetupStepIcons.introWelcome
-            }
-            SetupIconBadge(icon = icon, selected = true, modifier = Modifier.padding(bottom = Dimens.Md))
+        when (step.visual) {
+            IntroVisual.WELCOME -> SetupIconBadge(
+                icon = SetupStepIcons.introWelcome,
+                selected = true,
+                modifier = Modifier.padding(bottom = Dimens.Md),
+                size = 72.dp
+            )
+            IntroVisual.RHYTHM -> SetupRhythmVisual(
+                modifier = Modifier.padding(bottom = Dimens.Md),
+                size = 220.dp
+            )
+            IntroVisual.READY -> SetupIconBadge(
+                icon = SetupStepIcons.introReady,
+                selected = true,
+                modifier = Modifier.padding(bottom = Dimens.Md),
+                size = 72.dp
+            )
         }
         Text(
             stringResource(step.titleRes),
-            style = HeadlineMd.copy(fontWeight = FontWeight.Bold),
+            style = HeadlineLg.copy(fontWeight = FontWeight.Bold),
             color = OnSurface,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = Dimens.Md)
         )
         Text(
             stringResource(step.bodyRes),
-            style = BodyMd,
+            style = BodyLg,
             color = OnSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = Dimens.Sm, start = Dimens.Md, end = Dimens.Md)
+            modifier = Modifier.padding(top = Dimens.Md, start = Dimens.Sm, end = Dimens.Sm)
         )
     }
 }
@@ -281,51 +321,81 @@ private fun MultiSelectionStep(
 
 @Composable
 private fun WeeklyStep(sessions: Int, options: List<Int>, onChange: (Int) -> Unit) {
-    Column(Modifier.fillMaxWidth()) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+    ) {
         Text(stringResource(R.string.setup_step_weekly_title), style = HeadlineMd, color = OnSurface)
         Text(
             stringResource(R.string.setup_step_weekly_body),
             style = BodyMd,
             color = OnSurfaceVariant,
-            modifier = Modifier.padding(top = Dimens.Sm, bottom = Dimens.Md)
+            modifier = Modifier.padding(top = Dimens.Sm, bottom = Dimens.Lg)
         )
-        Column(verticalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
+        Column(
+            Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Md)
+        ) {
             options.chunked(3).forEach { row ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
+                Row(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.Md)
+                ) {
                     row.forEach { count ->
-                        val isSelected = sessions == count
-                        val shape = RoundedCornerShape(14.dp)
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(80.dp)
-                                .clip(shape)
-                                .border(
-                                    width = if (isSelected) 2.dp else 1.dp,
-                                    color = if (isSelected) PrimaryAccent else Primary.copy(0.2f),
-                                    shape = shape
-                                )
-                                .clickable { onChange(count) }
-                                .padding(Dimens.Sm),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                "$count",
-                                style = DisplayStat,
-                                color = if (isSelected) PrimaryAccent else OnSurface
-                            )
-                            Text(
-                                stringResource(R.string.setup_sessions_per_week),
-                                style = LabelCaps,
-                                color = OnSurfaceVariant
-                            )
-                        }
+                        WeeklySessionCard(
+                            count = count,
+                            selected = sessions == count,
+                            onClick = { onChange(count) },
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                     repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun WeeklySessionCard(
+    count: Int,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(18.dp)
+    Column(
+        modifier = modifier
+            .fillMaxHeight()
+            .heightIn(min = 100.dp)
+            .clip(shape)
+            .border(
+                width = if (selected) 2.dp else 1.dp,
+                color = if (selected) PrimaryAccent else Primary.copy(0.2f),
+                shape = shape
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = Dimens.Sm, vertical = Dimens.Md),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            "$count",
+            style = HeadlineLg.copy(fontWeight = FontWeight.ExtraBold),
+            color = if (selected) PrimaryAccent else OnSurface
+        )
+        Text(
+            stringResource(R.string.setup_sessions_per_week),
+            style = BodyMd,
+            color = if (selected) PrimaryAccent.copy(0.85f) else OnSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = Dimens.Xs)
+        )
     }
 }
 

@@ -12,6 +12,7 @@ import com.example.vigorly.data.model.WorkoutType
 import com.example.vigorly.data.model.AuthError
 import com.example.vigorly.data.model.AuthResult
 import com.example.vigorly.data.model.UserAccount
+import com.example.vigorly.ui.setup.SetupDevFlags
 import com.example.vigorly.util.LocaleManager
 import com.example.vigorly.util.DailyTipSelector
 import com.example.vigorly.util.WorkoutRecommender
@@ -256,9 +257,10 @@ class VigorlyRepository(context: Context) {
     }
 
     fun resolveStartDestination(): AppDestination = when {
-        !_isLoggedIn.value -> com.example.vigorly.navigation.AppDestination.Login
-        !_onboardingCompleted.value -> com.example.vigorly.navigation.AppDestination.Setup
-        else -> com.example.vigorly.navigation.AppDestination.Main
+        SetupDevFlags.FORCE_SPLASH_TO_SETUP -> AppDestination.Setup
+        !_isLoggedIn.value -> AppDestination.Login
+        !_onboardingCompleted.value -> AppDestination.Setup
+        else -> AppDestination.Main
     }
 
     suspend fun preloadAppData() {
