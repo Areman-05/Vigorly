@@ -1,5 +1,6 @@
 package com.example.vigorly.ui.setup
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,12 +14,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -73,11 +74,11 @@ fun SetupWizardScreen(
     modifier: Modifier = Modifier
 ) {
     var step by remember { mutableIntStateOf(0) }
-    var fitnessGoals by remember { mutableStateOf(setOf("wellness")) }
-    var activityLevels by remember { mutableStateOf(setOf("moderate")) }
-    var workoutLocations by remember { mutableStateOf(setOf("home")) }
-    var preferredTimes by remember { mutableStateOf(setOf("flexible")) }
-    var weeklySessions by remember { mutableIntStateOf(4) }
+    var fitnessGoals by remember { mutableStateOf(emptySet<String>()) }
+    var activityLevels by remember { mutableStateOf(emptySet<String>()) }
+    var workoutLocations by remember { mutableStateOf(emptySet<String>()) }
+    var preferredTimes by remember { mutableStateOf(emptySet<String>()) }
+    var weeklySessions by remember { mutableStateOf<Int?>(null) }
     var notifications by remember { mutableStateOf(true) }
 
     val introSteps = listOf(
@@ -119,18 +120,29 @@ fun SetupWizardScreen(
     val totalSteps = introSteps.size + 7
     val progress = (step + 1) / totalSteps.toFloat()
     val introCount = introSteps.size
+    val isSelectionStep = step in introCount..introCount + 3
+    val canContinue = when {
+        step < introCount -> true
+        step == introCount -> fitnessGoals.isNotEmpty()
+        step == introCount + 1 -> activityLevels.isNotEmpty()
+        step == introCount + 2 -> workoutLocations.isNotEmpty()
+        step == introCount + 3 -> preferredTimes.isNotEmpty()
+        step == introCount + 4 -> weeklySessions != null
+        else -> true
+    }
 
     AuthGradientBackground(modifier) {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(Dimens.ContainerMargin)
+                .statusBarsPadding()
+                .padding(top = Dimens.Lg)
+                .padding(horizontal = if (isSelectionStep) Dimens.Sm else Dimens.ContainerMargin)
+                .padding(bottom = Dimens.ContainerMargin)
         ) {
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth().height(5.dp),
-                color = PrimaryAccent,
-                trackColor = OnSurfaceVariant.copy(alpha = 0.2f)
+            SetupProgressBar(
+                progress = progress,
+                modifier = Modifier.fillMaxWidth()
             )
             Text(
                 stringResource(R.string.setup_progress, step + 1, totalSteps),
@@ -148,9 +160,12 @@ fun SetupWizardScreen(
                     Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(vertical = Dimens.Lg),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(
+                            top = if (isSelectionStep) Dimens.Sm else Dimens.Lg,
+                            bottom = Dimens.Lg
+                        ),
+                    verticalArrangement = if (isSelectionStep) Arrangement.Top else Arrangement.Center,
+                    horizontalAlignment = if (isSelectionStep) Alignment.Start else Alignment.CenterHorizontally
                 ) {
                     when {
                         step < introCount -> IntroStepContent(introSteps[step])
@@ -215,10 +230,11 @@ fun SetupWizardScreen(
                         if (step < totalSteps - 1) {
                             step++
                         } else {
+                            val sessions = weeklySessions ?: return@Button
                             repository.saveSetupPreferences(
                                 fitnessGoals.joinToString(","),
                                 activityLevels.joinToString(","),
-                                weeklySessions,
+                                sessions,
                                 notifications,
                                 workoutLocations.joinToString(","),
                                 preferredTimes.joinToString(",")
@@ -226,6 +242,7 @@ fun SetupWizardScreen(
                             onComplete()
                         }
                     },
+                    enabled = canContinue,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
@@ -243,6 +260,23 @@ fun SetupWizardScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SetupProgressBar(progress: Float, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .height(5.dp)
+            .clip(RoundedCornerShape(2.5.dp))
+            .background(OnSurfaceVariant.copy(alpha = 0.2f))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .fillMaxHeight()
+                .background(PrimaryAccent)
+        )
     }
 }
 
@@ -296,31 +330,49 @@ private fun MultiSelectionStep(
     onToggle: (String) -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Dimens.Sm)
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.Md)
     ) {
-        Text(stringResource(titleRes), style = HeadlineMd, color = OnSurface)
-        Text(stringResource(bodyRes), style = BodyMd, color = OnSurfaceVariant)
-        Text(
-            stringResource(R.string.setup_multi_select_hint),
-            style = LabelCaps,
-            color = PrimaryAccent.copy(0.8f),
-            modifier = Modifier.padding(bottom = Dimens.Xs)
-        )
-        options.forEach { option ->
-            SetupOptionCard(
-                title = stringResource(option.titleRes),
-                subtitle = stringResource(option.subtitleRes),
-                icon = option.icon(option.key),
-                selected = option.key in selected,
-                onClick = { onToggle(option.key) }
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
+            Text(
+                stringResource(titleRes),
+                style = HeadlineLg.copy(fontWeight = FontWeight.Bold),
+                color = OnSurface
             )
+            Text(stringResource(bodyRes), style = BodyLg, color = OnSurfaceVariant)
+            Text(
+                stringResource(R.string.setup_multi_select_hint),
+                style = LabelCaps,
+                color = PrimaryAccent.copy(0.8f),
+                modifier = Modifier.padding(top = Dimens.Xs)
+            )
+        }
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Md)
+        ) {
+            options.forEach { option ->
+                SetupOptionCard(
+                    title = stringResource(option.titleRes),
+                    subtitle = stringResource(option.subtitleRes),
+                    icon = option.icon(option.key),
+                    selected = option.key in selected,
+                    onClick = { onToggle(option.key) },
+                    modifier = Modifier.fillMaxWidth(),
+                    badgeSize = 56.dp,
+                    iconSize = 30.dp,
+                    contentPadding = Dimens.Lg,
+                    minHeight = 80.dp
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun WeeklyStep(sessions: Int, options: List<Int>, onChange: (Int) -> Unit) {
+private fun WeeklyStep(sessions: Int?, options: List<Int>, onChange: (Int) -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()

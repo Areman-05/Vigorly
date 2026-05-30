@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -68,11 +69,16 @@ fun SetupOptionCard(
     icon: ImageVector,
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    badgeSize: Dp = 52.dp,
+    iconSize: Dp = 28.dp,
+    contentPadding: Dp = Dimens.Md,
+    minHeight: Dp? = null
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(18.dp)
     Row(
         modifier = modifier
+            .then(if (minHeight != null) Modifier.heightIn(min = minHeight) else Modifier)
             .fillMaxWidth()
             .clip(shape)
             .border(
@@ -81,10 +87,10 @@ fun SetupOptionCard(
                 shape = shape
             )
             .clickable(onClick = onClick)
-            .padding(Dimens.Md),
+            .padding(contentPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        SetupIconBadge(icon = icon, selected = selected)
+        SetupIconBadge(icon = icon, selected = selected, size = badgeSize, iconSize = iconSize)
         Column(Modifier.padding(start = Dimens.Md).weight(1f)) {
             Text(
                 title,
