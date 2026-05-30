@@ -91,7 +91,10 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(Dimens.Md))
-            AuthLoginVisual(size = 160.dp)
+            AuthLoginVisual(
+                modifier = Modifier.padding(bottom = Dimens.Sm),
+                size = 180.dp
+            )
             Text(
                 stringResource(R.string.brand_name),
                 style = DisplayStat.copy(fontWeight = FontWeight.Black),

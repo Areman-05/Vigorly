@@ -80,7 +80,10 @@ fun RegisterScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(Dimens.Md))
-            AuthRegisterVisual(size = 160.dp)
+            AuthRegisterVisual(
+                modifier = Modifier.padding(bottom = Dimens.Sm),
+                size = 104.dp
+            )
             Text(
                 stringResource(R.string.brand_name),
                 style = DisplayStat.copy(fontWeight = FontWeight.Black),
