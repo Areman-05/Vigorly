@@ -82,6 +82,7 @@
     <string name="auth_username">Nombre de usuario</string>
     <string name="auth_birth_date">Fecha de nacimiento</string>
     <string name="auth_birth_date_hint">DD/MM/AAAA</string>
+    <string name="auth_birth_date_incomplete">Completa los 8 dígitos (DD/MM/AAAA)</string>
     <string name="auth_register_button">Registrarse</string>
     <string name="auth_has_account">¿Ya tienes cuenta?</string>
     <string name="auth_login_link">Inicia sesión</string>
@@ -93,7 +94,12 @@
     <string name="auth_error_invalid_email">Introduce un correo válido (ejemplo@dominio.com)</string>
     <string name="auth_error_invalid_username">Nombre: 3–30 caracteres, letras y números</string>
     <string name="auth_error_invalid_birth_date">Fecha en formato DD/MM/AAAA</string>
-    <string name="auth_password_req_summary">La contraseña debe tener 8 caracteres, números y símbolos</string>
+    <string name="auth_password_req_summary">Mín. 8 caracteres, mayúscula, minúscula, número y símbolo</string>
+    <string name="auth_password_req_length">Al menos 8 caracteres</string>
+    <string name="auth_password_req_upper">Una mayúscula</string>
+    <string name="auth_password_req_lower">Una minúscula</string>
+    <string name="auth_password_req_digit">Un número</string>
+    <string name="auth_password_req_symbol">Un símbolo (!@#$…)</string>
     <string name="auth_or_divider">o</string>
     <string name="auth_google_button">Continuar con Google</string>
     <string name="auth_error_google_failed">No se pudo iniciar sesión con Google</string>

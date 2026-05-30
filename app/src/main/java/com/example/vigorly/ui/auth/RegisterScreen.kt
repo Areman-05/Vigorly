@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.example.vigorly.util.BirthDateVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.R
@@ -62,11 +63,12 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
-    var birthDate by remember { mutableStateOf("") }
+    var birthDateDigits by remember { mutableStateOf("") }
     var authError by remember { mutableStateOf<AuthError?>(null) }
     val scope = rememberCoroutineScope()
+    val birthDateFormatted = BirthDateFormatter.toFormatted(birthDateDigits)
+    val birthDateComplete = birthDateDigits.length == 8
     val passwordChecks = AuthValidator.passwordRequirementsMet(password)
-    val canSubmit = AuthValidator.validateRegistration(email, password, username, birthDate) == null
 
     AuthGradientBackground(modifier) {
         Column(
@@ -149,9 +151,9 @@ fun RegisterScreen(
                     shape = RoundedCornerShape(16.dp)
                 )
                 OutlinedTextField(
-                    value = birthDate,
+                    value = birthDateDigits,
                     onValueChange = {
-                        birthDate = BirthDateFormatter.formatInput(it)
+                        birthDateDigits = BirthDateFormatter.digitsOnly(it)
                         authError = null
                     },
                     label = { Text(stringResource(R.string.auth_birth_date)) },
@@ -159,10 +161,17 @@ fun RegisterScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    visualTransformation = BirthDateVisualTransformation(),
                     isError = authError == AuthError.INVALID_BIRTH_DATE,
-                    supportingText = if (authError == AuthError.INVALID_BIRTH_DATE) {
-                        { Text(authErrorMessage(AuthError.INVALID_BIRTH_DATE)) }
-                    } else null,
+                    supportingText = when {
+                        authError == AuthError.INVALID_BIRTH_DATE -> {
+                            { Text(authErrorMessage(AuthError.INVALID_BIRTH_DATE)) }
+                        }
+                        birthDateDigits.isNotEmpty() && !birthDateComplete -> {
+                            { Text(stringResource(R.string.auth_birth_date_incomplete)) }
+                        }
+                        else -> null
+                    },
                     colors = authFieldColors,
                     shape = RoundedCornerShape(16.dp)
                 )
@@ -184,19 +193,22 @@ fun RegisterScreen(
                 }
                 Button(
                     onClick = {
-                        val error = AuthValidator.validateRegistration(email, password, username, birthDate)
+                        val error = AuthValidator.validateRegistration(
+                            email, password, username, birthDateFormatted
+                        )
                         if (error != null) {
                             authError = error
                             return@Button
                         }
                         scope.launch {
-                            when (val result = repository.register(email, password, username, birthDate)) {
+                            when (val result = repository.register(
+                                email, password, username, birthDateFormatted
+                            )) {
                                 is AuthResult.Success -> onRegisterSuccess()
                                 is AuthResult.Error -> authError = result.messageKey
                             }
                         }
                     },
-                    enabled = canSubmit,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
@@ -219,18 +231,4 @@ fun RegisterScreen(
             Spacer(Modifier.height(Dimens.Md))
         }
     }
-}
-
-@Composable
-private fun CompactPasswordHint(checks: List<Boolean>, showError: Boolean) {
-    val allMet = checks.all { it }
-    Text(
-        text = stringResource(R.string.auth_password_req_summary),
-        style = BodyMd,
-        color = when {
-            showError -> PrimaryAccent
-            allMet -> PrimaryAccent.copy(0.9f)
-            else -> OnSurfaceVariant.copy(0.75f)
-        }
-    )
 }
