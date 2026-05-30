@@ -11,6 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.DisplayStat
@@ -31,7 +33,7 @@ fun StreakCard(
             Icon(Icons.Default.LocalFireDepartment, null, tint = Primary)
             Column(Modifier.padding(start = Dimens.Md)) {
                 Text("$streakDays", style = DisplayStat, color = Primary)
-                Text("Day streak — keep it alive", style = BodyMd, color = OnSurfaceVariant)
+                Text(stringResource(R.string.streak_subtitle), style = BodyMd, color = OnSurfaceVariant)
             }
         }
     }

@@ -88,7 +88,8 @@ fun ActiveWorkoutScreen(
         Text(current.workoutName, style = HeadlineLgMobile, color = OnSurface)
         Text(TimeFormatter.formatElapsed(current.elapsedSeconds), style = DisplayStat, color = Primary)
         Text(
-            if (isResting) "REST" else "EXERCISE ${current.currentExerciseIndex + 1} / ${current.totalExercises}",
+            if (isResting) stringResource(R.string.session_rest)
+            else stringResource(R.string.session_exercise_progress, current.currentExerciseIndex + 1, current.totalExercises),
             style = LabelCaps,
             color = OnSurfaceVariant
         )
@@ -103,9 +104,9 @@ fun ActiveWorkoutScreen(
                         style = DisplayStat,
                         color = Primary
                     )
-                    Text("Rest before next exercise", style = BodyMd, color = OnSurfaceVariant)
+                    Text(stringResource(R.string.session_rest_hint), style = BodyMd, color = OnSurfaceVariant)
                     TextButton(onClick = repository::skipRest) {
-                        Text("Skip rest", style = ButtonText, color = Primary)
+                        Text(stringResource(R.string.session_skip_rest), style = ButtonText, color = Primary)
                     }
                 }
             }
@@ -135,7 +136,8 @@ fun ActiveWorkoutScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Primary.copy(alpha = 0.2f))
             ) {
                 Text(
-                    if (isExerciseDone) "Exercise completed" else "Mark exercise done",
+                    if (isExerciseDone) stringResource(R.string.exercise_completed)
+                    else stringResource(R.string.mark_exercise_done),
                     style = ButtonText,
                     color = Primary
                 )
@@ -182,7 +184,7 @@ fun ActiveWorkoutScreen(
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = OnSurfaceVariant.copy(alpha = 0.2f))
             ) {
-                Text("Cancel session", style = BodyMd, color = OnSurfaceVariant)
+                Text(stringResource(R.string.session_cancel), style = BodyMd, color = OnSurfaceVariant)
             }
         }
     }

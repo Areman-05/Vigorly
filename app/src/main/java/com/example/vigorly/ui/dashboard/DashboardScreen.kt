@@ -85,7 +85,7 @@ fun DashboardScreen(
             .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
     ) {
         Text(
-            text = "Hey, $firstName",
+            text = stringResource(R.string.dashboard_greeting, firstName),
             style = HeadlineLgMobile,
             color = OnSurface,
             fontWeight = FontWeight.Bold,
@@ -96,7 +96,7 @@ fun DashboardScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Ready to train?", style = BodyMd, color = OnSurfaceVariant)
+            Text(stringResource(R.string.dashboard_ready), style = BodyMd, color = OnSurfaceVariant)
             TextButton(onClick = repository::refreshDailyGoalsFromActivity) {
                 Text(stringResource(R.string.sync_activity), style = ButtonText, color = Primary)
             }
@@ -162,7 +162,7 @@ fun DashboardScreen(
 private fun PulseStartButton(onClick: () -> Unit) {
     PulsingButton(onClick = onClick) {
         Icon(Icons.Default.PlayArrow, contentDescription = null)
-        Text("START WORKOUT", style = ButtonText, modifier = Modifier.padding(start = 4.dp))
+        Text(stringResource(R.string.start_workout), style = ButtonText, modifier = Modifier.padding(start = 4.dp))
     }
 }
 
@@ -215,7 +215,7 @@ private fun SmallMetricCard(modifier: Modifier, icon: ImageVector, value: String
 private fun RecentSection(items: List<RecentActivity>) {
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(Dimens.Md)) {
-            Text("Recent", style = ButtonText, color = OnSurface)
+            Text(stringResource(R.string.recent_section), style = ButtonText, color = OnSurface)
             Spacer(Modifier.height(Dimens.Sm))
             items.forEach { item ->
                 Row(

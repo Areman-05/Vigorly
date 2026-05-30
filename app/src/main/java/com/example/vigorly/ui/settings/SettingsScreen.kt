@@ -56,7 +56,7 @@ fun SettingsScreen(
             .verticalScroll(rememberScrollState())
             .padding(Dimens.ContainerMargin)
     ) {
-        Text("Settings", style = HeadlineMd, color = OnSurface)
+        Text(stringResource(R.string.settings_title), style = HeadlineMd, color = OnSurface)
         if (profile.isProMember) {
             GlassCard(Modifier.fillMaxWidth().padding(top = Dimens.Md)) {
                 Row(
@@ -65,19 +65,19 @@ fun SettingsScreen(
                 ) {
                     Icon(Icons.Default.WorkspacePremium, null, tint = Primary)
                     Column(Modifier.padding(start = Dimens.Sm)) {
-                        Text("Vigorly Pro", style = HeadlineMd, color = OnSurface)
-                        Text("All premium features unlocked", style = BodyMd, color = OnSurfaceVariant)
+                        Text(stringResource(R.string.settings_pro_title), style = HeadlineMd, color = OnSurface)
+                        Text(stringResource(R.string.settings_pro_subtitle), style = BodyMd, color = OnSurfaceVariant)
                     }
                 }
             }
         }
         GlassCard(Modifier.fillMaxWidth().padding(top = Dimens.Md)) {
             Column(Modifier.padding(Dimens.Md)) {
-                Text("Profile", style = HeadlineMd, color = OnSurface)
+                Text(stringResource(R.string.settings_profile), style = HeadlineMd, color = OnSurface)
                 OutlinedTextField(
                     value = nameInput,
                     onValueChange = { nameInput = it },
-                    label = { Text("Display name") },
+                    label = { Text(stringResource(R.string.settings_display_name)) },
                     modifier = Modifier.fillMaxWidth().padding(top = Dimens.Sm),
                     singleLine = true
                 )
@@ -85,19 +85,19 @@ fun SettingsScreen(
                     onClick = { if (nameInput.isNotBlank()) repository.updateDisplayName(nameInput) },
                     modifier = Modifier.padding(top = Dimens.Sm)
                 ) {
-                    Text("Save profile", style = ButtonText)
+                    Text(stringResource(R.string.settings_save_profile), style = ButtonText)
                 }
             }
         }
         GlassCard(Modifier.fillMaxWidth().padding(top = Dimens.Md)) {
             Column(Modifier.padding(Dimens.Md)) {
-                SettingToggle("Workout reminders", notifications, repository::setNotificationsEnabled)
-                SettingToggle("Metric units", unitsMetric, repository::setUnitsMetric)
+                SettingToggle(stringResource(R.string.settings_reminders), notifications, repository::setNotificationsEnabled)
+                SettingToggle(stringResource(R.string.settings_metric_units), unitsMetric, repository::setUnitsMetric)
             }
         }
         GlassCard(Modifier.fillMaxWidth().padding(top = Dimens.Md)) {
             Column(Modifier.padding(Dimens.Md)) {
-                Text("Weekly target sessions", style = BodyMd, color = OnSurface)
+                Text(stringResource(R.string.settings_weekly_target), style = BodyMd, color = OnSurface)
                 Row(
                     Modifier.fillMaxWidth().padding(top = Dimens.Sm),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -118,7 +118,7 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth().padding(top = Dimens.Md)
         ) {
             Icon(Icons.Default.Insights, null, modifier = Modifier.padding(end = Dimens.Sm))
-            Text("Open insights", style = ButtonText)
+            Text(stringResource(R.string.settings_open_insights), style = ButtonText)
         }
         Button(
             onClick = repository::resetOnboarding,
@@ -144,10 +144,10 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth().padding(top = Dimens.Md),
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainer)
         ) {
-            Text("Clear workout history", style = ButtonText)
+            Text(stringResource(R.string.clear_history), style = ButtonText)
         }
         Text(
-            "Version 1.0 — Vigorly",
+            stringResource(R.string.settings_version, "1.0"),
             style = BodyMd,
             color = OnSurfaceVariant,
             modifier = Modifier.padding(top = Dimens.Lg)

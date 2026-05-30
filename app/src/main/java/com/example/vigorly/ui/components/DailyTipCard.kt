@@ -9,6 +9,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
 import com.example.vigorly.data.model.CoachingTip
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
@@ -25,7 +27,7 @@ fun DailyTipCard(
     GlassCard(modifier = modifier.fillMaxWidth()) {
         Column(Modifier.padding(Dimens.Md)) {
             Icon(Icons.Default.Lightbulb, contentDescription = null, tint = Primary)
-            Text("COACHING TIP", style = LabelCaps, color = OnSurfaceVariant, modifier = Modifier.padding(top = Dimens.Sm))
+            Text(stringResource(R.string.coaching_tip_label), style = LabelCaps, color = OnSurfaceVariant, modifier = Modifier.padding(top = Dimens.Sm))
             Text(tip.text, style = BodyMd, color = OnSurface, modifier = Modifier.padding(top = Dimens.Xs))
         }
     }

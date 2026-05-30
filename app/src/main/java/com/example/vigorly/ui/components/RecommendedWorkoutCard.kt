@@ -12,6 +12,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.vigorly.R
 import com.example.vigorly.data.model.WorkoutDetail
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
@@ -39,7 +41,7 @@ fun RecommendedWorkoutCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(Modifier.weight(1f)) {
-                Text("FOR YOU", style = LabelCaps, color = Primary)
+                Text(stringResource(R.string.for_you_label), style = LabelCaps, color = Primary)
                 Text(workout.name, style = HeadlineMd, color = OnSurface, modifier = Modifier.padding(top = Dimens.Xs))
                 Text(
                     "${workout.durationMinutes} min · ${workout.intensity}",

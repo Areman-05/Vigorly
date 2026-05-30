@@ -20,7 +20,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.vigorly.R
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.EmptyState
 import com.example.vigorly.ui.components.GlassCard
@@ -55,20 +57,20 @@ fun HistoryScreen(
             .verticalScroll(rememberScrollState())
             .padding(Dimens.ContainerMargin)
     ) {
-        Text("History", style = HeadlineMd, color = OnSurface, modifier = Modifier.padding(bottom = Dimens.Md))
+        Text(stringResource(R.string.history_title), style = HeadlineMd, color = OnSurface, modifier = Modifier.padding(bottom = Dimens.Md))
         if (history.isNotEmpty()) {
             GlassCard(Modifier.fillMaxWidth().padding(bottom = Dimens.Md)) {
                 Column(Modifier.padding(Dimens.Md)) {
-                    StatRow("Sessions", "${summary.totalSessions}", highlight = true)
-                    StatRow("Total time", "${summary.totalMinutes} min")
-                    StatRow("Calories", "%,d kcal".format(summary.totalCalories))
+                    StatRow(stringResource(R.string.history_sessions), "${summary.totalSessions}", highlight = true)
+                    StatRow(stringResource(R.string.history_total_time), "${summary.totalMinutes} min")
+                    StatRow(stringResource(R.string.history_calories), "%,d kcal".format(summary.totalCalories))
                 }
             }
         }
         if (history.isEmpty()) {
             EmptyState(
-                title = "No workouts yet",
-                message = "Complete a session to see your training history here."
+                title = stringResource(R.string.history_empty_title),
+                message = stringResource(R.string.history_empty_message)
             )
         } else {
             sections.forEach { section ->
