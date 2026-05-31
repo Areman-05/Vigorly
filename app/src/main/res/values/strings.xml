@@ -42,6 +42,12 @@
     <string name="metric_steps">PASOS</string>
     <string name="metric_exercise">EJERCICIO</string>
     <string name="metric_stand">DE PIE</string>
+    <string name="activity_detail_move_value">%1$d kcal</string>
+    <string name="activity_detail_exercise_value">%1$d min</string>
+    <string name="activity_detail_stand_value">%1$d h</string>
+    <string name="activity_detail_steps">PASOS</string>
+    <string name="activity_detail_distance">DISTANCIA</string>
+    <string name="activity_detail_today">Hoy</string>
     <string name="recent_section">Recientes</string>
     <string name="coaching_tip_label">CONSEJO</string>
     <string name="for_you_label">PARA TI</string>

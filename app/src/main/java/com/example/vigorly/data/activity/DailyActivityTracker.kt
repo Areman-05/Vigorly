@@ -47,10 +47,16 @@ class DailyActivityTracker(
     private var standHoursEarned = mutableSetOf<Int>()
     private var exerciseMinutes = 0
     private var workoutCalories = 0
+    private var stepsPerHour = IntArray(HourlyActivityCodec.HOURS)
+    private var exerciseMinutesPerHour = IntArray(HourlyActivityCodec.HOURS)
+    private var workoutCaloriesPerHour = IntArray(HourlyActivityCodec.HOURS)
     private var trackingDateKey: String = todayKey()
 
     private val _metrics = MutableStateFlow(DailyActivityMetrics())
     val metrics: StateFlow<DailyActivityMetrics> = _metrics.asStateFlow()
+
+    private val _detail = MutableStateFlow(DailyActivityDetail())
+    val detail: StateFlow<DailyActivityDetail> = _detail.asStateFlow()
 
     private var listening = false
     @Volatile
@@ -99,7 +105,12 @@ class DailyActivityTracker(
                 ensureToday()
                 exerciseMinutes = (exerciseMinutes + durationMinutes).coerceAtMost(180)
                 workoutCalories = (workoutCalories + calories).coerceAtMost(2000)
-                markStandHour(currentHour())
+                val hour = currentHour()
+                exerciseMinutesPerHour[hour] = (exerciseMinutesPerHour[hour] + durationMinutes)
+                    .coerceAtMost(180)
+                workoutCaloriesPerHour[hour] = (workoutCaloriesPerHour[hour] + calories)
+                    .coerceAtMost(500)
+                markStandHour(hour)
                 persistState()
             }
             publishGoals(preserveWellness = true)
@@ -124,7 +135,9 @@ class DailyActivityTracker(
                 } else if (total >= lastStepTotal) {
                     val delta = total - lastStepTotal
                     if (delta > 0) {
-                        markStandHour(currentHour())
+                        val hour = currentHour()
+                        stepsPerHour[hour] = (stepsPerHour[hour] + delta.toInt()).coerceAtMost(50_000)
+                        markStandHour(hour)
                     }
                     lastStepTotal = total
                 } else {
@@ -148,6 +161,15 @@ class DailyActivityTracker(
             workoutCalories = workoutCalories,
             standHours = standCount,
             sensorAvailable = stepSensor != null
+        )
+        _detail.value = DailyActivityDetailBuilder.build(
+            stepsPerHour = stepsPerHour,
+            exerciseMinutesPerHour = exerciseMinutesPerHour,
+            workoutCaloriesPerHour = workoutCaloriesPerHour,
+            standHours = standHoursEarned,
+            totalSteps = steps,
+            totalExerciseMinutes = exerciseMinutes,
+            totalWorkoutCalories = workoutCalories
         )
         val previous = preferences.dailyGoalsState()
         val goals = DailyGoalsCalculator.build(
@@ -176,6 +198,9 @@ class DailyActivityTracker(
             standHoursEarned.clear()
             exerciseMinutes = 0
             workoutCalories = 0
+            stepsPerHour = IntArray(HourlyActivityCodec.HOURS)
+            exerciseMinutesPerHour = IntArray(HourlyActivityCodec.HOURS)
+            workoutCaloriesPerHour = IntArray(HourlyActivityCodec.HOURS)
         }
     }
 
@@ -195,6 +220,9 @@ class DailyActivityTracker(
         exerciseMinutes = state.exerciseMinutes
         workoutCalories = state.workoutCalories
         standHoursEarned = state.standHours.toMutableSet()
+        stepsPerHour = state.stepsPerHour.copyOf()
+        exerciseMinutesPerHour = state.exerciseMinutesPerHour.copyOf()
+        workoutCaloriesPerHour = state.workoutCaloriesPerHour.copyOf()
         ensureToday()
     }
 
@@ -213,7 +241,10 @@ class DailyActivityTracker(
             lastStepTotal = lastStepTotal,
             exerciseMinutes = exerciseMinutes,
             workoutCalories = workoutCalories,
-            standHours = standHoursEarned.toList()
+            standHours = standHoursEarned.toList(),
+            stepsPerHour = stepsPerHour,
+            exerciseMinutesPerHour = exerciseMinutesPerHour,
+            workoutCaloriesPerHour = workoutCaloriesPerHour
         )
     }
 }

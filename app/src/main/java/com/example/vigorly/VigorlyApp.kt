@@ -33,6 +33,7 @@ import com.example.vigorly.ui.components.RouteFallbackScreen
 import com.example.vigorly.ui.components.VigorlyBottomBar
 import com.example.vigorly.ui.components.VigorlyDetailTopBar
 import com.example.vigorly.ui.components.VigorlyMainTopBar
+import com.example.vigorly.ui.dashboard.ActivityDetailScreen
 import com.example.vigorly.ui.dashboard.DashboardScreen
 import com.example.vigorly.ui.history.HistoryDetailScreen
 import com.example.vigorly.ui.history.HistoryScreen
@@ -86,7 +87,8 @@ fun VigorlyApp(
     val isSubScreen = currentRoute in listOf(
         VigorlyRoutes.Settings,
         VigorlyRoutes.Milestones,
-        VigorlyRoutes.Insights
+        VigorlyRoutes.Insights,
+        VigorlyRoutes.ActivityDetail
     )
     val isSummary = currentRoute == VigorlyRoutes.SessionSummary
     val isHistoryDetail = currentRoute?.startsWith("history/") == true && currentRoute != VigorlyRoutes.History
@@ -211,10 +213,14 @@ fun VigorlyApp(
             composable(VigorlyRoutes.Dashboard) {
                 DashboardScreen(
                     repository = repository,
+                    onActivityDetailClick = { navController.navigate(VigorlyRoutes.ActivityDetail) },
                     onRecommendedWorkoutClick = { id ->
                         navController.navigate(VigorlyRoutes.workoutDetail(id))
                     }
                 )
+            }
+            composable(VigorlyRoutes.ActivityDetail) {
+                ActivityDetailScreen(repository = repository)
             }
             composable(VigorlyRoutes.Workouts) {
                 WorkoutsScreen(

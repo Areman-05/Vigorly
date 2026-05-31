@@ -1,12 +1,16 @@
 package com.example.vigorly.ui.dashboard
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -17,12 +21,13 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,7 +46,6 @@ import com.example.vigorly.ui.theme.ButtonText
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.DisplayStat
 import com.example.vigorly.ui.theme.HeadlineLgMobile
-import com.example.vigorly.ui.theme.HeadlineMd
 import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
@@ -52,6 +56,7 @@ import com.example.vigorly.ui.theme.PrimaryContainer
 @Composable
 fun DashboardScreen(
     repository: VigorlyRepository,
+    onActivityDetailClick: () -> Unit = {},
     onRecommendedWorkoutClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -69,47 +74,45 @@ fun DashboardScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
     ) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.dashboard_greeting, firstName),
-                        style = HeadlineLgMobile,
-                        color = OnSurface,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        stringResource(R.string.dashboard_ready),
-                        style = BodyMd,
-                        color = OnSurfaceVariant,
-                        modifier = Modifier.padding(top = Dimens.Xs)
-                    )
-                }
-                TextButton(onClick = repository::refreshDailyGoalsFromActivity) {
-                    Text(stringResource(R.string.sync_activity), style = ButtonText, color = Primary)
-                }
-            }
-
-            Spacer(Modifier.height(Dimens.Lg))
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                ActivityRings(
-                    moveProgress = goals.moveProgress,
-                    exerciseProgress = goals.exerciseProgress,
-                    standProgress = goals.standProgress,
-                    centerPercent = goals.dailyGoalPercent,
-                    centerLabel = stringResource(R.string.daily_goal_label),
-                    ringSize = 240.dp
+            Column(Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(R.string.dashboard_greeting, firstName),
+                    style = HeadlineLgMobile,
+                    color = OnSurface,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    stringResource(R.string.dashboard_ready),
+                    style = BodyMd,
+                    color = OnSurfaceVariant,
+                    modifier = Modifier.padding(top = Dimens.Xs)
                 )
             }
 
-            Spacer(Modifier.height(Dimens.Lg))
+            Spacer(Modifier.height(Dimens.Md))
+
+            ActivityRingsHeroSection(
+                moveProgress = goals.moveProgress,
+                exerciseProgress = goals.exerciseProgress,
+                standProgress = goals.standProgress,
+                centerPercent = goals.dailyGoalPercent,
+                onClick = onActivityDetailClick
+            )
+
+            Spacer(Modifier.height(Dimens.Md))
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = stringResource(R.string.daily_goal_label),
+                    style = LabelCaps,
+                    color = OnSurfaceVariant
+                )
+            }
+
+            Spacer(Modifier.height(Dimens.Sm))
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.Md)) {
                 ActivityMetricTile(
@@ -166,6 +169,40 @@ fun DashboardScreen(
             RecentSection(recent)
             Spacer(Modifier.height(Dimens.Md))
         }
+}
+
+@Composable
+private fun ActivityRingsHeroSection(
+    moveProgress: Float,
+    exerciseProgress: Float,
+    standProgress: Float,
+    centerPercent: Int,
+    onClick: () -> Unit
+) {
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val heroMinHeight = screenHeight * 0.38f
+    val interactionSource = remember { MutableInteractionSource() }
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = heroMinHeight)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        val ringSize = maxWidth.coerceIn(280.dp, 380.dp)
+        ActivityRings(
+            moveProgress = moveProgress,
+            exerciseProgress = exerciseProgress,
+            standProgress = standProgress,
+            centerPercent = centerPercent,
+            ringSize = ringSize
+        )
+    }
 }
 
 @Composable

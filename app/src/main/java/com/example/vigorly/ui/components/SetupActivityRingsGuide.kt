@@ -47,7 +47,7 @@ fun SetupActivityRingsGuide(modifier: Modifier = Modifier) {
             standProgress = 0.68f,
             centerPercent = 0,
             ringSize = 260.dp,
-            showCenterLabel = false
+            showCenterPercent = false
         )
         Column(
             modifier = Modifier.fillMaxWidth(),

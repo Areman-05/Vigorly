@@ -17,6 +17,7 @@ object VigorlyRoutes {
     const val ActiveSession = "session/{workoutId}"
     const val SessionSummary = "session/summary"
     const val HistoryDetail = "history/{historyId}"
+    const val ActivityDetail = "activity/detail"
 
     fun workoutDetail(workoutId: String) = "workout/$workoutId"
     fun activeSession(workoutId: String) = "session/$workoutId"

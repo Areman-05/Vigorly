@@ -1,6 +1,7 @@
 package com.example.vigorly.data.repository
 
 import android.content.Context
+import com.example.vigorly.data.activity.DailyActivityDetail
 import com.example.vigorly.data.activity.DailyActivityTracker
 import com.example.vigorly.data.activity.DailyGoalsCalculator
 import com.example.vigorly.data.AthleticStatBooster
@@ -65,6 +66,10 @@ class VigorlyRepository(context: Context) {
 
     val dailyGoals: StateFlow<DailyGoals> = preferences.dailyGoals.stateIn(
         scope, SharingStarted.Eagerly, defaultDailyGoals()
+    )
+
+    val dailyActivityDetail: StateFlow<DailyActivityDetail> = activityTracker.detail.stateIn(
+        scope, SharingStarted.Eagerly, DailyActivityDetail()
     )
 
     val notificationsEnabled: StateFlow<Boolean> = preferences.notificationsEnabled.stateIn(

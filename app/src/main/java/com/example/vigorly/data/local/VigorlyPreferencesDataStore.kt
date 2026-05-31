@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.vigorly.data.activity.HourlyActivityCodec
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
 import com.example.vigorly.data.model.UserProfile
@@ -242,7 +243,10 @@ class VigorlyPreferencesDataStore(private val context: Context) {
             lastStepTotal = prefs[PreferenceKeys.STEP_COUNTER_LAST]?.toLongOrNull() ?: 0L,
             exerciseMinutes = prefs[PreferenceKeys.EXERCISE_MINUTES_TODAY] ?: 0,
             workoutCalories = prefs[PreferenceKeys.WORKOUT_CALORIES_TODAY] ?: 0,
-            standHours = standHours
+            standHours = standHours,
+            stepsPerHour = HourlyActivityCodec.decode(prefs[PreferenceKeys.STEPS_PER_HOUR]),
+            exerciseMinutesPerHour = HourlyActivityCodec.decode(prefs[PreferenceKeys.EXERCISE_MINUTES_PER_HOUR]),
+            workoutCaloriesPerHour = HourlyActivityCodec.decode(prefs[PreferenceKeys.WORKOUT_CALORIES_PER_HOUR])
         )
     }
 
@@ -252,7 +256,10 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         lastStepTotal: Long,
         exerciseMinutes: Int,
         workoutCalories: Int,
-        standHours: List<Int>
+        standHours: List<Int>,
+        stepsPerHour: IntArray,
+        exerciseMinutesPerHour: IntArray,
+        workoutCaloriesPerHour: IntArray
     ) {
         context.vigorlyDataStore.edit { prefs ->
             prefs[PreferenceKeys.DAILY_ACTIVITY_DATE] = dateKey
@@ -265,6 +272,9 @@ class VigorlyPreferencesDataStore(private val context: Context) {
             prefs[PreferenceKeys.EXERCISE_MINUTES_TODAY] = exerciseMinutes
             prefs[PreferenceKeys.WORKOUT_CALORIES_TODAY] = workoutCalories
             prefs[PreferenceKeys.STAND_HOURS_TODAY] = standHours.sorted().joinToString(",")
+            prefs[PreferenceKeys.STEPS_PER_HOUR] = HourlyActivityCodec.encode(stepsPerHour)
+            prefs[PreferenceKeys.EXERCISE_MINUTES_PER_HOUR] = HourlyActivityCodec.encode(exerciseMinutesPerHour)
+            prefs[PreferenceKeys.WORKOUT_CALORIES_PER_HOUR] = HourlyActivityCodec.encode(workoutCaloriesPerHour)
         }
     }
 

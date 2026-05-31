@@ -14,11 +14,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.vigorly.ui.theme.DisplayStat
-import com.example.vigorly.ui.theme.LabelCaps
-import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.PrimaryContainer
@@ -32,12 +32,22 @@ fun ActivityRings(
     centerPercent: Int,
     modifier: Modifier = Modifier,
     ringSize: Dp = 256.dp,
-    showCenterLabel: Boolean = true,
-    centerLabel: String = "DAILY GOAL"
+    showCenterPercent: Boolean = true
 ) {
     val animatedMove by animateFloatAsState(moveProgress, tween(800), label = "move")
     val animatedExercise by animateFloatAsState(exerciseProgress, tween(800), label = "exercise")
     val animatedStand by animateFloatAsState(standProgress, tween(800), label = "stand")
+    val ringScale = (ringSize.value / 256f).coerceIn(1f, 1.45f)
+    val digitCount = when {
+        centerPercent >= 100 -> 3
+        centerPercent >= 10 -> 2
+        else -> 1
+    }
+    val percentFontSize = when (digitCount) {
+        1 -> (34f * ringScale).sp
+        2 -> (30f * ringScale).sp
+        else -> (26f * ringScale).sp
+    }
 
     Box(modifier = modifier.size(ringSize), contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.matchParentSize()) {
@@ -69,19 +79,17 @@ fun ActivityRings(
             drawRing(0.60f, animatedExercise, PrimaryContainer)
             drawRing(0.36f, animatedStand, Primary)
         }
-        if (showCenterLabel) {
-            androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "$centerPercent%",
-                    style = DisplayStat,
-                    color = Primary
-                )
-                Text(
-                    text = centerLabel,
-                    style = LabelCaps,
-                    color = OnSurfaceVariant
-                )
-            }
+        if (showCenterPercent) {
+            Text(
+                text = "$centerPercent%",
+                style = DisplayStat.copy(
+                    fontSize = percentFontSize,
+                    lineHeight = percentFontSize
+                ),
+                color = Primary,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
         }
     }
 }
