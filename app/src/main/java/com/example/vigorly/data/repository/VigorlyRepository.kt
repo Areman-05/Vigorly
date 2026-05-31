@@ -5,6 +5,8 @@ import com.example.vigorly.data.activity.DailyActivityDetail
 import com.example.vigorly.data.activity.DailyActivityDaySummary
 import com.example.vigorly.data.activity.DailyActivityTracker
 import com.example.vigorly.data.activity.DailyGoalsCalculator
+import com.example.vigorly.data.activity.WeeklyActivityRingDay
+import com.example.vigorly.data.activity.WeeklyActivityRingsBuilder
 import com.example.vigorly.data.AthleticStatBooster
 import com.example.vigorly.data.MilestoneUnlocker
 import com.example.vigorly.data.catalog.WorkoutCatalog
@@ -90,6 +92,16 @@ class VigorlyRepository(context: Context) {
     ) { live, history, selected ->
         resolveActivityDetail(selected, live, history)
     }.stateIn(scope, SharingStarted.Eagerly, DailyActivityDetail())
+
+    val currentWeekActivityRings: StateFlow<List<WeeklyActivityRingDay>> = combine(
+        dailyActivityDetail,
+        activityDayHistory
+    ) { live, history ->
+        WeeklyActivityRingsBuilder.build(
+            history = history,
+            liveTodayDetail = live
+        )
+    }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     private val activityDateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
@@ -207,6 +219,11 @@ class VigorlyRepository(context: Context) {
             return DailyActivityDaySummary.fromDetail(key, live)
         }
         return activityDayHistory.value[key]
+    }
+
+    fun currentWeekRangeLabel(locale: Locale = Locale.getDefault()): String {
+        val days = currentWeekActivityRings.value
+        return WeeklyActivityRingsBuilder.formatWeekRange(days, locale)
     }
 
     fun startActivityTracking() {

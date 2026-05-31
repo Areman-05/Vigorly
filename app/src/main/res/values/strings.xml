@@ -51,6 +51,12 @@
     <string name="activity_calendar_title">Actividad</string>
     <string name="activity_calendar_open">Calendario de actividad</string>
     <string name="activity_calendar_back">Volver al detalle del día</string>
+    <string name="activity_weekly_title">SEMANA ACTUAL</string>
+    <string name="activity_chart_period_dawn">Madrugada</string>
+    <string name="activity_chart_period_morning">Mañana</string>
+    <string name="activity_chart_period_noon">Mediodía</string>
+    <string name="activity_chart_period_afternoon">Tarde</string>
+    <string name="activity_chart_period_night">Noche</string>
     <string name="recent_section">Recientes</string>
     <string name="coaching_tip_label">CONSEJO</string>
     <string name="for_you_label">PARA TI</string>
