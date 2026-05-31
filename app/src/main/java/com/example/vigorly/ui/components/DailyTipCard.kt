@@ -24,7 +24,7 @@ fun DailyTipCard(
     tip: CoachingTip,
     modifier: Modifier = Modifier
 ) {
-    GlassCard(modifier = modifier.fillMaxWidth()) {
+    VigorlyOutlineCard(modifier = modifier.fillMaxWidth()) {
         Column(Modifier.padding(Dimens.Md)) {
             Icon(Icons.Default.Lightbulb, contentDescription = null, tint = Primary)
             Text(stringResource(R.string.coaching_tip_label), style = LabelCaps, color = OnSurfaceVariant, modifier = Modifier.padding(top = Dimens.Sm))

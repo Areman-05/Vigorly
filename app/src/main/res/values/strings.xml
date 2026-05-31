@@ -11,7 +11,7 @@
     <string name="finish_workout">FINALIZAR ENTRENAMIENTO</string>
     <string name="daily_goal">META DIARIA</string>
     <string name="workout_completed">¡Entrenamiento completado!</string>
-    <string name="sync_activity">Sincronizar actividad</string>
+    <string name="sync_activity">Actualizar</string>
     <string name="search_workouts">Buscar entrenamientos</string>
     <string name="clear_history">Borrar historial</string>
     <string name="mark_exercise_done">Marcar ejercicio hecho</string>
@@ -34,6 +34,14 @@
     <string name="reset_weekly_progress">Restablecer progreso semanal</string>
     <string name="dashboard_greeting">Hola, %1$s</string>
     <string name="dashboard_ready">¿Listo para entrenar?</string>
+    <string name="daily_goal_label">OBJETIVO DIARIO</string>
+    <string name="ring_move">Mover · %1$d / %2$d kcal</string>
+    <string name="ring_exercise">Ejercicio · %1$d / %2$d min</string>
+    <string name="ring_stand">De pie · %1$d / %2$d h</string>
+    <string name="metric_move">MOVER</string>
+    <string name="metric_steps">PASOS</string>
+    <string name="metric_exercise">EJERCICIO</string>
+    <string name="metric_stand">DE PIE</string>
     <string name="recent_section">Recientes</string>
     <string name="coaching_tip_label">CONSEJO</string>
     <string name="for_you_label">PARA TI</string>

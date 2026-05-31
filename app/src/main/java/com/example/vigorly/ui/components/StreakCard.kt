@@ -25,7 +25,7 @@ fun StreakCard(
     streakDays: Int,
     modifier: Modifier = Modifier
 ) {
-    GlassCard(modifier = modifier.fillMaxWidth()) {
+    VigorlyOutlineCard(modifier = modifier.fillMaxWidth()) {
         Row(
             Modifier.padding(Dimens.Md),
             verticalAlignment = Alignment.CenterVertically

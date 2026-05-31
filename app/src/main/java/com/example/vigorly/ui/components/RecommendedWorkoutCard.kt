@@ -29,7 +29,7 @@ fun RecommendedWorkoutCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    GlassCard(
+    VigorlyOutlineCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)

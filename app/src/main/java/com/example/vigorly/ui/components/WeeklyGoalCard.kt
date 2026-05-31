@@ -23,7 +23,7 @@ fun WeeklyGoalCard(
     goal: WeeklyGoal,
     modifier: Modifier = Modifier
 ) {
-    GlassCard(modifier = modifier.fillMaxWidth()) {
+    VigorlyOutlineCard(modifier = modifier.fillMaxWidth()) {
         Column(Modifier.padding(Dimens.Md)) {
             Text(stringResource(R.string.weekly_goal_title), style = HeadlineMd, color = OnSurface)
             Text(

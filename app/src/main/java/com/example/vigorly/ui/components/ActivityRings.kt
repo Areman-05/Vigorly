@@ -32,7 +32,8 @@ fun ActivityRings(
     centerPercent: Int,
     modifier: Modifier = Modifier,
     ringSize: Dp = 256.dp,
-    showCenterLabel: Boolean = true
+    showCenterLabel: Boolean = true,
+    centerLabel: String = "DAILY GOAL"
 ) {
     val animatedMove by animateFloatAsState(moveProgress, tween(800), label = "move")
     val animatedExercise by animateFloatAsState(exerciseProgress, tween(800), label = "exercise")
@@ -76,7 +77,7 @@ fun ActivityRings(
                     color = Primary
                 )
                 Text(
-                    text = "DAILY GOAL",
+                    text = centerLabel,
                     style = LabelCaps,
                     color = OnSurfaceVariant
                 )
