@@ -2,6 +2,7 @@ package com.example.vigorly.data.repository
 
 import android.content.Context
 import com.example.vigorly.data.activity.DailyActivityDetail
+import com.example.vigorly.data.activity.DailyActivityDaySummary
 import com.example.vigorly.data.activity.DailyActivityTracker
 import com.example.vigorly.data.activity.DailyGoalsCalculator
 import com.example.vigorly.data.AthleticStatBooster
@@ -46,7 +47,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -71,6 +76,22 @@ class VigorlyRepository(context: Context) {
     val dailyActivityDetail: StateFlow<DailyActivityDetail> = activityTracker.detail.stateIn(
         scope, SharingStarted.Eagerly, DailyActivityDetail()
     )
+
+    private val _activityDayHistory = MutableStateFlow<Map<String, DailyActivityDaySummary>>(emptyMap())
+    val activityDayHistory: StateFlow<Map<String, DailyActivityDaySummary>> = _activityDayHistory.asStateFlow()
+
+    private val _selectedActivityDate = MutableStateFlow(LocalDate.now())
+    val selectedActivityDate: StateFlow<LocalDate> = _selectedActivityDate.asStateFlow()
+
+    val displayedActivityDetail: StateFlow<DailyActivityDetail> = combine(
+        dailyActivityDetail,
+        activityDayHistory,
+        selectedActivityDate
+    ) { live, history, selected ->
+        resolveActivityDetail(selected, live, history)
+    }.stateIn(scope, SharingStarted.Eagerly, DailyActivityDetail())
+
+    private val activityDateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
     val notificationsEnabled: StateFlow<Boolean> = preferences.notificationsEnabled.stateIn(
         scope, SharingStarted.Eagerly, true
@@ -151,6 +172,41 @@ class VigorlyRepository(context: Context) {
         preferences.userProfile.onEach { refreshMilestones() }.launchIn(scope)
         scope.launch { restoreActiveUserSessionIfNeeded() }
         scope.launch { activityTracker.initialize() }
+        scope.launch { refreshActivityDayHistory() }
+        activityTracker.detail.onEach {
+            scope.launch { refreshActivityDayHistory() }
+        }.launchIn(scope)
+    }
+
+    fun selectActivityDate(date: LocalDate) {
+        _selectedActivityDate.value = date
+    }
+
+    fun resetSelectedActivityDateToToday() {
+        _selectedActivityDate.value = LocalDate.now()
+    }
+
+    suspend fun refreshActivityDayHistory() {
+        _activityDayHistory.value = preferences.loadActivityDayHistory()
+    }
+
+    private fun resolveActivityDetail(
+        date: LocalDate,
+        live: DailyActivityDetail,
+        history: Map<String, DailyActivityDaySummary>
+    ): DailyActivityDetail {
+        if (date == LocalDate.now()) return live
+        val key = date.format(activityDateFormatter)
+        return history[key]?.toDetail() ?: DailyActivityDetail()
+    }
+
+    fun summaryForDate(date: LocalDate): DailyActivityDaySummary? {
+        val key = date.format(activityDateFormatter)
+        if (date == LocalDate.now()) {
+            val live = dailyActivityDetail.value
+            return DailyActivityDaySummary.fromDetail(key, live)
+        }
+        return activityDayHistory.value[key]
     }
 
     fun startActivityTracking() {

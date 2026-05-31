@@ -53,4 +53,5 @@ object PreferenceKeys {
     val STEPS_PER_HOUR = stringPreferencesKey("steps_per_hour")
     val EXERCISE_MINUTES_PER_HOUR = stringPreferencesKey("exercise_minutes_per_hour")
     val WORKOUT_CALORIES_PER_HOUR = stringPreferencesKey("workout_calories_per_hour")
+    val ACTIVITY_DAY_HISTORY = stringPreferencesKey("activity_day_history")
 }

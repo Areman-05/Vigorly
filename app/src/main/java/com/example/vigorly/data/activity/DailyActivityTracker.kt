@@ -89,6 +89,12 @@ class DailyActivityTracker(
         if (!listening) return
         sensorManager.unregisterListener(this)
         listening = false
+        if (!job.isActive) return
+        scope.launch {
+            stateMutex.withLock {
+                persistTodaySummary()
+            }
+        }
     }
 
     fun close() {
@@ -192,6 +198,7 @@ class DailyActivityTracker(
     private suspend fun ensureToday() {
         val today = todayKey()
         if (today != trackingDateKey) {
+            archiveCurrentDayIfNeeded()
             trackingDateKey = today
             stepBaseline = null
             lastStepTotal = 0L
@@ -202,6 +209,35 @@ class DailyActivityTracker(
             exerciseMinutesPerHour = IntArray(HourlyActivityCodec.HOURS)
             workoutCaloriesPerHour = IntArray(HourlyActivityCodec.HOURS)
         }
+    }
+
+    private suspend fun archiveCurrentDayIfNeeded() {
+        if (trackingDateKey.isBlank()) return
+        val detail = buildDetailSnapshot()
+        if (detail.steps == 0 && detail.exerciseMinutes == 0 && detail.standHours == 0) return
+        preferences.saveActivityDaySummary(
+            DailyActivityDaySummary.fromDetail(trackingDateKey, detail)
+        )
+    }
+
+    private suspend fun persistTodaySummary() {
+        if (trackingDateKey.isBlank()) return
+        preferences.saveActivityDaySummary(
+            DailyActivityDaySummary.fromDetail(trackingDateKey, buildDetailSnapshot())
+        )
+    }
+
+    private fun buildDetailSnapshot(): DailyActivityDetail {
+        val steps = todaySteps()
+        return DailyActivityDetailBuilder.build(
+            stepsPerHour = stepsPerHour,
+            exerciseMinutesPerHour = exerciseMinutesPerHour,
+            workoutCaloriesPerHour = workoutCaloriesPerHour,
+            standHours = standHoursEarned,
+            totalSteps = steps,
+            totalExerciseMinutes = exerciseMinutes,
+            totalWorkoutCalories = workoutCalories
+        )
     }
 
     private fun markStandHour(hour: Int) {

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -75,6 +76,43 @@ fun VigorlyMainTopBar(
                         modifier = Modifier.size(28.dp)
                     )
                 }
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ActivityDetailTopBar(
+    onBackClick: () -> Unit,
+    onCalendarClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val calendarLabel = stringResource(R.string.activity_calendar_open)
+
+    TopAppBar(
+        modifier = modifier,
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent,
+            scrolledContainerColor = Color.Transparent
+        ),
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = com.example.vigorly.ui.theme.OnSurfaceVariant
+                )
+            }
+        },
+        title = {},
+        actions = {
+            IconButton(onClick = onCalendarClick) {
+                Icon(
+                    Icons.Default.CalendarMonth,
+                    contentDescription = calendarLabel,
+                    tint = Primary
+                )
             }
         }
     )

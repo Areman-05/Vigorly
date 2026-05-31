@@ -5,6 +5,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.vigorly.data.activity.ActivityHistoryCodec
+import com.example.vigorly.data.activity.DailyActivityDaySummary
 import com.example.vigorly.data.activity.HourlyActivityCodec
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
@@ -276,6 +278,31 @@ class VigorlyPreferencesDataStore(private val context: Context) {
             prefs[PreferenceKeys.EXERCISE_MINUTES_PER_HOUR] = HourlyActivityCodec.encode(exerciseMinutesPerHour)
             prefs[PreferenceKeys.WORKOUT_CALORIES_PER_HOUR] = HourlyActivityCodec.encode(workoutCaloriesPerHour)
         }
+    }
+
+    suspend fun loadActivityDayHistory(): Map<String, DailyActivityDaySummary> {
+        val prefs = context.vigorlyDataStore.data.first()
+        return ActivityHistoryCodec.decode(prefs[PreferenceKeys.ACTIVITY_DAY_HISTORY])
+    }
+
+    suspend fun saveActivityDaySummary(summary: DailyActivityDaySummary) {
+        val current = loadActivityDayHistory().toMutableMap()
+        current[summary.dateKey] = summary
+        val trimmed = trimHistory(current)
+        context.vigorlyDataStore.edit { prefs ->
+            prefs[PreferenceKeys.ACTIVITY_DAY_HISTORY] = ActivityHistoryCodec.encode(trimmed)
+        }
+    }
+
+    private fun trimHistory(
+        map: Map<String, DailyActivityDaySummary>,
+        maxDays: Int = 400
+    ): Map<String, DailyActivityDaySummary> {
+        if (map.size <= maxDays) return map
+        return map.entries
+            .sortedByDescending { it.key }
+            .take(maxDays)
+            .associate { it.key to it.value }
     }
 
     suspend fun setNotificationsEnabled(enabled: Boolean) {

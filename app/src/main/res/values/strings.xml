@@ -48,6 +48,9 @@
     <string name="activity_detail_steps">PASOS</string>
     <string name="activity_detail_distance">DISTANCIA</string>
     <string name="activity_detail_today">Hoy</string>
+    <string name="activity_calendar_title">Actividad</string>
+    <string name="activity_calendar_open">Calendario de actividad</string>
+    <string name="activity_calendar_back">Volver al detalle del día</string>
     <string name="recent_section">Recientes</string>
     <string name="coaching_tip_label">CONSEJO</string>
     <string name="for_you_label">PARA TI</string>

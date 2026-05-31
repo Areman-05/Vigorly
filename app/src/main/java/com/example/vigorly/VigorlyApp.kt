@@ -31,6 +31,10 @@ import com.example.vigorly.ui.auth.RegisterScreen
 import com.example.vigorly.ui.components.AuthGradientBackground
 import com.example.vigorly.ui.components.RouteFallbackScreen
 import com.example.vigorly.ui.components.VigorlyBottomBar
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.example.vigorly.ui.components.ActivityDetailTopBar
 import com.example.vigorly.ui.components.VigorlyDetailTopBar
 import com.example.vigorly.ui.components.VigorlyMainTopBar
 import com.example.vigorly.ui.dashboard.ActivityDetailScreen
@@ -87,9 +91,17 @@ fun VigorlyApp(
     val isSubScreen = currentRoute in listOf(
         VigorlyRoutes.Settings,
         VigorlyRoutes.Milestones,
-        VigorlyRoutes.Insights,
-        VigorlyRoutes.ActivityDetail
+        VigorlyRoutes.Insights
     )
+    val isActivityDetail = currentRoute == VigorlyRoutes.ActivityDetail
+    var showActivityCalendar by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isActivityDetail) {
+        if (!isActivityDetail) {
+            showActivityCalendar = false
+            repository.resetSelectedActivityDateToToday()
+        }
+    }
     val isSummary = currentRoute == VigorlyRoutes.SessionSummary
     val isHistoryDetail = currentRoute?.startsWith("history/") == true && currentRoute != VigorlyRoutes.History
 
@@ -119,6 +131,10 @@ fun VigorlyApp(
         topBar = {
             when {
                 isAuthFlow || isSummary -> {}
+                isActivityDetail && !showActivityCalendar -> ActivityDetailTopBar(
+                    onBackClick = { navController.popBackStack() },
+                    onCalendarClick = { showActivityCalendar = true }
+                )
                 isDetailOrSession || isHistoryDetail -> VigorlyDetailTopBar(
                     onBackClick = { navController.popBackStack() },
                     onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) }
@@ -157,13 +173,17 @@ fun VigorlyApp(
         }
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
-            if (showBottomBar) {
+            if (showBottomBar || (isActivityDetail && !showActivityCalendar)) {
                 AuthGradientBackground(Modifier.fillMaxSize()) {}
             }
             NavHost(
                 navController = navController,
                 startDestination = VigorlyRoutes.Splash,
-                modifier = if (isAuthFlow) Modifier else Modifier.padding(padding)
+                modifier = when {
+                    isAuthFlow -> Modifier
+                    isActivityDetail && showActivityCalendar -> Modifier.fillMaxSize()
+                    else -> Modifier.padding(padding)
+                }
             ) {
             composable(VigorlyRoutes.Splash) {
                 SplashScreen(
@@ -220,7 +240,15 @@ fun VigorlyApp(
                 )
             }
             composable(VigorlyRoutes.ActivityDetail) {
-                ActivityDetailScreen(repository = repository)
+                ActivityDetailScreen(
+                    repository = repository,
+                    showCalendar = showActivityCalendar,
+                    onDismissCalendar = { showActivityCalendar = false },
+                    onDateSelected = {
+                        repository.selectActivityDate(it)
+                        showActivityCalendar = false
+                    }
+                )
             }
             composable(VigorlyRoutes.Workouts) {
                 WorkoutsScreen(
