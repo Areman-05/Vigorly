@@ -1,5 +1,6 @@
 package com.example.vigorly
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -11,6 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -26,6 +28,7 @@ import com.example.vigorly.navigation.VigorlyRoutes
 import com.example.vigorly.ui.VigorlyViewModel
 import com.example.vigorly.ui.auth.LoginScreen
 import com.example.vigorly.ui.auth.RegisterScreen
+import com.example.vigorly.ui.components.AuthGradientBackground
 import com.example.vigorly.ui.components.RouteFallbackScreen
 import com.example.vigorly.ui.components.VigorlyBottomBar
 import com.example.vigorly.ui.components.VigorlyDetailTopBar
@@ -109,6 +112,7 @@ fun VigorlyApp(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             when {
@@ -123,7 +127,15 @@ fun VigorlyApp(
                 )
                 showBottomBar -> VigorlyMainTopBar(
                     avatarUrl = profile.avatarUrl,
-                    onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) }
+                    onProfileClick = {
+                        navController.navigate(VigorlyRoutes.Profile) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
         },
@@ -142,11 +154,15 @@ fun VigorlyApp(
             }
         }
     ) { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = VigorlyRoutes.Splash,
-            modifier = if (isAuthFlow) Modifier else Modifier.padding(padding)
-        ) {
+        Box(Modifier.fillMaxSize()) {
+            if (showBottomBar) {
+                AuthGradientBackground(Modifier.fillMaxSize()) {}
+            }
+            NavHost(
+                navController = navController,
+                startDestination = VigorlyRoutes.Splash,
+                modifier = if (isAuthFlow) Modifier else Modifier.padding(padding)
+            ) {
             composable(VigorlyRoutes.Splash) {
                 SplashScreen(
                     repository = repository,
@@ -195,7 +211,6 @@ fun VigorlyApp(
             composable(VigorlyRoutes.Dashboard) {
                 DashboardScreen(
                     repository = repository,
-                    onStartWorkout = { navController.navigate(VigorlyRoutes.Workouts) },
                     onRecommendedWorkoutClick = { id ->
                         navController.navigate(VigorlyRoutes.workoutDetail(id))
                     }
@@ -312,6 +327,7 @@ fun VigorlyApp(
                     HistoryDetailScreen(item = item)
                 }
             }
+        }
         }
     }
 }

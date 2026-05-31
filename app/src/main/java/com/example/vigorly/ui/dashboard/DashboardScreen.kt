@@ -1,6 +1,5 @@
 package com.example.vigorly.ui.dashboard
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,15 +10,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,8 +23,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,7 +30,6 @@ import com.example.vigorly.R
 import com.example.vigorly.data.model.RecentActivity
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.ActivityRings
-import com.example.vigorly.ui.components.AuthGradientBackground
 import com.example.vigorly.ui.components.DailyTipCard
 import com.example.vigorly.ui.components.RecommendedWorkoutCard
 import com.example.vigorly.ui.components.StreakCard
@@ -51,7 +43,6 @@ import com.example.vigorly.ui.theme.DisplayStat
 import com.example.vigorly.ui.theme.HeadlineLgMobile
 import com.example.vigorly.ui.theme.HeadlineMd
 import com.example.vigorly.ui.theme.LabelCaps
-import com.example.vigorly.ui.theme.OnPrimaryContainer
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
@@ -61,7 +52,6 @@ import com.example.vigorly.ui.theme.PrimaryContainer
 @Composable
 fun DashboardScreen(
     repository: VigorlyRepository,
-    onStartWorkout: () -> Unit,
     onRecommendedWorkoutClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -73,13 +63,12 @@ fun DashboardScreen(
     val recommended = repository.getRecommendedWorkout()
     val firstName = profile.displayName.substringBefore(" ").ifBlank { profile.displayName }
 
-    AuthGradientBackground(modifier) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
-        ) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
+    ) {
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -117,41 +106,6 @@ fun DashboardScreen(
                     centerPercent = goals.dailyGoalPercent,
                     centerLabel = stringResource(R.string.daily_goal_label),
                     ringSize = 240.dp
-                )
-                Spacer(Modifier.height(Dimens.Md))
-                RingLegendRow(
-                    moveLabel = stringResource(R.string.ring_move, goals.moveCalories, goals.moveCaloriesGoal),
-                    exerciseLabel = stringResource(
-                        R.string.ring_exercise,
-                        goals.exerciseMinutes,
-                        goals.exerciseMinutesGoal
-                    ),
-                    standLabel = stringResource(
-                        R.string.ring_stand,
-                        goals.standHours,
-                        goals.standHoursGoal
-                    )
-                )
-            }
-
-            Spacer(Modifier.height(Dimens.Lg))
-
-            Button(
-                onClick = onStartWorkout,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(26.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryContainer,
-                    contentColor = OnPrimaryContainer
-                )
-            ) {
-                Icon(Icons.Default.PlayArrow, contentDescription = null)
-                Text(
-                    stringResource(R.string.start_workout),
-                    style = ButtonText,
-                    modifier = Modifier.padding(start = Dimens.Xs)
                 )
             }
 
@@ -212,41 +166,6 @@ fun DashboardScreen(
             RecentSection(recent)
             Spacer(Modifier.height(Dimens.Md))
         }
-    }
-}
-
-@Composable
-private fun RingLegendRow(
-    moveLabel: String,
-    exerciseLabel: String,
-    standLabel: String
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Dimens.Xs)
-    ) {
-        RingLegendItem(color = PrimaryAccent, label = moveLabel)
-        RingLegendItem(color = PrimaryContainer, label = exerciseLabel)
-        RingLegendItem(color = Primary, label = standLabel)
-    }
-}
-
-@Composable
-private fun RingLegendItem(
-    color: androidx.compose.ui.graphics.Color,
-    label: String
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Canvas(Modifier.size(10.dp)) {
-            drawCircle(color = color, radius = size.minDimension / 2f)
-        }
-        Text(
-            label,
-            style = BodyMd,
-            color = OnSurfaceVariant,
-            modifier = Modifier.padding(start = Dimens.Sm)
-        )
-    }
 }
 
 @Composable

@@ -1,12 +1,11 @@
 package com.example.vigorly.ui.components
 
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,47 +15,66 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.vigorly.R
+import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.HeadlineMd
+import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.Primary
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VigorlyMainTopBar(
     avatarUrl: String?,
-    onSettingsClick: () -> Unit,
+    onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val todayLabel = remember { formatTodayLabel() }
+    val profileLabel = stringResource(R.string.profile_title)
+
     TopAppBar(
         modifier = modifier,
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = com.example.vigorly.ui.theme.Surface.copy(alpha = 0.8f)
+            containerColor = Color.Transparent,
+            scrolledContainerColor = Color.Transparent
         ),
-        navigationIcon = {
-            AsyncImage(
-                model = avatarUrl,
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(start = Dimens.ContainerMargin)
-                    .size(32.dp)
-                    .clip(CircleShape)
-            )
-        },
         title = {
             Text(
-                text = "VIGORLY",
-                style = HeadlineMd.copy(fontWeight = FontWeight.Black),
-                color = Primary
+                text = todayLabel,
+                style = BodyMd.copy(fontWeight = FontWeight.Medium),
+                color = OnSurface,
+                modifier = Modifier.padding(start = Dimens.ContainerMargin)
             )
         },
         actions = {
-            IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Primary)
+            IconButton(onClick = onProfileClick) {
+                if (!avatarUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = avatarUrl,
+                        contentDescription = profileLabel,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = profileLabel,
+                        tint = Primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
         }
     )
@@ -70,7 +88,8 @@ fun VigorlyDetailTopBar(
 ) {
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = com.example.vigorly.ui.theme.Surface.copy(alpha = 0.8f)
+            containerColor = Color.Transparent,
+            scrolledContainerColor = Color.Transparent
         ),
         navigationIcon = {
             IconButton(onClick = onBackClick) {
@@ -94,4 +113,14 @@ fun VigorlyDetailTopBar(
             }
         }
     )
+}
+
+private fun formatTodayLabel(): String {
+    val locale = Locale.getDefault()
+    val formatter = DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", locale)
+    return LocalDate.now()
+        .format(formatter)
+        .replaceFirstChar { char ->
+            if (char.isLowerCase()) char.titlecase(locale) else char.toString()
+        }
 }
