@@ -24,7 +24,8 @@ import com.example.vigorly.auth.GoogleUserInfo
 import com.example.vigorly.util.AuthValidator
 import com.example.vigorly.util.LocaleManager
 import com.example.vigorly.util.PasswordHasher
-import com.example.vigorly.util.DailyTipSelector
+import com.example.vigorly.util.PersonalizedCoachingTipEngine
+import com.example.vigorly.util.PersonalizedTipContext
 import com.example.vigorly.util.WorkoutRecommender
 import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.data.model.AthleticStat
@@ -135,6 +136,9 @@ class VigorlyRepository(context: Context) {
     private val _dailyTip = MutableStateFlow(coachingTips.firstOrNull() ?: CoachingTip("tip-001", ""))
     val dailyTip: StateFlow<CoachingTip> = _dailyTip.asStateFlow()
 
+    private val _showStreakBanner = MutableStateFlow(false)
+    val showStreakBanner: StateFlow<Boolean> = _showStreakBanner.asStateFlow()
+
     private val _favorites = MutableStateFlow<Set<String>>(emptySet())
     val favorites: StateFlow<Set<String>> = _favorites.asStateFlow()
 
@@ -160,14 +164,37 @@ class VigorlyRepository(context: Context) {
         preferences.athleticStats.onEach { _athleticStats.value = it }.launchIn(scope)
         preferences.favoriteWorkoutIds.onEach { _favorites.value = it }.launchIn(scope)
         preferences.onboardingCompleted.onEach { _onboardingCompleted.value = it }.launchIn(scope)
-        preferences.dailyTipIndex.onEach { index ->
-            _dailyTip.value = DailyTipSelector.pick(coachingTips, index)
+        combine(
+            combine(
+                preferences.fitnessGoal,
+                preferences.activityLevel,
+                preferences.workoutLocation
+            ) { fitnessGoal, activityLevel, location ->
+                Triple(fitnessGoal, activityLevel, location)
+            },
+            combine(preferences.preferredTime, dailyGoals, weeklyGoal) { preferredTime, goals, weekly ->
+                Triple(preferredTime, goals, weekly)
+            },
+            combine(profile, history) { prof, hist -> prof to hist }
+        ) { profilePrefs, goalPrefs, activity ->
+            val (fitnessGoal, activityLevel, location) = profilePrefs
+            val (preferredTime, goals, weekly) = goalPrefs
+            val (prof, hist) = activity
+            PersonalizedTipContext(
+                fitnessGoal = fitnessGoal,
+                activityLevel = activityLevel,
+                workoutLocation = location,
+                preferredTime = preferredTime,
+                dailyGoals = goals,
+                weeklyGoal = weekly,
+                streakDays = prof.activeStreakDays,
+                recentWorkoutTitles = hist.take(3).map { it.title }
+            )
+        }.onEach { context ->
+            _dailyTip.value = PersonalizedCoachingTipEngine.generate(appContext, context)
         }.launchIn(scope)
-        scope.launch {
-            if (coachingTips.isNotEmpty()) {
-                preferences.advanceDailyTip(coachingTips.size)
-            }
-        }
+        profile.onEach { refreshStreakBannerVisibility() }.launchIn(scope)
+        scope.launch { refreshStreakBannerVisibility() }
         preferences.workoutHistory.onEach { stored ->
             _history.value = stored
             _recentActivity.value = stored.take(5).map { item ->
@@ -192,6 +219,24 @@ class VigorlyRepository(context: Context) {
 
     fun selectActivityDate(date: LocalDate) {
         _selectedActivityDate.value = date
+    }
+
+    fun dismissStreakBanner() {
+        scope.launch {
+            preferences.setStreakBannerDismissedDate(LocalDate.now().format(activityDateFormatter))
+            _showStreakBanner.value = false
+        }
+    }
+
+    private suspend fun refreshStreakBannerVisibility() {
+        val streak = profile.value.activeStreakDays
+        if (streak < 2) {
+            _showStreakBanner.value = false
+            return
+        }
+        val dismissed = preferences.getStreakBannerDismissedDate()
+        val today = LocalDate.now().format(activityDateFormatter)
+        _showStreakBanner.value = dismissed != today
     }
 
     fun resetSelectedActivityDateToToday() {

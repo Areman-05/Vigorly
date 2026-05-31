@@ -354,6 +354,16 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         }
     }
 
+    suspend fun getStreakBannerDismissedDate(): String? {
+        return context.vigorlyDataStore.data.first()[PreferenceKeys.STREAK_BANNER_DISMISSED_DATE]
+    }
+
+    suspend fun setStreakBannerDismissedDate(dateKey: String) {
+        context.vigorlyDataStore.edit { prefs ->
+            prefs[PreferenceKeys.STREAK_BANNER_DISMISSED_DATE] = dateKey
+        }
+    }
+
     suspend fun resetDailyGoals() {
         val defaults = VigorlyRepository.defaultDailyGoals()
         updateDailyGoals(defaults)

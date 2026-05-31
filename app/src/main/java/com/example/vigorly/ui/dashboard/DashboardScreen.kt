@@ -1,8 +1,10 @@
 package com.example.vigorly.ui.dashboard
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,8 +16,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -27,22 +32,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
-import com.example.vigorly.data.model.RecentActivity
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.ActivityRings
 import com.example.vigorly.ui.components.DailyTipCard
 import com.example.vigorly.ui.components.RecommendedWorkoutCard
-import com.example.vigorly.ui.components.StreakCard
-import com.example.vigorly.ui.components.VigorlyOutlineCard
+import com.example.vigorly.ui.components.StreakBannerPopup
 import com.example.vigorly.ui.components.WeeklyGoalCard
-import com.example.vigorly.ui.iconForName
 import com.example.vigorly.ui.theme.BodyMd
-import com.example.vigorly.ui.theme.ButtonText
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.DisplayStat
 import com.example.vigorly.ui.theme.HeadlineLgMobile
@@ -62,18 +68,19 @@ fun DashboardScreen(
 ) {
     val goals by repository.dailyGoals.collectAsState()
     val weeklyGoal by repository.weeklyGoal.collectAsState()
-    val recent by repository.recentActivity.collectAsState()
     val profile by repository.profile.collectAsState()
     val dailyTip by repository.dailyTip.collectAsState()
+    val showStreakBanner by repository.showStreakBanner.collectAsState()
     val recommended = repository.getRecommendedWorkout()
     val firstName = profile.displayName.substringBefore(" ").ifBlank { profile.displayName }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
+        ) {
             Column(Modifier.fillMaxWidth()) {
                 Text(
                     text = stringResource(R.string.dashboard_greeting, firstName),
@@ -119,17 +126,20 @@ fun DashboardScreen(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.LocalFireDepartment,
                     label = stringResource(R.string.metric_move),
-                    value = "${goals.moveCalories}",
-                    suffix = "/ ${goals.moveCaloriesGoal} kcal",
+                    current = goals.moveCalories,
+                    goal = goals.moveCaloriesGoal,
+                    goalLabel = "${goals.moveCaloriesGoal} kcal",
                     accent = PrimaryAccent
                 )
                 ActivityMetricTile(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.DirectionsWalk,
                     label = stringResource(R.string.metric_steps),
-                    value = "%,d".format(goals.steps),
-                    suffix = "/ ${goals.stepsGoal / 1000}k",
-                    accent = PrimaryContainer
+                    current = goals.steps,
+                    goal = goals.stepsGoal,
+                    goalLabel = "${goals.stepsGoal / 1000}k",
+                    accent = PrimaryContainer,
+                    valueFormatter = { "%,d".format(it) }
                 )
             }
 
@@ -140,23 +150,24 @@ fun DashboardScreen(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.FitnessCenter,
                     label = stringResource(R.string.metric_exercise),
-                    value = "${goals.exerciseMinutes}",
-                    suffix = "/ ${goals.exerciseMinutesGoal} min",
+                    current = goals.exerciseMinutes,
+                    goal = goals.exerciseMinutesGoal,
+                    goalLabel = "${goals.exerciseMinutesGoal} min",
                     accent = Primary
                 )
                 ActivityMetricTile(
                     modifier = Modifier.weight(1f),
-                    icon = Icons.Default.DirectionsWalk,
+                    icon = Icons.Default.AccessibilityNew,
                     label = stringResource(R.string.metric_stand),
-                    value = "${goals.standHours}",
-                    suffix = "/ ${goals.standHoursGoal} h",
+                    current = goals.standHours,
+                    goal = goals.standHoursGoal,
+                    goalLabel = "${goals.standHoursGoal} h",
                     accent = PrimaryAccent.copy(0.85f)
                 )
             }
 
             Spacer(Modifier.height(Dimens.Lg))
 
-            StreakCard(streakDays = profile.activeStreakDays, modifier = Modifier.padding(bottom = Dimens.Md))
             DailyTipCard(tip = dailyTip, modifier = Modifier.padding(bottom = Dimens.Md))
             recommended?.let { workout ->
                 RecommendedWorkoutCard(
@@ -166,9 +177,19 @@ fun DashboardScreen(
                 )
             }
             WeeklyGoalCard(goal = weeklyGoal, modifier = Modifier.padding(bottom = Dimens.Md))
-            RecentSection(recent)
             Spacer(Modifier.height(Dimens.Md))
         }
+
+        StreakBannerPopup(
+            visible = showStreakBanner,
+            streakDays = profile.activeStreakDays,
+            onDismiss = repository::dismissStreakBanner,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = Dimens.Sm)
+                .padding(horizontal = Dimens.ContainerMargin)
+        )
+    }
 }
 
 @Composable
@@ -208,59 +229,74 @@ private fun ActivityRingsHeroSection(
 @Composable
 private fun ActivityMetricTile(
     modifier: Modifier,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
-    value: String,
-    suffix: String,
-    accent: androidx.compose.ui.graphics.Color
+    current: Int,
+    goal: Int,
+    goalLabel: String,
+    accent: Color,
+    valueFormatter: (Int) -> String = { it.toString() }
 ) {
-    VigorlyOutlineCard(modifier = modifier) {
-        Column(Modifier.padding(Dimens.Md)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(label, style = LabelCaps, color = OnSurfaceVariant)
-                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
-            }
-            Spacer(Modifier.height(Dimens.Sm))
-            Text(value, style = DisplayStat, color = OnSurface, fontWeight = FontWeight.Bold)
-            Text(suffix, style = BodyMd, color = OnSurfaceVariant)
-        }
-    }
-}
+    val displayValue = current.coerceAtMost(goal)
+    val progress = (displayValue.toFloat() / goal.coerceAtLeast(1)).coerceIn(0f, 1f)
+    val goalReached = current >= goal
 
-@Composable
-private fun RecentSection(items: List<RecentActivity>) {
-    if (items.isEmpty()) return
-    VigorlyOutlineCard(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(Dimens.Md)) {
-            Text(stringResource(R.string.recent_section), style = ButtonText, color = OnSurface)
-            Spacer(Modifier.height(Dimens.Sm))
-            items.forEach { item ->
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = Dimens.Xs),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            iconForName(item.iconName),
-                            contentDescription = null,
-                            tint = Primary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Column(Modifier.padding(start = Dimens.Sm)) {
-                            Text(item.title, style = BodyMd, color = OnSurface)
-                            Text(item.timeLabel, style = LabelCaps, color = OnSurfaceVariant)
-                        }
-                    }
-                    Text("${item.durationMinutes}m", style = ButtonText, color = PrimaryAccent)
-                }
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        accent.copy(alpha = 0.12f),
+                        accent.copy(alpha = 0.04f)
+                    )
+                )
+            )
+            .padding(horizontal = Dimens.Md, vertical = 14.dp)
+    ) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(label, style = LabelCaps, color = OnSurfaceVariant.copy(alpha = 0.85f))
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(accent.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(16.dp))
             }
+        }
+        Spacer(Modifier.height(10.dp))
+        Text(
+            text = valueFormatter(displayValue),
+            style = DisplayStat.copy(fontSize = 28.sp, lineHeight = 30.sp),
+            color = if (goalReached) accent else OnSurface,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "/ $goalLabel",
+            style = BodyMd.copy(fontSize = 13.sp),
+            color = OnSurfaceVariant.copy(alpha = 0.65f)
+        )
+        Spacer(Modifier.height(10.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(accent.copy(alpha = 0.12f))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progress)
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(accent.copy(alpha = if (goalReached) 0.95f else 0.55f))
+            )
         }
     }
 }

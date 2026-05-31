@@ -18,4 +18,11 @@ class WeeklyProgressCalculatorTest {
         val goal = WeeklyGoal(targetSessions = 8, completedSessions = 3)
         assertEquals(37, WeeklyProgressCalculator.percent(goal))
     }
+
+    @Test
+    fun displayCompletedSessions_capsAtTarget() {
+        val goal = WeeklyGoal(targetSessions = 5, completedSessions = 7)
+        assertEquals(5, WeeklyProgressCalculator.displayCompletedSessions(goal))
+        assertEquals(100, WeeklyProgressCalculator.percent(goal))
+    }
 }
