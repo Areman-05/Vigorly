@@ -156,6 +156,10 @@ class VigorlyRepository(context: Context) {
         activityTracker.stop()
     }
 
+    fun closeActivityTracking() {
+        activityTracker.close()
+    }
+
     private suspend fun restoreActiveUserSessionIfNeeded() {
         if (!preferences.isLoggedIn.first()) return
         val userId = preferences.currentUserId.first() ?: return

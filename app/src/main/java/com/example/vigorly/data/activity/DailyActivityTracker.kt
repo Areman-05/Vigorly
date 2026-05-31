@@ -10,10 +10,13 @@ import com.example.vigorly.data.model.DailyGoals
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -34,7 +37,9 @@ class DailyActivityTracker(
     private val appContext = context.applicationContext
     private val sensorManager = appContext.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val stepSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val job = SupervisorJob()
+    private val scope = CoroutineScope(job + Dispatchers.IO)
+    private val stateMutex = Mutex()
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
     private var stepBaseline: Long? = null
@@ -48,19 +53,30 @@ class DailyActivityTracker(
     val metrics: StateFlow<DailyActivityMetrics> = _metrics.asStateFlow()
 
     private var listening = false
+    @Volatile
+    private var initialized = false
+    private var pendingStart = false
 
     suspend fun initialize() {
-        loadPersistedState()
+        stateMutex.withLock {
+            loadPersistedState()
+        }
         publishGoals(preserveWellness = true)
+        initialized = true
+        if (pendingStart) {
+            pendingStart = false
+            startInternal()
+        }
     }
 
     fun start() {
         if (listening) return
-        stepSensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
-            listening = true
-        }
         _metrics.value = _metrics.value.copy(sensorAvailable = stepSensor != null)
+        if (!initialized) {
+            pendingStart = true
+            return
+        }
+        startInternal()
     }
 
     fun stop() {
@@ -69,43 +85,54 @@ class DailyActivityTracker(
         listening = false
     }
 
+    fun close() {
+        stop()
+        pendingStart = false
+        initialized = false
+        scope.cancel()
+    }
+
     fun addWorkoutContribution(durationMinutes: Int, calories: Int) {
+        if (!job.isActive) return
         scope.launch {
-            ensureToday()
-            exerciseMinutes = (exerciseMinutes + durationMinutes).coerceAtMost(180)
-            workoutCalories = (workoutCalories + calories).coerceAtMost(2000)
-            markStandHour(currentHour())
-            persistState()
+            stateMutex.withLock {
+                ensureToday()
+                exerciseMinutes = (exerciseMinutes + durationMinutes).coerceAtMost(180)
+                workoutCalories = (workoutCalories + calories).coerceAtMost(2000)
+                markStandHour(currentHour())
+                persistState()
+            }
             publishGoals(preserveWellness = true)
         }
     }
 
     suspend fun syncNow() {
-        ensureToday()
+        stateMutex.withLock { ensureToday() }
         publishGoals(preserveWellness = true)
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
+        if (!initialized || !job.isActive) return
         if (event?.sensor?.type != Sensor.TYPE_STEP_COUNTER) return
         val total = event.values[0].toLong()
         scope.launch {
-            ensureToday()
-            if (stepBaseline == null) {
-                stepBaseline = total
-                lastStepTotal = total
+            stateMutex.withLock {
+                ensureToday()
+                if (stepBaseline == null) {
+                    stepBaseline = total
+                    lastStepTotal = total
+                } else if (total >= lastStepTotal) {
+                    val delta = total - lastStepTotal
+                    if (delta > 0) {
+                        markStandHour(currentHour())
+                    }
+                    lastStepTotal = total
+                } else {
+                    stepBaseline = total
+                    lastStepTotal = total
+                }
                 persistState()
             }
-            if (total >= lastStepTotal) {
-                val delta = total - lastStepTotal
-                if (delta > 0) {
-                    markStandHour(currentHour())
-                }
-                lastStepTotal = total
-            } else {
-                stepBaseline = total
-                lastStepTotal = total
-            }
-            persistState()
             publishGoals(preserveWellness = true)
         }
     }
@@ -162,13 +189,21 @@ class DailyActivityTracker(
 
     private suspend fun loadPersistedState() {
         val state = preferences.loadDailyActivityState()
-        trackingDateKey = state.dateKey
+        trackingDateKey = state.dateKey.ifBlank { todayKey() }
         stepBaseline = state.stepBaseline
         lastStepTotal = state.lastStepTotal
         exerciseMinutes = state.exerciseMinutes
         workoutCalories = state.workoutCalories
         standHoursEarned = state.standHours.toMutableSet()
         ensureToday()
+    }
+
+    private fun startInternal() {
+        if (listening) return
+        stepSensor?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
+            listening = true
+        }
     }
 
     private suspend fun persistState() {
