@@ -40,6 +40,10 @@ class VigorlyPreferencesDataStore(private val context: Context) {
             moveCaloriesGoal = prefs[PreferenceKeys.MOVE_CALORIES_GOAL] ?: defaults.moveCaloriesGoal,
             steps = prefs[PreferenceKeys.STEPS] ?: defaults.steps,
             stepsGoal = prefs[PreferenceKeys.STEPS_GOAL] ?: defaults.stepsGoal,
+            exerciseMinutes = prefs[PreferenceKeys.EXERCISE_MINUTES] ?: defaults.exerciseMinutes,
+            exerciseMinutesGoal = prefs[PreferenceKeys.EXERCISE_MINUTES_GOAL] ?: defaults.exerciseMinutesGoal,
+            standHours = prefs[PreferenceKeys.STAND_HOURS] ?: defaults.standHours,
+            standHoursGoal = prefs[PreferenceKeys.STAND_HOURS_GOAL] ?: defaults.standHoursGoal,
             heartRateBpm = prefs[PreferenceKeys.HEART_RATE_BPM] ?: defaults.heartRateBpm,
             sleepHours = prefs[PreferenceKeys.SLEEP_HOURS] ?: defaults.sleepHours
         )
@@ -215,8 +219,52 @@ class VigorlyPreferencesDataStore(private val context: Context) {
             prefs[PreferenceKeys.MOVE_CALORIES_GOAL] = goals.moveCaloriesGoal
             prefs[PreferenceKeys.STEPS] = goals.steps
             prefs[PreferenceKeys.STEPS_GOAL] = goals.stepsGoal
+            prefs[PreferenceKeys.EXERCISE_MINUTES] = goals.exerciseMinutes
+            prefs[PreferenceKeys.EXERCISE_MINUTES_GOAL] = goals.exerciseMinutesGoal
+            prefs[PreferenceKeys.STAND_HOURS] = goals.standHours
+            prefs[PreferenceKeys.STAND_HOURS_GOAL] = goals.standHoursGoal
             prefs[PreferenceKeys.HEART_RATE_BPM] = goals.heartRateBpm
             prefs[PreferenceKeys.SLEEP_HOURS] = goals.sleepHours
+        }
+    }
+
+    suspend fun dailyGoalsState(): DailyGoals = dailyGoals.first()
+
+    suspend fun loadDailyActivityState(): PersistedDailyActivity {
+        val prefs = context.vigorlyDataStore.data.first()
+        val standRaw = prefs[PreferenceKeys.STAND_HOURS_TODAY].orEmpty()
+        val standHours = if (standRaw.isBlank()) emptyList() else {
+            standRaw.split(",").mapNotNull { it.toIntOrNull() }
+        }
+        return PersistedDailyActivity(
+            dateKey = prefs[PreferenceKeys.DAILY_ACTIVITY_DATE].orEmpty(),
+            stepBaseline = prefs[PreferenceKeys.STEP_COUNTER_BASELINE]?.toLongOrNull(),
+            lastStepTotal = prefs[PreferenceKeys.STEP_COUNTER_LAST]?.toLongOrNull() ?: 0L,
+            exerciseMinutes = prefs[PreferenceKeys.EXERCISE_MINUTES_TODAY] ?: 0,
+            workoutCalories = prefs[PreferenceKeys.WORKOUT_CALORIES_TODAY] ?: 0,
+            standHours = standHours
+        )
+    }
+
+    suspend fun saveDailyActivityState(
+        dateKey: String,
+        stepBaseline: Long?,
+        lastStepTotal: Long,
+        exerciseMinutes: Int,
+        workoutCalories: Int,
+        standHours: List<Int>
+    ) {
+        context.vigorlyDataStore.edit { prefs ->
+            prefs[PreferenceKeys.DAILY_ACTIVITY_DATE] = dateKey
+            if (stepBaseline != null) {
+                prefs[PreferenceKeys.STEP_COUNTER_BASELINE] = stepBaseline.toString()
+            } else {
+                prefs.remove(PreferenceKeys.STEP_COUNTER_BASELINE)
+            }
+            prefs[PreferenceKeys.STEP_COUNTER_LAST] = lastStepTotal.toString()
+            prefs[PreferenceKeys.EXERCISE_MINUTES_TODAY] = exerciseMinutes
+            prefs[PreferenceKeys.WORKOUT_CALORIES_TODAY] = workoutCalories
+            prefs[PreferenceKeys.STAND_HOURS_TODAY] = standHours.sorted().joinToString(",")
         }
     }
 

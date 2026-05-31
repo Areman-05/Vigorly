@@ -1,6 +1,8 @@
 package com.example.vigorly.data.repository
 
 import android.content.Context
+import com.example.vigorly.data.activity.DailyActivityTracker
+import com.example.vigorly.data.activity.DailyGoalsCalculator
 import com.example.vigorly.data.AthleticStatBooster
 import com.example.vigorly.data.MilestoneUnlocker
 import com.example.vigorly.data.catalog.WorkoutCatalog
@@ -53,6 +55,7 @@ class VigorlyRepository(context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val appContext = context.applicationContext
     private val preferences = VigorlyPreferencesDataStore(appContext)
+    private val activityTracker = DailyActivityTracker(appContext, preferences) { }
     private val workouts = WorkoutCatalog.allWorkouts()
     private val coachingTips: List<CoachingTip> = CoachingTipLoader.load(appContext)
 
@@ -142,6 +145,15 @@ class VigorlyRepository(context: Context) {
         }.launchIn(scope)
         preferences.userProfile.onEach { refreshMilestones() }.launchIn(scope)
         scope.launch { restoreActiveUserSessionIfNeeded() }
+        scope.launch { activityTracker.initialize() }
+    }
+
+    fun startActivityTracking() {
+        activityTracker.start()
+    }
+
+    fun stopActivityTracking() {
+        activityTracker.stop()
     }
 
     private suspend fun restoreActiveUserSessionIfNeeded() {
@@ -556,16 +568,7 @@ class VigorlyRepository(context: Context) {
                     activeStreakDays = currentProfile.activeStreakDays + 1
                 )
             )
-            val goals = dailyGoals.value
-            preferences.updateDailyGoals(
-                goals.copy(
-                    moveProgress = (goals.moveProgress + 0.05f).coerceAtMost(1f),
-                    exerciseProgress = (goals.exerciseProgress + 0.08f).coerceAtMost(1f),
-                    standProgress = (goals.standProgress + 0.03f).coerceAtMost(1f),
-                    moveCalories = (goals.moveCalories + kcal / 10).coerceAtMost(goals.moveCaloriesGoal),
-                    steps = (goals.steps + 500).coerceAtMost(goals.stepsGoal)
-                )
-            )
+            activityTracker.addWorkoutContribution(duration, kcal)
             preferences.saveAthleticStats(boostedStats)
             val goal = weeklyGoal.value
             preferences.saveWeeklyGoal(goal.copy(completedSessions = goal.completedSessions + 1))
@@ -630,15 +633,7 @@ class VigorlyRepository(context: Context) {
     }
 
     fun refreshDailyGoalsFromActivity() {
-        scope.launch {
-            val goals = dailyGoals.value
-            preferences.updateDailyGoals(
-                goals.copy(
-                    steps = (goals.steps + 120).coerceAtMost(goals.stepsGoal),
-                    heartRateBpm = (68..78).random()
-                )
-            )
-        }
+        scope.launch { activityTracker.syncNow() }
     }
 
     private fun MutableStateFlow<WorkoutSessionState?>.updateSession(
@@ -670,16 +665,11 @@ class VigorlyRepository(context: Context) {
             level = 42
         )
 
-        fun defaultDailyGoals() = DailyGoals(
-            moveProgress = 0.75f,
-            exerciseProgress = 0.50f,
-            standProgress = 0.82f,
-            moveCalories = 450,
-            moveCaloriesGoal = 600,
-            steps = 6240,
-            stepsGoal = 10000,
-            heartRateBpm = 72,
-            sleepHours = 7f
+        fun defaultDailyGoals() = DailyGoalsCalculator.build(
+            steps = 0,
+            workoutCalories = 0,
+            exerciseMinutes = 0,
+            standHours = 0
         )
 
         fun defaultAthleticStats() = listOf(

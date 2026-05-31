@@ -102,6 +102,10 @@ object UserSessionCodec {
             .put("moveCaloriesGoal", goals.moveCaloriesGoal)
             .put("steps", goals.steps)
             .put("stepsGoal", goals.stepsGoal)
+            .put("exerciseMinutes", goals.exerciseMinutes)
+            .put("exerciseMinutesGoal", goals.exerciseMinutesGoal)
+            .put("standHours", goals.standHours)
+            .put("standHoursGoal", goals.standHoursGoal)
             .put("heartRateBpm", goals.heartRateBpm)
             .put("sleepHours", goals.sleepHours.toDouble())
     }
@@ -115,6 +119,10 @@ object UserSessionCodec {
             moveCaloriesGoal = json.getInt("moveCaloriesGoal"),
             steps = json.getInt("steps"),
             stepsGoal = json.getInt("stepsGoal"),
+            exerciseMinutes = json.optInt("exerciseMinutes", 0),
+            exerciseMinutesGoal = json.optInt("exerciseMinutesGoal", 30),
+            standHours = json.optInt("standHours", 0),
+            standHoursGoal = json.optInt("standHoursGoal", 12),
             heartRateBpm = json.getInt("heartRateBpm"),
             sleepHours = json.getDouble("sleepHours").toFloat()
         )

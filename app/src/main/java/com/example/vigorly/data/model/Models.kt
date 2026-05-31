@@ -19,11 +19,15 @@ data class DailyGoals(
     val moveCaloriesGoal: Int,
     val steps: Int,
     val stepsGoal: Int,
+    val exerciseMinutes: Int = 0,
+    val exerciseMinutesGoal: Int = 30,
+    val standHours: Int = 0,
+    val standHoursGoal: Int = 12,
     val heartRateBpm: Int,
     val sleepHours: Float
 ) {
     val dailyGoalPercent: Int
-        get() = ((moveProgress + exerciseProgress + standProgress) / 3f * 100).toInt()
+        get() = ((moveProgress + exerciseProgress + standProgress) / 3f * 100).toInt().coerceIn(0, 100)
 }
 
 data class AthleticStat(
