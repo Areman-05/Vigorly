@@ -66,6 +66,7 @@ class VigorlyRepository(context: Context) {
     private val preferences = VigorlyPreferencesDataStore(appContext)
     private val activityTracker = DailyActivityTracker(appContext, preferences) { }
     private val workouts = WorkoutCatalog.allWorkouts()
+    private val workoutList: List<WorkoutDetail> = workouts.values.toList()
     private val coachingTips: List<CoachingTip> = CoachingTipLoader.load(appContext)
 
     val profile: StateFlow<UserProfile> = preferences.userProfile.stateIn(
@@ -298,7 +299,7 @@ class VigorlyRepository(context: Context) {
 
     fun listWorkoutIds(): List<String> = workouts.keys.toList()
 
-    fun listWorkouts(): List<WorkoutDetail> = workouts.values.toList()
+    fun listWorkouts(): List<WorkoutDetail> = workoutList
 
     fun flatExercises(workout: WorkoutDetail): List<Exercise> =
         workout.blocks.flatMap { it.exercises }

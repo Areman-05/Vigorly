@@ -31,8 +31,9 @@ import com.example.vigorly.util.WorkoutLabels
 fun WorkoutFilterChips(
     favoritesOnly: Boolean,
     selectedType: WorkoutType?,
-    onFavoritesToggle: () -> Unit,
-    onTypeSelected: (WorkoutType?) -> Unit,
+    onFavoritesClick: () -> Unit,
+    onSelectAll: () -> Unit,
+    onTypeSelected: (WorkoutType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -45,12 +46,12 @@ fun WorkoutFilterChips(
         FilterPill(
             label = stringResource(R.string.favorites_only),
             selected = favoritesOnly,
-            onClick = onFavoritesToggle
+            onClick = onFavoritesClick
         )
         FilterPill(
             label = stringResource(R.string.filter_all),
             selected = selectedType == null && !favoritesOnly,
-            onClick = { onTypeSelected(null) }
+            onClick = onSelectAll
         )
         WorkoutType.entries.forEach { type ->
             FilterPill(

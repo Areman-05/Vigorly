@@ -14,7 +14,7 @@ class AppViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
             modelClass.isAssignableFrom(VigorlyViewModel::class.java) -> VigorlyViewModel() as T
-            modelClass.isAssignableFrom(WorkoutsViewModel::class.java) -> WorkoutsViewModel() as T
+            modelClass.isAssignableFrom(WorkoutsViewModel::class.java) -> WorkoutsViewModel(repository) as T
             else -> throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")
         }
     }

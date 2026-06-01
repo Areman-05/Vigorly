@@ -5,15 +5,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vigorly.R
-import com.example.vigorly.data.model.WorkoutDetail
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.di.AppViewModelFactory
 import com.example.vigorly.ui.components.WorkoutFilterChips
@@ -45,8 +45,6 @@ import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
-import com.example.vigorly.util.WorkoutAssistantEngine
-import com.example.vigorly.util.WorkoutFilter
 import com.example.vigorly.util.WorkoutSort
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,19 +60,10 @@ fun WorkoutsScreen(
     val sort by workoutsViewModel.sort.collectAsState()
     val favoritesOnly by workoutsViewModel.favoritesOnly.collectAsState()
     val assistantFilters by workoutsViewModel.assistantFilters.collectAsState()
+    val workouts by workoutsViewModel.filteredWorkouts.collectAsState()
     val favorites by repository.favorites.collectAsState()
 
     var assistantVisible by rememberSaveable { mutableStateOf(false) }
-
-    val workouts = buildWorkoutList(
-        all = repository.listWorkouts(),
-        searchQuery = searchQuery,
-        selectedFilter = selectedFilter,
-        sort = sort,
-        favoritesOnly = favoritesOnly,
-        favoriteIds = favorites,
-        assistant = assistantFilters
-    )
 
     val sortLabel = when (sort) {
         WorkoutSort.DURATION_ASC -> stringResource(R.string.sort_duration_asc)
@@ -88,71 +77,87 @@ fun WorkoutsScreen(
         assistantFilters.lowIntensityOnly
 
     Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = Dimens.ContainerMargin,
+                end = Dimens.ContainerMargin,
+                top = Dimens.Lg,
+                bottom = 100.dp
+            )
         ) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.workouts_title),
-                    style = HeadlineLgMobile,
-                    color = OnSurface,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-                TextButton(onClick = workoutsViewModel::cycleSort) {
-                    Text(sortLabel, style = BodyMd, color = Primary)
+            item(key = "header") {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.workouts_title),
+                        style = HeadlineLgMobile,
+                        color = OnSurface,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(onClick = workoutsViewModel::cycleSort) {
+                        Text(sortLabel, style = BodyMd, color = Primary)
+                    }
                 }
             }
 
             if (assistantActive) {
-                AssistantActiveBanner(
-                    onClear = workoutsViewModel::clearAssistantConstraints
+                item(key = "assistant_banner") {
+                    AssistantActiveBanner(
+                        onClear = workoutsViewModel::clearAssistantConstraints
+                    )
+                }
+            }
+
+            item(key = "search") {
+                Spacer(Modifier.height(Dimens.Sm))
+                WorkoutSearchBar(
+                    query = searchQuery,
+                    onQueryChange = workoutsViewModel::setSearchQuery
                 )
             }
 
-            Spacer(Modifier.height(Dimens.Sm))
-
-            WorkoutSearchBar(
-                query = searchQuery,
-                onQueryChange = workoutsViewModel::setSearchQuery
-            )
-
-            WorkoutFilterChips(
-                favoritesOnly = favoritesOnly,
-                selectedType = selectedFilter,
-                onFavoritesToggle = workoutsViewModel::toggleFavoritesOnly,
-                onTypeSelected = workoutsViewModel::setSelectedType
-            )
+            item(key = "filters") {
+                WorkoutFilterChips(
+                    favoritesOnly = favoritesOnly,
+                    selectedType = selectedFilter,
+                    onFavoritesClick = workoutsViewModel::onFavoritesChipClick,
+                    onSelectAll = workoutsViewModel::selectAll,
+                    onTypeSelected = workoutsViewModel::selectType
+                )
+            }
 
             if (workouts.isEmpty()) {
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = Dimens.Xl),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = stringResource(R.string.no_workouts_found),
-                        style = BodyMd,
-                        color = OnSurface,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = stringResource(R.string.workouts_empty_hint),
-                        style = BodyMd.copy(fontSize = 13.sp),
-                        color = OnSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(top = Dimens.Xs)
-                    )
+                item(key = "empty") {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = Dimens.Xl),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(R.string.no_workouts_found),
+                            style = BodyMd,
+                            color = OnSurface,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = stringResource(R.string.workouts_empty_hint),
+                            style = BodyMd.copy(fontSize = 13.sp),
+                            color = OnSurfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(top = Dimens.Xs)
+                        )
+                    }
                 }
             } else {
-                workouts.forEach { workout ->
+                items(
+                    items = workouts,
+                    key = { it.id }
+                ) { workout ->
                     WorkoutListCard(
                         workout = workout,
                         isFavorite = favorites.contains(workout.id),
@@ -162,15 +167,13 @@ fun WorkoutsScreen(
                     )
                 }
             }
-
-            Spacer(Modifier.height(88.dp))
         }
 
         WorkoutAssistantFab(
             onClick = { assistantVisible = true },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 22.dp, bottom = 96.dp)
+                .padding(end = 22.dp, bottom = 72.dp)
         )
 
         WorkoutAssistantSheet(
@@ -204,28 +207,6 @@ private fun AssistantActiveBanner(onClear: () -> Unit) {
             style = BodyMd.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
             color = OnSurface,
             modifier = Modifier.clickable(onClick = onClear)
-        )
-    }
-}
-
-private fun buildWorkoutList(
-    all: List<WorkoutDetail>,
-    searchQuery: String,
-    selectedFilter: com.example.vigorly.data.model.WorkoutType?,
-    sort: WorkoutSort,
-    favoritesOnly: Boolean,
-    favoriteIds: Set<String>,
-    assistant: WorkoutAssistantEngine.Result
-): List<WorkoutDetail> {
-    var workouts = WorkoutFilter.filter(all, searchQuery, selectedFilter, sort)
-    if (favoritesOnly) {
-        workouts = WorkoutFilter.filterFavorites(workouts, favoriteIds)
-    }
-    return workouts.filter {
-        WorkoutAssistantEngine.matchesConstraints(
-            durationMinutes = it.durationMinutes,
-            intensity = it.intensity,
-            filters = assistant
         )
     }
 }
