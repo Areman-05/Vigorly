@@ -694,7 +694,8 @@ class VigorlyRepository(context: Context) {
         val workout = getWorkout(workoutId) ?: return
         val duration = durationMinutes ?: workout.durationMinutes
         val kcal = calories ?: workout.estimatedCalories
-        val nowLabel = SimpleDateFormat("'Today,' hh:mm a", Locale.getDefault()).format(Date())
+        val completedAt = System.currentTimeMillis()
+        val nowLabel = com.example.vigorly.util.HistoryLabels.formatTimestamp(completedAt)
 
         val boostedStats = AthleticStatBooster.bump(_athleticStats.value, workout.type)
         _athleticStats.value = boostedStats
@@ -720,7 +721,10 @@ class VigorlyRepository(context: Context) {
             timestampLabel = nowLabel,
             durationMinutes = duration,
             calories = kcal,
-            iconName = iconForWorkoutType(workout.type.name)
+            iconName = iconForWorkoutType(workout.type.name),
+            completedAtMillis = completedAt,
+            workoutId = workoutId,
+            workoutType = workout.type.name
         )
         _history.value = listOf(historyItem) + _history.value
 
@@ -827,11 +831,30 @@ class VigorlyRepository(context: Context) {
             Milestone("elite", "Elite", "Status", "emoji_events", false)
         )
 
-        fun defaultHistory() = listOf(
-            WorkoutHistoryItem("h1", "Potencia tren superior", "Hoy, 06:30", 60, 540, "fitness_center"),
-            WorkoutHistoryItem("h2", "Intervalos HIIT", "Ayer, 07:15", 35, 420, "directions_run"),
-            WorkoutHistoryItem("h3", "Yoga de recuperación", "Lun, 18:00", 45, 150, "self_improvement")
-        )
+        fun defaultHistory(): List<WorkoutHistoryItem> {
+            val now = System.currentTimeMillis()
+            val hour = 3_600_000L
+            return listOf(
+                WorkoutHistoryItem(
+                    "h1", "Potencia tren superior", "Hoy, 06:30", 60, 540, "fitness_center",
+                    completedAtMillis = now - hour * 2,
+                    workoutId = "upper_body_power",
+                    workoutType = "STRENGTH"
+                ),
+                WorkoutHistoryItem(
+                    "h2", "Intervalos HIIT", "Ayer, 07:15", 35, 420, "directions_run",
+                    completedAtMillis = now - hour * 26,
+                    workoutId = "hiit_sprint",
+                    workoutType = "HIIT"
+                ),
+                WorkoutHistoryItem(
+                    "h3", "Yoga de recuperación", "Lun, 18:00", 45, 150, "self_improvement",
+                    completedAtMillis = now - hour * 72,
+                    workoutId = "recovery_yoga",
+                    workoutType = "RECOVERY"
+                )
+            )
+        }
 
         fun defaultRecentActivity() = listOf(
             RecentActivity("r1", "Natación matutina", "HOY, 6:00", 45, "pool")

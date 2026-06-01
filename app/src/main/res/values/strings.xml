@@ -133,6 +133,13 @@
     <string name="history_calories">Calorías</string>
     <string name="history_empty_title">Aún no hay entrenamientos</string>
     <string name="history_empty_message">Completa una sesión para ver tu historial aquí.</string>
+    <string name="history_section_today">Hoy</string>
+    <string name="history_section_yesterday">Ayer</string>
+    <string name="history_section_earlier">Anteriores</string>
+    <string name="history_duration_chip">%1$d min</string>
+    <string name="history_calories_chip">%1$d kcal</string>
+    <string name="history_detail_workout">Entrenamiento</string>
+    <string name="history_detail_exercises">Ejercicios de la sesión</string>
     <string name="fallback_workout_title">Entrenamiento no encontrado</string>
     <string name="fallback_workout_message">Este entrenamiento ya no está disponible.</string>
     <string name="fallback_history_title">Sesión no encontrada</string>

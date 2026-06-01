@@ -49,7 +49,10 @@ data class WorkoutHistoryItem(
     val timestampLabel: String,
     val durationMinutes: Int,
     val calories: Int,
-    val iconName: String
+    val iconName: String,
+    val completedAtMillis: Long = 0L,
+    val workoutId: String? = null,
+    val workoutType: String? = null
 )
 
 data class RecentActivity(

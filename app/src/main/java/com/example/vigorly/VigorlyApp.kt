@@ -177,7 +177,7 @@ fun VigorlyApp(
         }
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
-            if (showBottomBar || (isActivityDetail && !showActivityCalendar) || isDetailOrSession || isSummary) {
+            if (showBottomBar || (isActivityDetail && !showActivityCalendar) || isDetailOrSession || isSummary || isHistoryDetail) {
                 AuthGradientBackground(Modifier.fillMaxSize()) {}
             }
             NavHost(
@@ -362,7 +362,7 @@ fun VigorlyApp(
                         onGoBack = { navController.popBackStack() }
                     )
                 } else {
-                    HistoryDetailScreen(item = item)
+                    HistoryDetailScreen(item = item, repository = repository)
                 }
             }
         }

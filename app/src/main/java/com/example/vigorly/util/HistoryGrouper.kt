@@ -1,31 +1,66 @@
 package com.example.vigorly.util
 
 import com.example.vigorly.data.model.WorkoutHistoryItem
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+
+enum class HistorySectionKind {
+    TODAY,
+    YESTERDAY,
+    EARLIER
+}
 
 data class HistorySection(
-    val title: String,
+    val kind: HistorySectionKind,
     val items: List<WorkoutHistoryItem>
 )
 
 object HistoryGrouper {
+
     fun group(items: List<WorkoutHistoryItem>): List<HistorySection> {
-        val today = mutableListOf<WorkoutHistoryItem>()
-        val yesterday = mutableListOf<WorkoutHistoryItem>()
-        val earlier = mutableListOf<WorkoutHistoryItem>()
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now(zone)
+        val yesterday = today.minusDays(1)
+
+        val todayItems = mutableListOf<WorkoutHistoryItem>()
+        val yesterdayItems = mutableListOf<WorkoutHistoryItem>()
+        val earlierItems = mutableListOf<WorkoutHistoryItem>()
 
         items.forEach { item ->
-            val label = item.timestampLabel.lowercase()
-            when {
-                label.startsWith("today") -> today.add(item)
-                label.startsWith("yesterday") -> yesterday.add(item)
-                else -> earlier.add(item)
+            when (resolveSection(item, today, yesterday, zone)) {
+                HistorySectionKind.TODAY -> todayItems.add(item)
+                HistorySectionKind.YESTERDAY -> yesterdayItems.add(item)
+                HistorySectionKind.EARLIER -> earlierItems.add(item)
             }
         }
 
         return buildList {
-            if (today.isNotEmpty()) add(HistorySection("Today", today))
-            if (yesterday.isNotEmpty()) add(HistorySection("Yesterday", yesterday))
-            if (earlier.isNotEmpty()) add(HistorySection("Earlier", earlier))
+            if (todayItems.isNotEmpty()) add(HistorySection(HistorySectionKind.TODAY, todayItems))
+            if (yesterdayItems.isNotEmpty()) add(HistorySection(HistorySectionKind.YESTERDAY, yesterdayItems))
+            if (earlierItems.isNotEmpty()) add(HistorySection(HistorySectionKind.EARLIER, earlierItems))
+        }
+    }
+
+    private fun resolveSection(
+        item: WorkoutHistoryItem,
+        today: LocalDate,
+        yesterday: LocalDate,
+        zone: ZoneId
+    ): HistorySectionKind {
+        if (item.completedAtMillis > 0L) {
+            val date = Instant.ofEpochMilli(item.completedAtMillis).atZone(zone).toLocalDate()
+            return when (date) {
+                today -> HistorySectionKind.TODAY
+                yesterday -> HistorySectionKind.YESTERDAY
+                else -> HistorySectionKind.EARLIER
+            }
+        }
+        val label = item.timestampLabel.lowercase()
+        return when {
+            label.startsWith("today") || label.startsWith("hoy") -> HistorySectionKind.TODAY
+            label.startsWith("yesterday") || label.startsWith("ayer") -> HistorySectionKind.YESTERDAY
+            else -> HistorySectionKind.EARLIER
         }
     }
 }

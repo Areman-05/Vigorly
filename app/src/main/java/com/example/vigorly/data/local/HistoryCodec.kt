@@ -14,7 +14,10 @@ object HistoryCodec {
                 item.timestampLabel,
                 item.durationMinutes.toString(),
                 item.calories.toString(),
-                item.iconName
+                item.iconName,
+                item.completedAtMillis.toString(),
+                item.workoutId.orEmpty(),
+                item.workoutType.orEmpty()
             ).joinToString(SEP_FIELD)
         }
 
@@ -29,7 +32,10 @@ object HistoryCodec {
                 timestampLabel = parts[2],
                 durationMinutes = parts[3].toIntOrNull() ?: 0,
                 calories = parts[4].toIntOrNull() ?: 0,
-                iconName = parts[5]
+                iconName = parts[5],
+                completedAtMillis = parts.getOrNull(6)?.toLongOrNull() ?: 0L,
+                workoutId = parts.getOrNull(7)?.takeIf { it.isNotBlank() },
+                workoutType = parts.getOrNull(8)?.takeIf { it.isNotBlank() }
             )
         }
     }
