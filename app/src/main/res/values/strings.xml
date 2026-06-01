@@ -298,6 +298,9 @@
     <string name="weekly_minutes_label">MINUTOS SEMANALES</string>
     <string name="level_label">NIVEL %1$d</string>
     <string name="session_detail_label">DETALLE DE SESIÓN</string>
+    <string name="workout_detail_duration">Duración</string>
+    <string name="workout_detail_session">Sesión</string>
+    <string name="workout_block_exercise_count"> · %1$d ejercicios</string>
     <string name="workout_target">Objetivo</string>
     <string name="workout_intensity">Intensidad</string>
     <string name="workout_est_cal">Cal. est.</string>
