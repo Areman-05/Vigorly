@@ -323,7 +323,11 @@ class VigorlyRepository(context: Context) {
     fun tickSession() {
         _activeSession.updateSession { session ->
             if (session.restSecondsRemaining > 0) {
-                session.copy(restSecondsRemaining = session.restSecondsRemaining - 1)
+                val nextRest = session.restSecondsRemaining - 1
+                session.copy(
+                    restSecondsRemaining = nextRest,
+                    restDurationSeconds = if (nextRest <= 0) 0 else session.restDurationSeconds
+                )
             } else {
                 session.copy(elapsedSeconds = session.elapsedSeconds + 1)
             }
@@ -339,14 +343,17 @@ class VigorlyRepository(context: Context) {
             if (session.currentExerciseIndex < session.totalExercises - 1) {
                 session.copy(
                     currentExerciseIndex = session.currentExerciseIndex + 1,
-                    restSecondsRemaining = REST_SECONDS_BETWEEN_EXERCISES
+                    restSecondsRemaining = REST_SECONDS_BETWEEN_EXERCISES,
+                    restDurationSeconds = REST_SECONDS_BETWEEN_EXERCISES
                 )
             } else session
         }
     }
 
     fun skipRest() {
-        _activeSession.updateSession { it.copy(restSecondsRemaining = 0) }
+        _activeSession.updateSession {
+            it.copy(restSecondsRemaining = 0, restDurationSeconds = 0)
+        }
     }
 
     fun markCurrentExerciseComplete() {
@@ -362,7 +369,11 @@ class VigorlyRepository(context: Context) {
     fun previousExercise() {
         _activeSession.updateSession { session ->
             if (session.currentExerciseIndex > 0) {
-                session.copy(currentExerciseIndex = session.currentExerciseIndex - 1)
+                session.copy(
+                    currentExerciseIndex = session.currentExerciseIndex - 1,
+                    restSecondsRemaining = 0,
+                    restDurationSeconds = 0
+                )
             } else session
         }
     }

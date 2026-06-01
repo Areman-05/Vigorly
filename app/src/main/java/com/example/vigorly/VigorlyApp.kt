@@ -139,7 +139,8 @@ fun VigorlyApp(
                 isDetailOrSession || isHistoryDetail -> VigorlyDetailTopBar(
                     onBackClick = { navController.popBackStack() },
                     onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) },
-                    showBrandTitle = !isDetailOrSession
+                    showBrandTitle = !isDetailOrSession,
+                    showSettingsAction = !isDetailOrSession
                 )
                 isSubScreen -> VigorlyDetailTopBar(
                     onBackClick = { navController.popBackStack() },
@@ -176,7 +177,7 @@ fun VigorlyApp(
         }
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
-            if (showBottomBar || (isActivityDetail && !showActivityCalendar) || isDetailOrSession) {
+            if (showBottomBar || (isActivityDetail && !showActivityCalendar) || isDetailOrSession || isSummary) {
                 AuthGradientBackground(Modifier.fillMaxSize()) {}
             }
             NavHost(

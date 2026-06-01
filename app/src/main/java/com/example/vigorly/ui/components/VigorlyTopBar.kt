@@ -123,7 +123,8 @@ fun ActivityDetailTopBar(
 fun VigorlyDetailTopBar(
     onBackClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    showBrandTitle: Boolean = true
+    showBrandTitle: Boolean = true,
+    showSettingsAction: Boolean = true
 ) {
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
@@ -149,8 +150,14 @@ fun VigorlyDetailTopBar(
             }
         },
         actions = {
-            IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = com.example.vigorly.ui.theme.OnSurfaceVariant)
+            if (showSettingsAction) {
+                IconButton(onClick = onSettingsClick) {
+                    Icon(
+                        Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        tint = com.example.vigorly.ui.theme.OnSurfaceVariant
+                    )
+                }
             }
         }
     )

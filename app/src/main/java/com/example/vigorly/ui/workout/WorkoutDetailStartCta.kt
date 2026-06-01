@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.annotation.StringRes
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,7 +36,9 @@ import com.example.vigorly.ui.theme.PrimaryAccent
 @Composable
 fun WorkoutDetailStartCta(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    @StringRes labelRes: Int = R.string.start_workout,
+    showPlayIcon: Boolean = true
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -60,14 +63,16 @@ fun WorkoutDetailStartCta(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        Icon(
-            Icons.Default.PlayArrow,
-            contentDescription = null,
-            tint = OnPrimaryContainer,
-            modifier = Modifier.size(26.dp)
-        )
+        if (showPlayIcon) {
+            Icon(
+                Icons.Default.PlayArrow,
+                contentDescription = null,
+                tint = OnPrimaryContainer,
+                modifier = Modifier.size(26.dp)
+            )
+        }
         Text(
-            stringResource(R.string.start_workout),
+            stringResource(labelRes),
             style = ButtonText.copy(fontWeight = FontWeight.Bold),
             color = OnPrimaryContainer,
             modifier = Modifier.padding(start = Dimens.Sm)

@@ -106,8 +106,16 @@
     <string name="session_rest">DESCANSO</string>
     <string name="session_exercise_progress">EJERCICIO %1$d / %2$d</string>
     <string name="session_rest_hint">Descansa antes del siguiente ejercicio</string>
+    <string name="session_rest_ring_label">DESCANSO</string>
+    <string name="session_exercises_completed">%1$d de %2$d completados</string>
     <string name="session_skip_rest">Saltar descanso</string>
     <string name="session_cancel">Cancelar sesión</string>
+    <string name="session_elapsed_label">TRANSCURRIDO</string>
+    <string name="session_paused_label">EN PAUSA</string>
+    <string name="summary_stat_duration">Duración</string>
+    <string name="summary_stat_calories">Calorías</string>
+    <string name="summary_stat_exercises">Ejercicios</string>
+    <string name="summary_congrats">¡Gran trabajo!</string>
     <string name="settings_pro_title">Vigorly Pro</string>
     <string name="settings_pro_subtitle">Todas las funciones premium desbloqueadas</string>
     <string name="settings_profile">Perfil</string>
