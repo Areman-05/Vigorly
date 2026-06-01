@@ -38,6 +38,7 @@
     <string name="reset_weekly_progress">Restablecer progreso semanal</string>
     <string name="dashboard_greeting">Hola, %1$s</string>
     <string name="dashboard_ready">¿Listo para entrenar?</string>
+    <string name="dashboard_view_activity">Ver actividad</string>
     <string name="daily_goal_label">OBJETIVO DIARIO</string>
     <string name="ring_move">Mover · %1$d / %2$d kcal</string>
     <string name="ring_exercise">Ejercicio · %1$d / %2$d min</string>

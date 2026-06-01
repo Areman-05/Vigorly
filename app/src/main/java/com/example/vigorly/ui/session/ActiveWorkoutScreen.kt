@@ -83,7 +83,8 @@ fun ActiveWorkoutScreen(
             delay(1000L)
             val active = repository.activeSession.value ?: break
             if (active.workoutId != workoutId) break
-            if (!active.isPaused) {
+            // El descanso sigue aunque el ejercicio esté en pausa; la pausa solo frena el tiempo de sesión.
+            if (active.restSecondsRemaining > 0 || !active.isPaused) {
                 repository.tickSession()
             }
         }

@@ -344,7 +344,8 @@ class VigorlyRepository(context: Context) {
                 session.copy(
                     currentExerciseIndex = session.currentExerciseIndex + 1,
                     restSecondsRemaining = REST_SECONDS_BETWEEN_EXERCISES,
-                    restDurationSeconds = REST_SECONDS_BETWEEN_EXERCISES
+                    restDurationSeconds = REST_SECONDS_BETWEEN_EXERCISES,
+                    isPaused = false
                 )
             } else session
         }

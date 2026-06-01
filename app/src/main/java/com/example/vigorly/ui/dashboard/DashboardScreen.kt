@@ -1,8 +1,6 @@
 package com.example.vigorly.ui.dashboard
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -29,7 +27,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +45,7 @@ import com.example.vigorly.ui.components.DailyTipCard
 import com.example.vigorly.ui.components.RecommendedWorkoutCard
 import com.example.vigorly.ui.components.StreakBannerPopup
 import com.example.vigorly.ui.components.WeeklyGoalCard
+import com.example.vigorly.ui.workout.WorkoutDetailStartCta
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.DisplayStat
@@ -103,7 +101,7 @@ fun DashboardScreen(
                 exerciseProgress = goals.exerciseProgress,
                 standProgress = goals.standProgress,
                 centerPercent = goals.dailyGoalPercent,
-                onClick = onActivityDetailClick
+                onViewActivityClick = onActivityDetailClick
             )
 
             Spacer(Modifier.height(Dimens.Md))
@@ -198,31 +196,38 @@ private fun ActivityRingsHeroSection(
     exerciseProgress: Float,
     standProgress: Float,
     centerPercent: Int,
-    onClick: () -> Unit
+    onViewActivityClick: () -> Unit
 ) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val heroMinHeight = screenHeight * 0.38f
-    val interactionSource = remember { MutableInteractionSource() }
 
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = heroMinHeight)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            ),
+            .heightIn(min = heroMinHeight),
         contentAlignment = Alignment.Center
     ) {
-        val ringSize = maxWidth.coerceIn(280.dp, 380.dp)
-        ActivityRings(
-            moveProgress = moveProgress,
-            exerciseProgress = exerciseProgress,
-            standProgress = standProgress,
-            centerPercent = centerPercent,
-            ringSize = ringSize
-        )
+        val ringSize = maxWidth.coerceIn(260.dp, 360.dp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            ActivityRings(
+                moveProgress = moveProgress,
+                exerciseProgress = exerciseProgress,
+                standProgress = standProgress,
+                centerPercent = centerPercent,
+                ringSize = ringSize
+            )
+            WorkoutDetailStartCta(
+                onClick = onViewActivityClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Dimens.Lg),
+                labelRes = R.string.dashboard_view_activity,
+                showPlayIcon = false
+            )
+        }
     }
 }
 
