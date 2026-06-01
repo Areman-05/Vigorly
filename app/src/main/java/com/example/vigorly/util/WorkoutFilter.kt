@@ -15,11 +15,13 @@ object WorkoutFilter {
         var result = workouts
         if (type != null) result = result.filter { it.type == type }
         if (query.isNotBlank()) {
-            val q = query.trim().lowercase()
+            val q = normalizeForSearch(query)
             result = result.filter {
-                it.name.lowercase().contains(q) ||
-                    it.targetMuscles.lowercase().contains(q) ||
-                    it.type.name.lowercase().contains(q)
+                normalizeForSearch(it.name).contains(q) ||
+                    normalizeForSearch(it.description).contains(q) ||
+                    normalizeForSearch(it.targetMuscles).contains(q) ||
+                    normalizeForSearch(it.targetDescription).contains(q) ||
+                    normalizeForSearch(it.type.name).contains(q)
             }
         }
         result = when (sort) {
@@ -32,4 +34,8 @@ object WorkoutFilter {
 
     fun filterFavorites(workouts: List<WorkoutDetail>, favoriteIds: Set<String>): List<WorkoutDetail> =
         workouts.filter { favoriteIds.contains(it.id) }
+
+    private fun normalizeForSearch(text: String): String =
+        java.text.Normalizer.normalize(text.trim().lowercase(), java.text.Normalizer.Form.NFD)
+            .replace(Regex("\\p{M}+"), "")
 }
