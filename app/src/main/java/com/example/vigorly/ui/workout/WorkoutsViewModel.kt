@@ -2,6 +2,7 @@ package com.example.vigorly.ui.workout
 
 import androidx.lifecycle.ViewModel
 import com.example.vigorly.data.model.WorkoutType
+import com.example.vigorly.util.WorkoutAssistantEngine
 import com.example.vigorly.util.WorkoutSort
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,12 +21,18 @@ class WorkoutsViewModel : ViewModel() {
     private val _favoritesOnly = MutableStateFlow(false)
     val favoritesOnly: StateFlow<Boolean> = _favoritesOnly.asStateFlow()
 
+    private val _assistantFilters = MutableStateFlow(WorkoutAssistantEngine.Result())
+    val assistantFilters: StateFlow<WorkoutAssistantEngine.Result> = _assistantFilters.asStateFlow()
+
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
 
     fun setSelectedType(type: WorkoutType?) {
         _selectedType.value = type
+        if (type == null && !_favoritesOnly.value) {
+            clearAssistantConstraints()
+        }
     }
 
     fun cycleSort() {
@@ -38,5 +45,17 @@ class WorkoutsViewModel : ViewModel() {
 
     fun toggleFavoritesOnly() {
         _favoritesOnly.value = !_favoritesOnly.value
+    }
+
+    fun applyAssistant(result: WorkoutAssistantEngine.Result) {
+        _searchQuery.value = result.searchQuery
+        _selectedType.value = result.type
+        result.sort?.let { _sort.value = it }
+        _favoritesOnly.value = result.favoritesOnly
+        _assistantFilters.value = result.copy(searchQuery = "")
+    }
+
+    fun clearAssistantConstraints() {
+        _assistantFilters.value = WorkoutAssistantEngine.Result()
     }
 }

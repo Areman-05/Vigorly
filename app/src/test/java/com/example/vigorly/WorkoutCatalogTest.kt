@@ -11,7 +11,7 @@ class WorkoutCatalogTest {
     @Test
     fun catalog_containsExpandedSpanishPrograms() {
         val workouts = WorkoutCatalog.allWorkouts()
-        assertTrue(workouts.size >= 20)
+        assertTrue(workouts.size >= 40)
         assertTrue(workouts.containsKey("titan_protocol"))
         assertTrue(workouts.containsKey("hiit_sprint"))
         assertTrue(workouts.containsKey("full_body_functional"))

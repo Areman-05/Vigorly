@@ -451,5 +451,336 @@ internal fun allCatalogWorkouts() = listOf(
                 exercise("br2", "Slams", "30 s on / 30 s off × 6", "fitness_center")
             ))
         )
+    ),
+    detail(
+        id = "jump_rope_cardio",
+        name = "Comba cardio",
+        description = "Saltos con comba para coordinación, piernas y ritmo cardíaco elevado.",
+        type = WorkoutType.HIIT,
+        durationMinutes = 18,
+        targetMuscles = "Piernas y hombros",
+        targetDescription = "Cardio",
+        intensity = "Alta",
+        estimatedCalories = 210,
+        blocks = listOf(
+            block("a", "A", "Rondas", listOf(
+                exercise("jr1", "Comba continua", "45 s on / 15 s off × 10", "fitness_center"),
+                exercise("jr2", "Estiramientos", "3 min", "self_improvement")
+            ))
+        )
+    ),
+    detail(
+        id = "boxing_conditioning",
+        name = "Boxeo fitness",
+        description = "Sombras y combinaciones para resistencia y descarga de estrés.",
+        type = WorkoutType.HIIT,
+        durationMinutes = 30,
+        targetMuscles = "Cuerpo completo",
+        targetDescription = "Cardio",
+        intensity = "Alta",
+        estimatedCalories = 320,
+        blocks = listOf(
+            block("a", "A", "Rondas", listOf(
+                exercise("bx1", "Jab-cross combinaciones", "3 min × 5", "fitness_center"),
+                exercise("bx2", "Rodillazos y esquiva", "2 min × 4", "fitness_center")
+            ))
+        )
+    ),
+    detail(
+        id = "rowing_intervals",
+        name = "Remo por intervalos",
+        description = "Ergómetro o remo: potencia anaeróbica con bajo impacto en articulaciones.",
+        type = WorkoutType.CARDIO,
+        durationMinutes = 28,
+        targetMuscles = "Espalda y piernas",
+        targetDescription = "Cardio",
+        intensity = "Alta",
+        estimatedCalories = 300,
+        blocks = listOf(
+            block("a", "A", "Intervalos", listOf(
+                exercise("rw1", "500 m fuerte", "4 series", "fitness_center"),
+                exercise("rw2", "Recuperación activa", "90 s entre series", "directions_walk")
+            ))
+        )
+    ),
+    detail(
+        id = "abs_shredder",
+        name = "Abdomen definición",
+        description = "Circuito abdominal para fuerza del core y estabilidad lumbar.",
+        type = WorkoutType.STRENGTH,
+        durationMinutes = 25,
+        targetMuscles = "Core y abdomen",
+        targetDescription = "Abdominales",
+        intensity = "Moderada",
+        estimatedCalories = 200,
+        blocks = listOf(
+            block("a", "A", "Circuito × 3", listOf(
+                exercise("ab1", "Crunch en polea", "15 reps"),
+                exercise("ab2", "Plancha con toque hombro", "40 s"),
+                exercise("ab3", "Bicicleta abdominal", "20 reps")
+            ))
+        )
+    ),
+    detail(
+        id = "back_width",
+        name = "Espalda ancho",
+        description = "Tirones verticales y horizontales para dorsales y postura.",
+        type = WorkoutType.STRENGTH,
+        durationMinutes = 45,
+        targetMuscles = "Espalda",
+        targetDescription = "Dorsales",
+        intensity = "Alta",
+        estimatedCalories = 410,
+        blocks = listOf(
+            block("a", "A", "Principal", listOf(
+                exercise("bw1", "Jalón al pecho", "4 × 10"),
+                exercise("bw2", "Remo en polea baja", "4 × 10"),
+                exercise("bw3", "Pullover", "3 × 12")
+            ))
+        )
+    ),
+    detail(
+        id = "chest_hypertrophy",
+        name = "Pecho hipertrofia",
+        description = "Volumen en ángulos variados para desarrollo del pectoral.",
+        type = WorkoutType.STRENGTH,
+        durationMinutes = 50,
+        targetMuscles = "Pecho",
+        targetDescription = "Pectoral",
+        intensity = "Alta",
+        estimatedCalories = 440,
+        blocks = listOf(
+            block("a", "A", "Pecho", listOf(
+                exercise("ch1", "Press inclinado", "4 × 10"),
+                exercise("ch2", "Aperturas con mancuernas", "3 × 12"),
+                exercise("ch3", "Fondos en banco", "3 × 12")
+            ))
+        )
+    ),
+    detail(
+        id = "arm_pump",
+        name = "Brazos bombeo",
+        description = "Superseries de bíceps y tríceps para volumen de brazos.",
+        type = WorkoutType.STRENGTH,
+        durationMinutes = 35,
+        targetMuscles = "Brazos",
+        targetDescription = "Bíceps y tríceps",
+        intensity = "Moderada",
+        estimatedCalories = 270,
+        blocks = listOf(
+            block("a", "A", "Superseries", listOf(
+                exercise("ap1", "Curl con barra", "3 × 12"),
+                exercise("ap2", "Extensiones en polea", "3 × 12")
+            ))
+        )
+    ),
+    detail(
+        id = "pilates_core",
+        name = "Pilates core",
+        description = "Control y respiración para core profundo y alineación postural.",
+        type = WorkoutType.RECOVERY,
+        durationMinutes = 35,
+        targetMuscles = "Core",
+        targetDescription = "Control motor",
+        intensity = "Baja",
+        estimatedCalories = 120,
+        blocks = listOf(
+            block("a", "A", "Secuencia", listOf(
+                exercise("pi1", "Cien", "2 series", "self_improvement"),
+                exercise("pi2", "Rodillo", "10 reps", "self_improvement"),
+                exercise("pi3", "Puente de glúteo", "12 reps", "self_improvement")
+            ))
+        )
+    ),
+    detail(
+        id = "foam_rolling",
+        name = "Foam roller",
+        description = "Automasaje miofascial para liberar tensión y acelerar recuperación.",
+        type = WorkoutType.RECOVERY,
+        durationMinutes = 15,
+        targetMuscles = "Cuerpo completo",
+        targetDescription = "Recuperación",
+        intensity = "Baja",
+        estimatedCalories = 45,
+        blocks = listOf(
+            block("a", "A", "Zonas", listOf(
+                exercise("fr1", "Cuádriceps y gemelos", "3 min cada uno", "self_improvement"),
+                exercise("fr2", "Espalda y glúteos", "4 min", "self_improvement")
+            ))
+        )
+    ),
+    detail(
+        id = "outdoor_run",
+        name = "Carrera exterior",
+        description = "Trote continuo al aire libre para base aeróbica y bienestar mental.",
+        type = WorkoutType.CARDIO,
+        durationMinutes = 40,
+        targetMuscles = "Piernas",
+        targetDescription = "Running",
+        intensity = "Moderada",
+        estimatedCalories = 380,
+        blocks = listOf(
+            block("a", "A", "Sesión", listOf(
+                exercise("or1", "Calentamiento", "8 min", "directions_run"),
+                exercise("or2", "Trote continuo", "27 min", "directions_run"),
+                exercise("or3", "Vuelta a la calma", "5 min", "directions_walk")
+            ))
+        )
+    ),
+    detail(
+        id = "sled_push",
+        name = "Trineo y empujes",
+        description = "Empujes de trineo o prowler para potencia de piernas y acondicionamiento.",
+        type = WorkoutType.STRENGTH,
+        durationMinutes = 30,
+        targetMuscles = "Piernas y glúteos",
+        targetDescription = "Potencia",
+        intensity = "Alta",
+        estimatedCalories = 350,
+        blocks = listOf(
+            block("a", "A", "Series", listOf(
+                exercise("sp1", "Empuje 20 m", "6 series", "fitness_center"),
+                exercise("sp2", "Descanso caminando", "60 s", "directions_walk")
+            ))
+        )
+    ),
+    detail(
+        id = "crossfit_wod",
+        name = "WOD metcon",
+        description = "Combinación funcional de alta demanda para resistencia muscular y cardio.",
+        type = WorkoutType.HIIT,
+        durationMinutes = 32,
+        targetMuscles = "Cuerpo completo",
+        targetDescription = "Metcon",
+        intensity = "Alta",
+        estimatedCalories = 390,
+        blocks = listOf(
+            block("a", "A", "AMRAP 20", listOf(
+                exercise("cw1", "Thrusters", "10 reps"),
+                exercise("cw2", "Burpees", "10 reps"),
+                exercise("cw3", "Saltos al cajón", "10 reps")
+            ))
+        )
+    ),
+    detail(
+        id = "balance_stability",
+        name = "Equilibrio y estabilidad",
+        description = "Ejercicios unilaterales y propiocepción para prevenir lesiones.",
+        type = WorkoutType.RECOVERY,
+        durationMinutes = 28,
+        targetMuscles = "Piernas y core",
+        targetDescription = "Estabilidad",
+        intensity = "Baja",
+        estimatedCalories = 100,
+        blocks = listOf(
+            block("a", "A", "Circuito", listOf(
+                exercise("bs1", "Equilibrio unipodal", "45 s por pierna", "self_improvement"),
+                exercise("bs2", "Puente una pierna", "10 por lado", "self_improvement")
+            ))
+        )
+    ),
+    detail(
+        id = "meditation_breath",
+        name = "Respiración y calma",
+        description = "Práctica guiada de respiración para reducir estrés y mejorar sueño.",
+        type = WorkoutType.RECOVERY,
+        durationMinutes = 12,
+        targetMuscles = "Sistema nervioso",
+        targetDescription = "Mindfulness",
+        intensity = "Baja",
+        estimatedCalories = 30,
+        blocks = listOf(
+            block("a", "A", "Sesión", listOf(
+                exercise("mb1", "Respiración 4-7-8", "5 min", "self_improvement"),
+                exercise("mb2", "Escaneo corporal", "7 min", "self_improvement")
+            ))
+        )
+    ),
+    detail(
+        id = "aqua_aerobic",
+        name = "Aquagym",
+        description = "Ejercicios en agua poco profunda: bajo impacto y trabajo cardiovascular.",
+        type = WorkoutType.SWIM,
+        durationMinutes = 38,
+        targetMuscles = "Cuerpo completo",
+        targetDescription = "Agua",
+        intensity = "Moderada",
+        estimatedCalories = 310,
+        blocks = listOf(
+            block("a", "A", "Circuito", listOf(
+                exercise("aq1", "Marcha en el agua", "5 min", "pool"),
+                exercise("aq2", "Sentadillas en agua", "3 × 15", "pool"),
+                exercise("aq3", "Nado suave", "10 min", "pool")
+            ))
+        )
+    ),
+    detail(
+        id = "trx_functional",
+        name = "TRX funcional",
+        description = "Suspensión con peso corporal para fuerza funcional y core integrado.",
+        type = WorkoutType.STRENGTH,
+        durationMinutes = 35,
+        targetMuscles = "Cuerpo completo",
+        targetDescription = "Suspensión",
+        intensity = "Moderada",
+        estimatedCalories = 310,
+        blocks = listOf(
+            block("a", "A", "Circuito", listOf(
+                exercise("tx1", "Remo TRX", "12 reps"),
+                exercise("tx2", "Sentadilla TRX", "15 reps"),
+                exercise("tx3", "Plancha con pies en TRX", "40 s")
+            ))
+        )
+    ),
+    detail(
+        id = "farmers_walk",
+        name = "Caminata del granjero",
+        description = "Cargas pesadas al caminar para agarre, core y acondicionamiento general.",
+        type = WorkoutType.STRENGTH,
+        durationMinutes = 25,
+        targetMuscles = "Core y agarre",
+        targetDescription = "Fuerza funcional",
+        intensity = "Moderada",
+        estimatedCalories = 240,
+        blocks = listOf(
+            block("a", "A", "Series", listOf(
+                exercise("fw1", "Farmer walk", "4 × 30 m", "directions_walk"),
+                exercise("fw2", "Descanso", "90 s", "directions_walk")
+            ))
+        )
+    ),
+    detail(
+        id = "incline_walk",
+        name = "Cinta inclinada",
+        description = "Caminata en pendiente para glúteos y cardio sin impacto de carrera.",
+        type = WorkoutType.CARDIO,
+        durationMinutes = 32,
+        targetMuscles = "Piernas y glúteos",
+        targetDescription = "Cardio",
+        intensity = "Moderada",
+        estimatedCalories = 290,
+        blocks = listOf(
+            block("a", "A", "Sesión", listOf(
+                exercise("iw1", "Inclinación 10–12 %", "25 min", "directions_walk"),
+                exercise("iw2", "Enfriamiento", "5 min", "directions_walk")
+            ))
+        )
+    ),
+    detail(
+        id = "power_yoga",
+        name = "Power yoga",
+        description = "Yoga dinámico con fuerza isométrica para flexibilidad y tren superior.",
+        type = WorkoutType.RECOVERY,
+        durationMinutes = 42,
+        targetMuscles = "Cuerpo completo",
+        targetDescription = "Yoga",
+        intensity = "Moderada",
+        estimatedCalories = 200,
+        blocks = listOf(
+            block("a", "A", "Flujo", listOf(
+                exercise("py1", "Guerrero III", "1 min por lado", "self_improvement"),
+                exercise("py2", "Cuervo o modificaciones", "5 min", "self_improvement")
+            ))
+        )
     )
 )
