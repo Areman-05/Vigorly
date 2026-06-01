@@ -1,10 +1,5 @@
 package com.example.vigorly.ui.session
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -37,22 +31,14 @@ fun WorkoutSessionTimerRing(
     progress: Float,
     accent: Color = PrimaryAccent,
     modifier: Modifier = Modifier,
-    ringSize: Dp = 220.dp,
-    pulseWhenActive: Boolean = true
+    ringSize: Dp = 220.dp
 ) {
-    val transition = rememberInfiniteTransition(label = "sessionRing")
-    val pulse by transition.animateFloat(
-        initialValue = if (pulseWhenActive) 0.92f else 1f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(1800), RepeatMode.Reverse),
-        label = "pulse"
-    )
     val clampedProgress = progress.coerceIn(0f, 1f)
 
     Box(modifier.size(ringSize), contentAlignment = Alignment.Center) {
         Canvas(Modifier.matchParentSize()) {
             val stroke = this.size.minDimension * 0.055f
-            val radius = this.size.minDimension / 2f * 0.82f * pulse
+            val radius = this.size.minDimension / 2f * 0.82f
             val topLeft = Offset(this.size.width / 2 - radius, this.size.height / 2 - radius)
             val arcSize = Size(radius * 2, radius * 2)
             drawArc(

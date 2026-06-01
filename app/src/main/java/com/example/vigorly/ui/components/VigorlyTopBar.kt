@@ -122,7 +122,8 @@ fun ActivityDetailTopBar(
 @Composable
 fun VigorlyDetailTopBar(
     onBackClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    showBrandTitle: Boolean = true
 ) {
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
@@ -139,11 +140,13 @@ fun VigorlyDetailTopBar(
             }
         },
         title = {
-            Text(
-                text = "VIGORLY",
-                style = HeadlineMd.copy(fontWeight = FontWeight.Black),
-                color = Primary
-            )
+            if (showBrandTitle) {
+                Text(
+                    text = "VIGORLY",
+                    style = HeadlineMd.copy(fontWeight = FontWeight.Black),
+                    color = Primary
+                )
+            }
         },
         actions = {
             IconButton(onClick = onSettingsClick) {

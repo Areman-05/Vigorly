@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.rounded.FitnessCenter
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -38,13 +40,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
 import com.example.vigorly.data.repository.VigorlyRepository
-import com.example.vigorly.ui.components.PulsingButton
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.ButtonText
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.HeadlineLgMobile
 import com.example.vigorly.ui.theme.HeadlineMd
 import com.example.vigorly.ui.theme.LabelCaps
+import com.example.vigorly.ui.theme.OnPrimaryContainer
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
@@ -128,8 +130,7 @@ fun ActiveWorkoutScreen(
                 "TRANSCURRIDO"
             },
             progress = restProgress,
-            accent = accent,
-            pulseWhenActive = !current.isPaused && !isResting
+            accent = accent
         )
 
         Spacer(Modifier.height(Dimens.Lg))
@@ -191,13 +192,17 @@ fun ActiveWorkoutScreen(
         Spacer(Modifier.height(Dimens.Lg))
 
         if (!isResting) {
-            PulsingButton(
+            Button(
                 onClick = repository::markCurrentExerciseComplete,
                 modifier = Modifier.fillMaxWidth(),
-                containerColor = accent.copy(alpha = 0.22f),
-                contentColor = accent,
-                pulseEnabled = !isExerciseDone,
-                shape = RoundedCornerShape(14.dp)
+                enabled = !isExerciseDone,
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = accent.copy(alpha = 0.22f),
+                    contentColor = accent,
+                    disabledContainerColor = accent.copy(alpha = 0.12f),
+                    disabledContentColor = accent.copy(alpha = 0.5f)
+                )
             ) {
                 Text(
                     if (isExerciseDone) stringResource(R.string.exercise_completed)
@@ -238,14 +243,17 @@ fun ActiveWorkoutScreen(
         Spacer(Modifier.weight(1f))
 
         if (current.currentExerciseIndex >= current.totalExercises - 1 && !isResting) {
-            PulsingButton(
+            Button(
                 onClick = {
                     repository.completeWorkoutSession()
                     onComplete()
                 },
                 modifier = Modifier.fillMaxWidth(),
-                containerColor = PrimaryAccent,
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryAccent,
+                    contentColor = OnPrimaryContainer
+                )
             ) {
                 Text(stringResource(R.string.finish_workout), style = ButtonText)
             }

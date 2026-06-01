@@ -300,6 +300,7 @@
     <string name="session_detail_label">DETALLE DE SESIÓN</string>
     <string name="workout_detail_duration">Duración</string>
     <string name="workout_detail_session">Sesión</string>
+    <string name="workout_session_exercise_count">Sesión · %1$d ejercicios</string>
     <string name="workout_block_exercise_count"> · %1$d ejercicios</string>
     <string name="workout_target">Objetivo</string>
     <string name="workout_intensity">Intensidad</string>
