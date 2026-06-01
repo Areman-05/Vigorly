@@ -78,10 +78,19 @@ fun HistoryDetailScreen(
                         .padding(12.dp)
                 )
                 Column(Modifier.padding(start = Dimens.Md)) {
+                    val sessionDateFull = HistoryLabels.formatSessionDateFull(item.completedAtMillis)
+                    if (sessionDateFull.isNotBlank()) {
+                        Text(
+                            sessionDateFull,
+                            style = LabelCaps.copy(fontSize = 11.sp),
+                            color = PrimaryAccent.copy(alpha = 0.9f)
+                        )
+                    }
                     Text(
                         stringResource(R.string.session_detail_label),
                         style = LabelCaps,
-                        color = OnSurfaceVariant.copy(alpha = 0.75f)
+                        color = OnSurfaceVariant.copy(alpha = 0.75f),
+                        modifier = Modifier.padding(top = if (sessionDateFull.isNotBlank()) 6.dp else 0.dp)
                     )
                     Text(
                         item.title,

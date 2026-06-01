@@ -140,6 +140,14 @@
     <string name="history_calories_chip">%1$d kcal</string>
     <string name="history_detail_workout">Entrenamiento</string>
     <string name="history_detail_exercises">Ejercicios de la sesión</string>
+    <string name="history_load_more">Cargar más</string>
+    <string name="history_pick_date">Elegir día</string>
+    <string name="history_clear_filter">Ver todo el historial</string>
+    <string name="history_filter_banner">Entrenamientos del %1$s</string>
+    <string name="history_no_sessions_date">No hay entrenamientos este día</string>
+    <string name="history_calendar_hint">Filtrar por fecha</string>
+    <string name="history_date_accept">Aceptar</string>
+    <string name="history_date_cancel">Cancelar</string>
     <string name="fallback_workout_title">Entrenamiento no encontrado</string>
     <string name="fallback_workout_message">Este entrenamiento ya no está disponible.</string>
     <string name="fallback_history_title">Sesión no encontrada</string>

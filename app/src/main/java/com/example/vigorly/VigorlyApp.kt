@@ -139,8 +139,8 @@ fun VigorlyApp(
                 isDetailOrSession || isHistoryDetail -> VigorlyDetailTopBar(
                     onBackClick = { navController.popBackStack() },
                     onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) },
-                    showBrandTitle = !isDetailOrSession,
-                    showSettingsAction = !isDetailOrSession
+                    showBrandTitle = !isDetailOrSession && !isHistoryDetail,
+                    showSettingsAction = !isDetailOrSession && !isHistoryDetail
                 )
                 isSubScreen -> VigorlyDetailTopBar(
                     onBackClick = { navController.popBackStack() },

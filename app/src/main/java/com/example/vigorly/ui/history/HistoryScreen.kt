@@ -3,7 +3,6 @@ package com.example.vigorly.ui.history
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,12 +16,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +61,12 @@ import com.example.vigorly.util.HistoryGrouper
 import com.example.vigorly.util.HistoryLabels
 import com.example.vigorly.util.HistorySectionKind
 import com.example.vigorly.util.HistorySummaryCalculator
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+private const val HISTORY_INITIAL_PAGE = 8
+private const val HISTORY_PAGE_INCREMENT = 8
 
 @Composable
 fun HistoryScreen(
@@ -62,9 +75,48 @@ fun HistoryScreen(
     modifier: Modifier = Modifier
 ) {
     val history by repository.history.collectAsState()
-    val sections = HistoryGrouper.group(history)
-    val summary = HistorySummaryCalculator.from(history)
+    var visibleCount by remember { mutableIntStateOf(HISTORY_INITIAL_PAGE) }
+    var filterDate by remember { mutableStateOf<LocalDate?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val locale = remember { Locale.getDefault() }
+    val filterDateFormatter = remember(locale) {
+        DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM yyyy", locale)
+    }
+
+    val sortedHistory = remember(history) {
+        history.sortedByDescending { it.completedAtMillis }
+    }
+
+    val filteredHistory = remember(sortedHistory, filterDate) {
+        val date = filterDate ?: return@remember sortedHistory
+        sortedHistory.filter { HistoryLabels.itemLocalDate(it) == date }
+    }
+
+    LaunchedEffect(filterDate) {
+        visibleCount = if (filterDate != null) filteredHistory.size.coerceAtLeast(HISTORY_INITIAL_PAGE)
+        else HISTORY_INITIAL_PAGE
+    }
+
+    val visibleHistory = remember(filteredHistory, visibleCount, filterDate) {
+        if (filterDate != null) filteredHistory
+        else filteredHistory.take(visibleCount)
+    }
+
+    val sections = remember(visibleHistory) { HistoryGrouper.group(visibleHistory) }
+    val summary = remember(visibleHistory) { HistorySummaryCalculator.from(visibleHistory) }
+    val hasMore = filterDate == null && visibleCount < filteredHistory.size
     val contentVisible = rememberWorkoutDetailVisible()
+
+    if (showDatePicker) {
+        HistoryDatePickerDialog(
+            onDismiss = { showDatePicker = false },
+            onDateSelected = { date ->
+                filterDate = date
+                showDatePicker = false
+            },
+            initialDate = filterDate ?: LocalDate.now()
+        )
+    }
 
     Column(
         modifier = modifier
@@ -73,12 +125,30 @@ fun HistoryScreen(
             .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
     ) {
         WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 0) {
-            Text(
-                stringResource(R.string.history_title),
-                style = HeadlineLgMobile.copy(fontSize = 28.sp),
-                color = OnSurface,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    stringResource(R.string.history_title),
+                    style = HeadlineLgMobile.copy(fontSize = 28.sp),
+                    color = OnSurface,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        Icons.Default.CalendarMonth,
+                        contentDescription = stringResource(R.string.history_calendar_hint),
+                        tint = PrimaryAccent,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            }
         }
 
         if (history.isEmpty()) {
@@ -88,44 +158,154 @@ fun HistoryScreen(
                 message = stringResource(R.string.history_empty_message)
             )
         } else {
-            WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 120) {
-                HistorySummaryCard(
-                    sessions = summary.totalSessions,
-                    totalMinutes = summary.totalMinutes,
-                    totalCalories = summary.totalCalories,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = Dimens.Lg, bottom = Dimens.Md)
-                )
-            }
-
-            var delay = 220
-            sections.forEach { section ->
-                WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = delay) {
-                    Text(
-                        sectionTitle(section.kind),
-                        style = LabelCaps.copy(fontSize = 11.sp),
-                        color = PrimaryAccent.copy(alpha = 0.85f),
-                        modifier = Modifier.padding(top = Dimens.Sm, bottom = Dimens.Sm)
+            filterDate?.let { date ->
+                WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 80) {
+                    HistoryFilterBanner(
+                        label = stringResource(
+                            R.string.history_filter_banner,
+                            filterDateFormatter.format(date).replaceFirstChar {
+                                if (it.isLowerCase()) it.titlecase(locale) else it.toString()
+                            }
+                        ),
+                        onClear = {
+                            filterDate = null
+                            visibleCount = HISTORY_INITIAL_PAGE
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = Dimens.Md)
                     )
                 }
-                delay += 60
-                section.items.forEach { item ->
+            }
+
+            if (filterDate != null && filteredHistory.isEmpty()) {
+                Spacer(Modifier.height(Dimens.Lg))
+                EmptyState(
+                    title = stringResource(R.string.history_no_sessions_date),
+                    message = stringResource(R.string.history_clear_filter)
+                )
+                Text(
+                    stringResource(R.string.history_clear_filter),
+                    style = BodyMd.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                    color = PrimaryAccent,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Dimens.Sm)
+                        .clickable {
+                            filterDate = null
+                            visibleCount = HISTORY_INITIAL_PAGE
+                        },
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            } else {
+                WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 120) {
+                    HistorySummaryCard(
+                        sessions = summary.totalSessions,
+                        totalMinutes = summary.totalMinutes,
+                        totalCalories = summary.totalCalories,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = Dimens.Lg, bottom = Dimens.Md)
+                    )
+                }
+
+                var delay = 220
+                sections.forEach { section ->
                     WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = delay) {
-                        HistoryItemCard(
-                            item = item,
-                            onClick = { onHistoryItemClick(item.id) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
+                        Text(
+                            sectionTitle(section.kind),
+                            style = LabelCaps.copy(fontSize = 11.sp),
+                            color = PrimaryAccent.copy(alpha = 0.85f),
+                            modifier = Modifier.padding(top = Dimens.Sm, bottom = Dimens.Sm)
                         )
                     }
-                    delay += 50
+                    delay += 60
+                    section.items.forEach { item ->
+                        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = delay) {
+                            HistoryItemCard(
+                                item = item,
+                                onClick = { onHistoryItemClick(item.id) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp)
+                            )
+                        }
+                        delay += 50
+                    }
+                }
+
+                if (hasMore) {
+                    WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = delay) {
+                        HistoryLoadMoreRow(
+                            onClick = { visibleCount += HISTORY_PAGE_INCREMENT },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = Dimens.Md, bottom = Dimens.Sm)
+                        )
+                    }
                 }
             }
         }
 
         Spacer(Modifier.height(Dimens.Md))
+    }
+}
+
+@Composable
+private fun HistoryFilterBanner(
+    label: String,
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(Primary.copy(alpha = 0.1f))
+            .padding(horizontal = Dimens.Md, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            label,
+            style = BodyMd.copy(fontSize = 14.sp, fontWeight = FontWeight.Medium),
+            color = OnSurface,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            stringResource(R.string.history_clear_filter),
+            style = BodyMd.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
+            color = PrimaryAccent,
+            modifier = Modifier.clickable(onClick = onClear)
+        )
+    }
+}
+
+@Composable
+private fun HistoryLoadMoreRow(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 14.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            stringResource(R.string.history_load_more),
+            style = BodyMd.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
+            color = PrimaryAccent
+        )
+        Icon(
+            Icons.Default.KeyboardArrowDown,
+            contentDescription = null,
+            tint = PrimaryAccent,
+            modifier = Modifier
+                .padding(start = 4.dp)
+                .size(22.dp)
+        )
     }
 }
 
@@ -218,6 +398,7 @@ private fun HistoryItemCard(
 ) {
     val type = HistoryLabels.parseWorkoutType(item.workoutType)
     val accent = type?.let { WorkoutTypeTheme.accent(it) } ?: PrimaryAccent
+    val sessionDate = HistoryLabels.formatItemDate(item.completedAtMillis)
 
     Row(
         modifier = modifier
@@ -250,10 +431,18 @@ private fun HistoryItemCard(
                 .weight(1f)
                 .padding(horizontal = Dimens.Md)
         ) {
+            if (sessionDate.isNotBlank()) {
+                Text(
+                    sessionDate,
+                    style = LabelCaps.copy(fontSize = 10.sp),
+                    color = PrimaryAccent.copy(alpha = 0.85f)
+                )
+            }
             Text(
                 item.title,
                 style = BodyMd.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
-                color = OnSurface
+                color = OnSurface,
+                modifier = Modifier.padding(top = if (sessionDate.isNotBlank()) 4.dp else 0.dp)
             )
             Text(
                 HistoryLabels.displayTimestamp(item),
