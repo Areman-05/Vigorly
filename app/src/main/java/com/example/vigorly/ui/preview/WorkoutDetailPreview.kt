@@ -24,7 +24,7 @@ fun WorkoutDetailHeaderPreview() {
     VigorlyTheme {
         GlassCard {
             Column(Modifier.padding(Dimens.Md)) {
-                WorkoutChip(workout.type.name)
+                WorkoutChip(text = workout.type.name)
                 Text(workout.name, style = HeadlineMd, color = OnSurface, modifier = Modifier.padding(top = Dimens.Sm))
                 Text(workout.description, style = BodyMd, color = OnSurfaceVariant, modifier = Modifier.padding(top = Dimens.Xs))
                 IntensityBadge(workout.intensity)

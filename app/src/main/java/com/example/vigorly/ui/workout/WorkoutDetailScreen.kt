@@ -45,6 +45,7 @@ import com.example.vigorly.ui.components.FavoriteToggle
 import com.example.vigorly.ui.components.GlassCard
 import com.example.vigorly.ui.components.WorkoutChip
 import com.example.vigorly.ui.iconForName
+import com.example.vigorly.util.WorkoutLabels
 import com.example.vigorly.ui.theme.BodyLg
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.ButtonText
@@ -92,8 +93,11 @@ fun WorkoutDetailScreen(
             }
             Column(Modifier.align(Alignment.BottomStart).padding(Dimens.ContainerMargin)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    WorkoutChip(workout.type.name)
-                    WorkoutChip("${workout.durationMinutes} MIN", primary = true)
+                    WorkoutChip(text = WorkoutLabels.typeLabel(workout.type))
+                    WorkoutChip(
+                        text = stringResource(R.string.workout_duration_chip, workout.durationMinutes),
+                        filled = true
+                    )
                 }
                 Text(
                     workout.name.uppercase(),
@@ -126,7 +130,7 @@ fun WorkoutDetailScreen(
                 Column(Modifier.padding(Dimens.Md)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(stringResource(R.string.workout_intensity), style = BodyMd, color = OnSurfaceVariant)
-                        Text(workout.intensity, style = HeadlineMd, color = Primary)
+                        Text(WorkoutLabels.intensityLabel(workout.intensity), style = HeadlineMd, color = Primary)
                     }
                     Row(Modifier.fillMaxWidth().padding(vertical = Dimens.Sm), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(stringResource(R.string.workout_est_cal), style = BodyMd, color = OnSurfaceVariant)

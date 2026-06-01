@@ -816,13 +816,13 @@ class VigorlyRepository(context: Context) {
         )
 
         fun defaultHistory() = listOf(
-            WorkoutHistoryItem("h1", "Upper Body Power", "Today, 06:30 AM", 60, 540, "fitness_center"),
-            WorkoutHistoryItem("h2", "HIIT Sprint Intervals", "Yesterday, 07:15 AM", 35, 420, "directions_run"),
-            WorkoutHistoryItem("h3", "Active Recovery Yoga", "Mon, 18:00 PM", 45, 150, "self_improvement")
+            WorkoutHistoryItem("h1", "Potencia tren superior", "Hoy, 06:30", 60, 540, "fitness_center"),
+            WorkoutHistoryItem("h2", "Intervalos HIIT", "Ayer, 07:15", 35, 420, "directions_run"),
+            WorkoutHistoryItem("h3", "Yoga de recuperación", "Lun, 18:00", 45, 150, "self_improvement")
         )
 
         fun defaultRecentActivity() = listOf(
-            RecentActivity("r1", "Morning Swim", "TODAY, 6:00 AM", 45, "pool")
+            RecentActivity("r1", "Natación matutina", "HOY, 6:00", 45, "pool")
         )
     }
 }

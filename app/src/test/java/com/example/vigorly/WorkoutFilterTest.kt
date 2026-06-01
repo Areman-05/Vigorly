@@ -15,7 +15,7 @@ class WorkoutFilterTest {
     val all = WorkoutCatalog.allWorkouts().values.toList()
     val result = WorkoutFilter.filter(all, "titan", null, WorkoutSort.NAME_ASC)
     assertEquals(1, result.size)
-    assertEquals("Titan Protocol", result.first().name)
+    assertEquals("Protocolo Titán", result.first().name)
   }
 
   @Test
