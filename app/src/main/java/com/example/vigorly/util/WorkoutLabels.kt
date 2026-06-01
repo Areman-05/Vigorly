@@ -32,5 +32,15 @@ object WorkoutLabels {
         return key in listOf("high", "alta", "alto")
     }
 
+    fun intensityProgress(intensity: String): Float {
+        val key = intensity.trim().lowercase()
+        return when {
+            key in listOf("high", "alta", "alto") -> 0.92f
+            key in listOf("moderate", "moderada", "medio", "media") -> 0.62f
+            key in listOf("low", "baja", "bajo") -> 0.35f
+            else -> 0.5f
+        }
+    }
+
     fun durationLabel(minutes: Int): String = "$minutes min"
 }
