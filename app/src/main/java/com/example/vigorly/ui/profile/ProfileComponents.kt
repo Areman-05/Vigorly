@@ -18,7 +18,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
+import com.example.vigorly.ui.components.FlatProgressBar
+import com.example.vigorly.util.LevelCalculator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -198,18 +199,21 @@ fun ProfileLevelCard(
                     .padding(horizontal = 10.dp, vertical = 4.dp)
             )
         }
-        LinearProgressIndicator(
-            progress = { progress.coerceIn(0f, 1f) },
+        FlatProgressBar(
+            progress = progress.coerceIn(0f, 1f),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = Dimens.Md, bottom = Dimens.Sm)
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp)),
+                .height(6.dp),
             color = PrimaryAccent,
             trackColor = OnSurfaceVariant.copy(alpha = 0.15f)
         )
         Text(
-            stringResource(R.string.level_progress_hint, workoutsUntilNext, level + 1),
+            if (level >= LevelCalculator.MAX_LEVEL) {
+                stringResource(R.string.level_max_reached)
+            } else {
+                stringResource(R.string.level_progress_hint, workoutsUntilNext, level + 1)
+            },
             style = BodyMd.copy(fontSize = 13.sp),
             color = OnSurfaceVariant.copy(alpha = 0.8f)
         )

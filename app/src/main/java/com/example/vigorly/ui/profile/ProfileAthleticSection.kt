@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
+import com.example.vigorly.ui.components.FlatProgressBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -112,13 +112,12 @@ private fun AthleticStatBar(stat: AthleticStat) {
                 color = accent
             )
         }
-        LinearProgressIndicator(
-            progress = { animatedValue / 100f },
+        FlatProgressBar(
+            progress = animatedValue / 100f,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 6.dp)
-                .height(5.dp)
-                .clip(RoundedCornerShape(3.dp)),
+                .height(5.dp),
             color = accent,
             trackColor = OnSurfaceVariant.copy(alpha = 0.12f)
         )

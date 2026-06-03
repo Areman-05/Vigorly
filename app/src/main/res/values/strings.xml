@@ -363,6 +363,7 @@
     <string name="sort_duration_desc">Duración ↓</string>
     <string name="sort_name_asc">Nombre A–Z</string>
     <string name="level_progress_hint">%1$d entrenamientos para nivel %2$d</string>
+    <string name="level_max_reached">Nivel máximo alcanzado</string>
     <string name="weekly_goal_sessions">%1$d/%2$d sesiones</string>
     <string name="weekly_goal_remaining">%1$d restantes · %2$d%%</string>
 </resources>
