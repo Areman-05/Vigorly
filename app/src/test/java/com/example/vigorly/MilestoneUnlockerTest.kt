@@ -9,8 +9,8 @@ import org.junit.Test
 class MilestoneUnlockerTest {
 
     @Test
-    fun elite_requiresProAndWorkoutCount() {
-        val profile = VigorlyRepository.defaultProfile().copy(totalWorkouts = 360, isProMember = true)
+    fun elite_requiresProAndMaxLevel() {
+        val profile = VigorlyRepository.defaultProfile().copy(totalWorkouts = 45, isProMember = true)
         val elite = MilestoneUnlocker.apply(profile, VigorlyRepository.defaultMilestones())
             .first { it.id == "elite" }
         assertTrue(elite.unlocked)
@@ -18,7 +18,7 @@ class MilestoneUnlockerTest {
 
     @Test
     fun elite_lockedWithoutPro() {
-        val profile = VigorlyRepository.defaultProfile().copy(totalWorkouts = 400, isProMember = false)
+        val profile = VigorlyRepository.defaultProfile().copy(totalWorkouts = 100, isProMember = false)
         val elite = MilestoneUnlocker.apply(profile, VigorlyRepository.defaultMilestones())
             .first { it.id == "elite" }
         assertFalse(elite.unlocked)
