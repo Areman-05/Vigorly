@@ -28,7 +28,13 @@ import com.example.vigorly.util.PersonalizedCoachingTipEngine
 import com.example.vigorly.util.PersonalizedTipContext
 import com.example.vigorly.util.AthleticStatKeys
 import com.example.vigorly.util.WorkoutRecommender
+import com.example.vigorly.data.MilestoneCatalog
 import com.example.vigorly.data.local.MilestoneShowcaseCodec
+import com.example.vigorly.util.HistoryItemMigration
+import com.example.vigorly.util.HistoryLabels
+import com.example.vigorly.util.LevelCalculator
+import com.example.vigorly.util.StreakCalculator
+import java.time.ZoneId
 import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
@@ -205,24 +211,35 @@ class VigorlyRepository(context: Context) {
         profile.onEach { refreshStreakBannerVisibility() }.launchIn(scope)
         scope.launch { refreshStreakBannerVisibility() }
         preferences.workoutHistory.onEach { stored ->
-            _history.value = stored
-            _recentActivity.value = stored.take(5).map { item ->
+            val migrated = stored.map { HistoryItemMigration.withResolvedTimestamp(it) }
+            _history.value = migrated
+            if (migrated != stored) {
+                scope.launch { preferences.saveWorkoutHistory(migrated) }
+            }
+            _recentActivity.value = migrated.take(5).map { item ->
                 RecentActivity(
                     id = item.id,
                     title = item.title,
-                    timeLabel = item.timestampLabel.uppercase(Locale.getDefault()),
+                    timeLabel = HistoryLabels.displayTimestamp(item).uppercase(Locale.getDefault()),
                     durationMinutes = item.durationMinutes,
                     iconName = item.iconName
                 )
             }.ifEmpty { defaultRecentActivity() }
+            scope.launch { syncActiveStreakDays() }
             refreshMilestones()
         }.launchIn(scope)
         preferences.userProfile.onEach { refreshMilestones() }.launchIn(scope)
         scope.launch { restoreActiveUserSessionIfNeeded() }
-        scope.launch { activityTracker.initialize() }
-        scope.launch { refreshActivityDayHistory() }
+        scope.launch {
+            activityTracker.initialize()
+            refreshActivityDayHistory()
+            syncActiveStreakDays()
+        }
         activityTracker.detail.onEach {
-            scope.launch { refreshActivityDayHistory() }
+            scope.launch {
+                refreshActivityDayHistory()
+                syncActiveStreakDays()
+            }
         }.launchIn(scope)
     }
 
@@ -254,7 +271,32 @@ class VigorlyRepository(context: Context) {
 
     suspend fun refreshActivityDayHistory() {
         _activityDayHistory.value = preferences.loadActivityDayHistory()
+        syncActiveStreakDays()
     }
+
+    private suspend fun syncActiveStreakDays() {
+        val streak = StreakCalculator.consecutiveActiveDays(collectActiveDates())
+        val current = profile.value
+        if (current.activeStreakDays == streak) return
+        preferences.updateProfile(current.copy(activeStreakDays = streak))
+    }
+
+    private fun collectActiveDates(): Set<LocalDate> {
+        val zone = ZoneId.systemDefault()
+        val fromWorkouts = _history.value.mapNotNull { HistoryLabels.itemLocalDate(it, zone) }
+        val fromActivity = _activityDayHistory.value.mapNotNull { (key, summary) ->
+            val date = runCatching { LocalDate.parse(key) }.getOrNull() ?: return@mapNotNull null
+            if (summary.hasRecordedActivity()) date else null
+        }
+        val today = LocalDate.now(zone)
+        val todayKey = today.format(activityDateFormatter)
+        val liveSummary = DailyActivityDaySummary.fromDetail(todayKey, dailyActivityDetail.value)
+        val todaySet = if (liveSummary.hasRecordedActivity()) setOf(today) else emptySet()
+        return (fromWorkouts + fromActivity + todaySet).toSet()
+    }
+
+    private fun DailyActivityDaySummary.hasRecordedActivity(): Boolean =
+        moveCalories > 0 || exerciseMinutes > 0 || standHours > 0 || steps > 0
 
     private fun resolveActivityDetail(
         date: LocalDate,
@@ -300,7 +342,7 @@ class VigorlyRepository(context: Context) {
     }
 
     private fun refreshMilestones() {
-        _milestones.value = MilestoneUnlocker.apply(profile.value, defaultMilestones())
+        _milestones.value = MilestoneUnlocker.apply(profile.value, MilestoneCatalog.all())
     }
 
     fun getWorkout(id: String): WorkoutDetail? = workouts[id]
@@ -728,13 +770,14 @@ class VigorlyRepository(context: Context) {
 
         scope.launch {
             val currentProfile = profile.value
+            val newTotal = currentProfile.totalWorkouts + 1
+            activityTracker.addWorkoutContribution(duration, kcal)
             preferences.updateProfile(
                 currentProfile.copy(
-                    totalWorkouts = currentProfile.totalWorkouts + 1,
-                    activeStreakDays = currentProfile.activeStreakDays + 1
+                    totalWorkouts = newTotal,
+                    level = LevelCalculator.levelFromWorkouts(newTotal)
                 )
             )
-            activityTracker.addWorkoutContribution(duration, kcal)
             preferences.saveAthleticStats(boostedStats)
             val goal = weeklyGoal.value
             preferences.saveWeeklyGoal(goal.copy(completedSessions = goal.completedSessions + 1))
@@ -757,7 +800,7 @@ class VigorlyRepository(context: Context) {
         val recent = RecentActivity(
             id = historyItem.id,
             title = workout.name,
-            timeLabel = nowLabel.uppercase(Locale.getDefault()),
+            timeLabel = HistoryLabels.displayTimestamp(historyItem).uppercase(Locale.getDefault()),
             durationMinutes = duration,
             iconName = historyItem.iconName
         )
@@ -765,6 +808,8 @@ class VigorlyRepository(context: Context) {
 
         scope.launch {
             preferences.saveWorkoutHistory(_history.value)
+            refreshActivityDayHistory()
+            syncActiveStreakDays()
         }
     }
 
@@ -831,7 +876,7 @@ class VigorlyRepository(context: Context) {
             isProMember = true,
             totalWorkouts = 342,
             activeStreakDays = 14,
-            level = 42
+            level = LevelCalculator.levelFromWorkouts(342)
         )
 
         fun defaultDailyGoals() = DailyGoalsCalculator.build(
@@ -850,12 +895,7 @@ class VigorlyRepository(context: Context) {
             AthleticStat(AthleticStatKeys.STAMINA, 75)
         )
 
-        fun defaultMilestones() = listOf(
-            Milestone("streak_100", "100 días", "Racha", "local_fire_department", true),
-            Milestone("lift_10k", "10 ton", "Levantado", "fitness_center", true),
-            Milestone("run_5k", "Sub 20", "5 km", "timer", true),
-            Milestone("elite", "Élite", "Estado", "emoji_events", false)
-        )
+        fun defaultMilestones() = MilestoneCatalog.all()
 
         fun defaultHistory(): List<WorkoutHistoryItem> {
             val now = System.currentTimeMillis()

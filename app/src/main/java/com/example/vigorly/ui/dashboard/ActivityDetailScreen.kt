@@ -91,6 +91,10 @@ fun ActivityDetailScreen(
         WeeklyActivityRingsBuilder.formatWeekRange(weekDays, locale)
     }
 
+    LaunchedEffect(Unit) {
+        repository.refreshActivityDayHistory()
+    }
+
     LaunchedEffect(showCalendar) {
         if (showCalendar) repository.refreshActivityDayHistory()
     }
