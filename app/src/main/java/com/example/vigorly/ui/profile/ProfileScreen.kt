@@ -20,26 +20,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
 import com.example.vigorly.data.repository.VigorlyRepository
-import com.example.vigorly.ui.components.EmptyState
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.HeadlineLgMobile
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.workout.WorkoutDetailSectionEnter
-import com.example.vigorly.ui.workout.WorkoutTypeTheme
 import com.example.vigorly.ui.workout.rememberWorkoutDetailVisible
-import com.example.vigorly.util.HistoryLabels
 import com.example.vigorly.util.HistorySummaryCalculator
 import com.example.vigorly.util.LevelCalculator
-
-private const val RECENT_SESSIONS_LIMIT = 3
 
 @Composable
 fun ProfileScreen(
     repository: VigorlyRepository,
     onViewAllMilestones: () -> Unit = {},
     onOpenInsights: () -> Unit = {},
-    onOpenHistory: () -> Unit = {},
-    onHistoryItemClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val profile by repository.profile.collectAsState()
@@ -49,8 +42,8 @@ fun ProfileScreen(
     val history by repository.history.collectAsState()
     val weeklyGoal by repository.weeklyGoal.collectAsState()
     val summary = remember(history) { HistorySummaryCalculator.from(history) }
-    val recentSessions = remember(history) {
-        history.sortedByDescending { it.completedAtMillis }.take(RECENT_SESSIONS_LIMIT)
+    val level = remember(profile.totalWorkouts) {
+        LevelCalculator.levelFromWorkouts(profile.totalWorkouts)
     }
     val unlockedMilestones = remember(milestones) { milestones.filter { it.unlocked } }
     val contentVisible = rememberWorkoutDetailVisible()
@@ -94,7 +87,7 @@ fun ProfileScreen(
             ProfileHeroCard(
                 displayName = profile.displayName,
                 avatarUrl = profile.avatarUrl,
-                level = profile.level,
+                level = level,
                 levelProgress = LevelCalculator.progressToNextLevel(profile.totalWorkouts),
                 isProMember = profile.isProMember,
                 totalWorkouts = profile.totalWorkouts,
@@ -114,7 +107,7 @@ fun ProfileScreen(
 
         WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 240) {
             ProfileLevelCard(
-                level = profile.level,
+                level = level,
                 progress = LevelCalculator.progressToNextLevel(profile.totalWorkouts),
                 workoutsUntilNext = LevelCalculator.workoutsUntilNextLevel(profile.totalWorkouts),
                 modifier = Modifier.padding(top = Dimens.Md)
@@ -149,34 +142,6 @@ fun ProfileScreen(
                 onViewAll = onViewAllMilestones,
                 modifier = Modifier.padding(top = Dimens.Lg)
             )
-        }
-
-        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 560) {
-            Column(Modifier.padding(top = Dimens.Lg)) {
-                ProfileSectionHeader(
-                    title = stringResource(R.string.profile_recent_history),
-                    actionLabel = if (history.isNotEmpty()) stringResource(R.string.profile_open_history) else null,
-                    onAction = if (history.isNotEmpty()) onOpenHistory else null
-                )
-                if (recentSessions.isEmpty()) {
-                    EmptyState(
-                        title = stringResource(R.string.profile_no_recent_sessions),
-                        message = stringResource(R.string.profile_no_recent_sessions_hint),
-                        modifier = Modifier.padding(top = Dimens.Sm)
-                    )
-                } else {
-                    recentSessions.forEach { item ->
-                        val type = HistoryLabels.parseWorkoutType(item.workoutType)
-                        val accent = type?.let { WorkoutTypeTheme.accent(it) } ?: com.example.vigorly.ui.theme.PrimaryAccent
-                        ProfileRecentSessionRow(
-                            item = item,
-                            accent = accent,
-                            onClick = { onHistoryItemClick(item.id) },
-                            modifier = Modifier.padding(top = Dimens.Sm)
-                        )
-                    }
-                }
-            }
         }
 
         Spacer(Modifier.height(Dimens.Md))

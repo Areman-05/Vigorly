@@ -7,7 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Icon
@@ -53,7 +54,7 @@ fun ProfileStatsSection(
             verticalArrangement = Arrangement.spacedBy(Dimens.Sm)
         ) {
             StatsInsightRow(
-                icon = Icons.Default.Insights,
+                icon = Icons.Default.FitnessCenter,
                 label = stringResource(R.string.profile_stats_sessions),
                 value = "${summary.totalSessions}",
                 accent = PrimaryAccent
@@ -71,7 +72,7 @@ fun ProfileStatsSection(
                 accent = PrimaryContainer
             )
             StatsInsightRow(
-                icon = Icons.Default.Insights,
+                icon = Icons.Default.CalendarMonth,
                 label = stringResource(R.string.weekly_goal_title),
                 value = stringResource(
                     R.string.profile_weekly_progress,
