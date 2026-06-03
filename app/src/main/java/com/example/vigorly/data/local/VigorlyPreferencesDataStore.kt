@@ -8,6 +8,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.example.vigorly.data.activity.ActivityHistoryCodec
 import com.example.vigorly.data.activity.DailyActivityDaySummary
 import com.example.vigorly.data.activity.HourlyActivityCodec
+import com.example.vigorly.data.local.MilestoneShowcaseCodec
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
 import com.example.vigorly.data.model.UserProfile
@@ -69,6 +70,10 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         val raw = prefs[PreferenceKeys.WORKOUT_HISTORY]
         val decoded = HistoryCodec.decode(raw)
         decoded.ifEmpty { VigorlyRepository.defaultHistory() }
+    }
+
+    val milestoneShowcase: Flow<List<String?>> = context.vigorlyDataStore.data.map { prefs ->
+        MilestoneShowcaseCodec.decode(prefs[PreferenceKeys.MILESTONE_SHOWCASE])
     }
 
     val weeklyGoal: Flow<WeeklyGoal> = context.vigorlyDataStore.data.map { prefs ->
@@ -322,6 +327,12 @@ class VigorlyPreferencesDataStore(private val context: Context) {
     suspend fun saveAthleticStats(stats: List<AthleticStat>) {
         context.vigorlyDataStore.edit { prefs ->
             prefs[PreferenceKeys.ATHLETIC_STATS] = AthleticStatsCodec.encode(stats)
+        }
+    }
+
+    suspend fun saveMilestoneShowcase(slots: List<String?>) {
+        context.vigorlyDataStore.edit { prefs ->
+            prefs[PreferenceKeys.MILESTONE_SHOWCASE] = MilestoneShowcaseCodec.encode(slots)
         }
     }
 

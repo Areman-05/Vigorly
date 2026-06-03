@@ -55,4 +55,5 @@ object PreferenceKeys {
     val WORKOUT_CALORIES_PER_HOUR = stringPreferencesKey("workout_calories_per_hour")
     val ACTIVITY_DAY_HISTORY = stringPreferencesKey("activity_day_history")
     val STREAK_BANNER_DISMISSED_DATE = stringPreferencesKey("streak_banner_dismissed_date")
+    val MILESTONE_SHOWCASE = stringPreferencesKey("milestone_showcase")
 }
