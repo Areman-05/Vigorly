@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -36,7 +35,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.vigorly.R
 import com.example.vigorly.data.model.Milestone
 import com.example.vigorly.data.model.WorkoutHistoryItem
@@ -54,110 +52,6 @@ import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.PrimaryContainer
 import com.example.vigorly.util.HistoryLabels
-
-@Composable
-fun ProfileHeroCard(
-    displayName: String,
-    avatarUrl: String?,
-    level: Int,
-    isProMember: Boolean,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        PrimaryAccent.copy(alpha = 0.18f),
-                        Primary.copy(alpha = 0.08f),
-                        PrimaryContainer.copy(alpha = 0.04f)
-                    )
-                )
-            )
-            .padding(Dimens.Lg),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(contentAlignment = Alignment.BottomEnd) {
-            if (!avatarUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = avatarUrl,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(96.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, PrimaryAccent.copy(alpha = 0.6f), CircleShape)
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(96.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(PrimaryAccent.copy(0.35f), Primary.copy(0.2f))
-                            )
-                        )
-                        .border(2.dp, PrimaryAccent.copy(alpha = 0.5f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
-                        tint = OnSurface,
-                        modifier = Modifier.size(44.dp)
-                    )
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(PrimaryAccent)
-                    .border(2.dp, OnSurface.copy(alpha = 0.15f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = level.toString(),
-                    style = LabelCaps.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold),
-                    color = OnSurface
-                )
-            }
-        }
-
-        Text(
-            displayName,
-            style = HeadlineLgMobile.copy(fontSize = 24.sp),
-            color = OnSurface,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = Dimens.Md),
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = Dimens.Sm)
-        ) {
-            Icon(
-                Icons.Default.WorkspacePremium,
-                contentDescription = null,
-                tint = if (isProMember) PrimaryAccent else OnSurfaceVariant,
-                modifier = Modifier.size(16.dp)
-            )
-            Text(
-                stringResource(
-                    if (isProMember) R.string.profile_member_pro else R.string.profile_member_free
-                ),
-                style = BodyMd.copy(fontSize = 13.sp),
-                color = if (isProMember) PrimaryAccent else OnSurfaceVariant.copy(0.8f),
-                modifier = Modifier.padding(start = 6.dp)
-            )
-        }
-    }
-}
 
 @Composable
 fun ProfileSummaryCard(
