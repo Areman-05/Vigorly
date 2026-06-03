@@ -146,15 +146,18 @@ fun VigorlyApp(
                     onBackClick = { navController.popBackStack() },
                     onSettingsClick = {
                         if (currentRoute != VigorlyRoutes.Milestones &&
-                            currentRoute != VigorlyRoutes.Insights
+                            currentRoute != VigorlyRoutes.Insights &&
+                            currentRoute != VigorlyRoutes.Settings
                         ) {
                             navController.navigate(VigorlyRoutes.Settings)
                         }
                     },
                     showBrandTitle = currentRoute != VigorlyRoutes.Milestones &&
-                        currentRoute != VigorlyRoutes.Insights,
+                        currentRoute != VigorlyRoutes.Insights &&
+                        currentRoute != VigorlyRoutes.Settings,
                     showSettingsAction = currentRoute != VigorlyRoutes.Milestones &&
-                        currentRoute != VigorlyRoutes.Insights
+                        currentRoute != VigorlyRoutes.Insights &&
+                        currentRoute != VigorlyRoutes.Settings
                 )
                 showBottomBar -> VigorlyMainTopBar(
                     onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) }
@@ -178,7 +181,14 @@ fun VigorlyApp(
         }
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
-            if (showBottomBar || (isActivityDetail && !showActivityCalendar) || isDetailOrSession || isSummary || isHistoryDetail) {
+            if (
+                showBottomBar ||
+                isSubScreen ||
+                (isActivityDetail && !showActivityCalendar) ||
+                isDetailOrSession ||
+                isSummary ||
+                isHistoryDetail
+            ) {
                 AuthGradientBackground(Modifier.fillMaxSize()) {}
             }
             NavHost(
@@ -280,6 +290,14 @@ fun VigorlyApp(
                 SettingsScreen(
                     repository = repository,
                     onOpenInsights = { navController.navigate(VigorlyRoutes.Insights) },
+                    onRestartOnboarding = {
+                        navController.navigate(VigorlyRoutes.Setup) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = false
+                            }
+                            launchSingleTop = true
+                        }
+                    },
                     onLogout = {
                         repository.logout()
                         navigateToLogin()
