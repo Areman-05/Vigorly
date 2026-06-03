@@ -144,7 +144,13 @@ fun VigorlyApp(
                 )
                 isSubScreen -> VigorlyDetailTopBar(
                     onBackClick = { navController.popBackStack() },
-                    onSettingsClick = {}
+                    onSettingsClick = {
+                        if (currentRoute != VigorlyRoutes.Milestones) {
+                            navController.navigate(VigorlyRoutes.Settings)
+                        }
+                    },
+                    showBrandTitle = currentRoute != VigorlyRoutes.Milestones,
+                    showSettingsAction = currentRoute != VigorlyRoutes.Milestones
                 )
                 showBottomBar -> VigorlyMainTopBar(
                     onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) }
@@ -263,17 +269,7 @@ fun VigorlyApp(
                 ProfileScreen(
                     repository = repository,
                     onViewAllMilestones = { navController.navigate(VigorlyRoutes.Milestones) },
-                    onOpenInsights = { navController.navigate(VigorlyRoutes.Insights) },
-                    onOpenHistory = {
-                        navController.navigate(VigorlyRoutes.History) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onHistoryItemClick = { id ->
-                        navController.navigate(VigorlyRoutes.historyDetail(id))
-                    }
+                    onOpenInsights = { navController.navigate(VigorlyRoutes.Insights) }
                 )
             }
             composable(VigorlyRoutes.Settings) {
