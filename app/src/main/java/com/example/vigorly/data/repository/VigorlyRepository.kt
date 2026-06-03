@@ -33,6 +33,7 @@ import com.example.vigorly.data.local.MilestoneShowcaseCodec
 import com.example.vigorly.util.HistoryItemMigration
 import com.example.vigorly.util.HistoryLabels
 import com.example.vigorly.util.LevelCalculator
+import com.example.vigorly.util.HistorySanitizer
 import com.example.vigorly.util.StreakCalculator
 import java.time.ZoneId
 import com.example.vigorly.navigation.AppDestination
@@ -138,7 +139,7 @@ class VigorlyRepository(context: Context) {
     private val _milestoneShowcase = MutableStateFlow(List(MilestoneShowcaseCodec.SLOT_COUNT) { null as String? })
     val milestoneShowcase: StateFlow<List<String?>> = _milestoneShowcase.asStateFlow()
 
-    private val _history = MutableStateFlow(defaultHistory())
+    private val _history = MutableStateFlow<List<WorkoutHistoryItem>>(emptyList())
     val history: StateFlow<List<WorkoutHistoryItem>> = _history.asStateFlow()
 
     private val _recentActivity = MutableStateFlow(defaultRecentActivity())
@@ -170,6 +171,12 @@ class VigorlyRepository(context: Context) {
 
     private val _accounts = MutableStateFlow<List<UserAccount>>(emptyList())
     private var appDataPreloaded = false
+
+    @Volatile
+    private var lastRecordedWorkoutId: String? = null
+
+    @Volatile
+    private var lastRecordedCompletionAt: Long = 0L
 
     init {
         preferences.isLoggedIn.onEach { _isLoggedIn.value = it }.launchIn(scope)
@@ -211,12 +218,20 @@ class VigorlyRepository(context: Context) {
         profile.onEach { refreshStreakBannerVisibility() }.launchIn(scope)
         scope.launch { refreshStreakBannerVisibility() }
         preferences.workoutHistory.onEach { stored ->
-            val migrated = stored.map { HistoryItemMigration.withResolvedTimestamp(it) }
-            _history.value = migrated
-            if (migrated != stored) {
-                scope.launch { preferences.saveWorkoutHistory(migrated) }
+            val cleaned = HistorySanitizer.clean(stored)
+            _history.value = cleaned
+            if (cleaned != stored) {
+                scope.launch {
+                    preferences.saveWorkoutHistory(cleaned)
+                    reconcileProfileAfterHistoryChange(
+                        cleaned,
+                        HistorySanitizer.removedCount(stored, cleaned)
+                    )
+                }
+            } else {
+                scope.launch { reconcileProfileAfterHistoryChange(cleaned, 0) }
             }
-            _recentActivity.value = migrated.take(5).map { item ->
+            _recentActivity.value = cleaned.take(5).map { item ->
                 RecentActivity(
                     id = item.id,
                     title = item.title,
@@ -297,6 +312,27 @@ class VigorlyRepository(context: Context) {
 
     private fun DailyActivityDaySummary.hasRecordedActivity(): Boolean =
         moveCalories > 0 || exerciseMinutes > 0 || standHours > 0 || steps > 0
+
+    private suspend fun reconcileProfileAfterHistoryChange(
+        history: List<WorkoutHistoryItem>,
+        removedCount: Int
+    ) {
+        val current = profile.value
+        val alignedTotal = history.size
+        val alignedLevel = LevelCalculator.levelFromWorkouts(alignedTotal)
+        if (current.totalWorkouts == alignedTotal &&
+            current.level == alignedLevel &&
+            removedCount == 0
+        ) {
+            return
+        }
+        preferences.updateProfile(
+            current.copy(
+                totalWorkouts = alignedTotal,
+                level = alignedLevel
+            )
+        )
+    }
 
     private fun resolveActivityDetail(
         date: LocalDate,
@@ -658,20 +694,25 @@ class VigorlyRepository(context: Context) {
         preferences.setPreferredTime(snapshot.preferredTime)
         preferences.setNotificationsEnabled(snapshot.notificationsEnabled)
         preferences.setUnitsMetric(snapshot.unitsMetric)
-        preferences.saveWorkoutHistory(snapshot.workoutHistory)
+        val sessionHistory = HistorySanitizer.clean(snapshot.workoutHistory)
+        preferences.saveWorkoutHistory(sessionHistory)
         preferences.saveAthleticStats(snapshot.athleticStats)
         preferences.setFavoriteWorkoutIds(snapshot.favoriteWorkoutIds)
         preferences.setDailyTipIndex(snapshot.dailyTipIndex)
-        _history.value = snapshot.workoutHistory
-        _recentActivity.value = snapshot.workoutHistory.take(5).map { item ->
+        _history.value = sessionHistory
+        _recentActivity.value = sessionHistory.take(5).map { item ->
             RecentActivity(
                 id = item.id,
                 title = item.title,
-                timeLabel = item.timestampLabel.uppercase(Locale.getDefault()),
+                timeLabel = HistoryLabels.displayTimestamp(item).uppercase(Locale.getDefault()),
                 durationMinutes = item.durationMinutes,
                 iconName = item.iconName
             )
-        }.ifEmpty { defaultRecentActivity() }
+        }
+        reconcileProfileAfterHistoryChange(
+            sessionHistory,
+            HistorySanitizer.removedCount(snapshot.workoutHistory, sessionHistory)
+        )
         _athleticStats.value = snapshot.athleticStats
         _favorites.value = snapshot.favoriteWorkoutIds
         _onboardingCompleted.value = snapshot.onboardingCompleted
@@ -760,9 +801,15 @@ class VigorlyRepository(context: Context) {
 
     fun recordWorkoutCompletion(workoutId: String, durationMinutes: Int? = null, calories: Int? = null) {
         val workout = getWorkout(workoutId) ?: return
+        val now = System.currentTimeMillis()
+        if (workoutId == lastRecordedWorkoutId && now - lastRecordedCompletionAt < 5_000L) {
+            return
+        }
+        lastRecordedWorkoutId = workoutId
+        lastRecordedCompletionAt = now
         val duration = durationMinutes ?: workout.durationMinutes
         val kcal = calories ?: workout.estimatedCalories
-        val completedAt = System.currentTimeMillis()
+        val completedAt = now
         val nowLabel = com.example.vigorly.util.HistoryLabels.formatTimestamp(completedAt)
 
         val boostedStats = AthleticStatBooster.bump(_athleticStats.value, workout.type)
@@ -828,9 +875,23 @@ class VigorlyRepository(context: Context) {
     }
 
     fun clearWorkoutHistory() {
+        lastRecordedWorkoutId = null
+        lastRecordedCompletionAt = 0L
         _history.value = emptyList()
         _recentActivity.value = emptyList()
-        scope.launch { preferences.saveWorkoutHistory(emptyList()) }
+        scope.launch {
+            preferences.saveWorkoutHistory(emptyList())
+            val current = profile.value
+            preferences.updateProfile(
+                current.copy(
+                    totalWorkouts = 0,
+                    level = 1,
+                    activeStreakDays = 0
+                )
+            )
+            refreshActivityDayHistory()
+            refreshMilestones()
+        }
     }
 
     fun setWeeklyTargetSessions(target: Int) {
@@ -871,12 +932,12 @@ class VigorlyRepository(context: Context) {
             "https://lh3.googleusercontent.com/aida-public/AB6AXuDzR2WvctnwBapv2J6FHSJYaIFfmcx4nHOnSfxS9s9DsMaU2qiczrCg6K6NhCslo0gLmFhJeFxgq3ulqD3z4hn_iwC2SqplrHuVXc8M4dX42iQoUArvxVD8coCeO-eFvEm0nH01AT0YTr7lBWOj1x6PxWej2M0mb_di0SpnHD5YQlNDE8HN_mFBd0v7fi8YXV3vimrg4QhfnOvZyF67cIrb0UZsn17KmNEg51BL1vdtc5iKyvmZjwee-hzGVEGko2Qxq_iTKNCuwcM"
 
         fun defaultProfile() = UserProfile(
-            displayName = "Alex Rivers",
+            displayName = "Usuario",
             avatarUrl = AVATAR,
-            isProMember = true,
-            totalWorkouts = 342,
-            activeStreakDays = 14,
-            level = LevelCalculator.levelFromWorkouts(342)
+            isProMember = false,
+            totalWorkouts = 0,
+            activeStreakDays = 0,
+            level = 1
         )
 
         fun defaultDailyGoals() = DailyGoalsCalculator.build(
@@ -897,33 +958,8 @@ class VigorlyRepository(context: Context) {
 
         fun defaultMilestones() = MilestoneCatalog.all()
 
-        fun defaultHistory(): List<WorkoutHistoryItem> {
-            val now = System.currentTimeMillis()
-            val hour = 3_600_000L
-            return listOf(
-                WorkoutHistoryItem(
-                    "h1", "Potencia tren superior", "Hoy, 06:30", 60, 540, "fitness_center",
-                    completedAtMillis = now - hour * 2,
-                    workoutId = "upper_body_power",
-                    workoutType = "STRENGTH"
-                ),
-                WorkoutHistoryItem(
-                    "h2", "Intervalos HIIT", "Ayer, 07:15", 35, 420, "directions_run",
-                    completedAtMillis = now - hour * 26,
-                    workoutId = "hiit_sprint",
-                    workoutType = "HIIT"
-                ),
-                WorkoutHistoryItem(
-                    "h3", "Yoga de recuperación", "Lun, 18:00", 45, 150, "self_improvement",
-                    completedAtMillis = now - hour * 72,
-                    workoutId = "recovery_yoga",
-                    workoutType = "RECOVERY"
-                )
-            )
-        }
+        fun defaultHistory(): List<WorkoutHistoryItem> = emptyList()
 
-        fun defaultRecentActivity() = listOf(
-            RecentActivity("r1", "Natación matutina", "HOY, 6:00", 45, "pool")
-        )
+        fun defaultRecentActivity(): List<RecentActivity> = emptyList()
     }
 }

@@ -56,11 +56,7 @@ object HistoryGrouper {
                 else -> HistorySectionKind.EARLIER
             }
         }
-        val label = item.timestampLabel.lowercase()
-        return when {
-            label.startsWith("today") || label.startsWith("hoy") -> HistorySectionKind.TODAY
-            label.startsWith("yesterday") || label.startsWith("ayer") -> HistorySectionKind.YESTERDAY
-            else -> HistorySectionKind.EARLIER
-        }
+        // Etiquetas relativas sin timestamp: no tratarlas como "hoy" (quedaron obsoletas).
+        return HistorySectionKind.EARLIER
     }
 }

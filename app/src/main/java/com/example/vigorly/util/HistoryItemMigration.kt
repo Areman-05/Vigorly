@@ -32,11 +32,14 @@ object HistoryItemMigration {
             runCatching { LocalTime.parse(part, timePattern) }.getOrNull()
         } ?: LocalTime.NOON
         val lower = trimmed.lowercase(Locale.getDefault())
-        val date = when {
-            lower.startsWith("hoy") || lower.startsWith("today") -> today
-            lower.startsWith("ayer") || lower.startsWith("yesterday") -> today.minusDays(1)
-            else -> parseWeekdayDate(trimmed.substringBefore(",").trim(), today) ?: return null
+        // "Hoy"/"Ayer" en etiquetas antiguas son relativas al día en que se guardaron;
+        // no inferir fecha fija o reaparecerían siempre como hoy.
+        if (lower.startsWith("hoy") || lower.startsWith("today") ||
+            lower.startsWith("ayer") || lower.startsWith("yesterday")
+        ) {
+            return null
         }
+        val date = parseWeekdayDate(trimmed.substringBefore(",").trim(), today) ?: return null
         return date.atTime(time).atZone(zone).toInstant().toEpochMilli()
     }
 

@@ -69,7 +69,7 @@ class VigorlyPreferencesDataStore(private val context: Context) {
     val workoutHistory: Flow<List<WorkoutHistoryItem>> = context.vigorlyDataStore.data.map { prefs ->
         val raw = prefs[PreferenceKeys.WORKOUT_HISTORY]
         val decoded = HistoryCodec.decode(raw)
-        decoded.ifEmpty { VigorlyRepository.defaultHistory() }
+        decoded
     }
 
     val milestoneShowcase: Flow<List<String?>> = context.vigorlyDataStore.data.map { prefs ->
