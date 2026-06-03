@@ -1,45 +1,42 @@
 package com.example.vigorly.ui.profile
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.vigorly.R
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
@@ -51,6 +48,7 @@ import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.PrimaryContainer
+import com.example.vigorly.util.LevelCalculator
 
 @Composable
 fun ProfileHeroCard(
@@ -59,39 +57,20 @@ fun ProfileHeroCard(
     level: Int,
     levelProgress: Float,
     isProMember: Boolean,
-    totalWorkouts: Int,
+    workoutsUntilNext: Int,
+    onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val pulseTransition = rememberInfiniteTransition(label = "heroPulse")
-    val glowAlpha by pulseTransition.animateFloat(
-        initialValue = 0.45f,
-        targetValue = 0.85f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glowAlpha"
-    )
-    val ringScale by pulseTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.03f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "ringScale"
-    )
-
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(22.dp))
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        PrimaryAccent.copy(alpha = 0.22f),
-                        Primary.copy(alpha = 0.1f),
-                        PrimaryContainer.copy(alpha = 0.05f)
+                        PrimaryAccent.copy(alpha = 0.2f),
+                        Primary.copy(alpha = 0.12f),
+                        PrimaryContainer.copy(alpha = 0.06f)
                     )
                 )
             )
@@ -100,19 +79,16 @@ fun ProfileHeroCard(
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(132.dp)
+            modifier = Modifier.size(120.dp)
         ) {
-            Canvas(
-                modifier = Modifier
-                    .matchParentSize()
-                    .scale(ringScale)
-            ) {
+            Canvas(modifier = Modifier.matchParentSize()) {
                 val stroke = 5.dp.toPx()
                 val diameter = size.minDimension - stroke
                 val topLeft = Offset((size.width - diameter) / 2f, (size.height - diameter) / 2f)
                 val arcSize = Size(diameter, diameter)
+                val center = Offset(size.width / 2f, size.height / 2f)
                 drawArc(
-                    color = PrimaryAccent.copy(alpha = 0.15f * glowAlpha),
+                    color = Primary.copy(alpha = 0.2f),
                     startAngle = 0f,
                     sweepAngle = 360f,
                     useCenter = false,
@@ -122,8 +98,8 @@ fun ProfileHeroCard(
                 )
                 drawArc(
                     brush = Brush.sweepGradient(
-                        listOf(PrimaryAccent, Primary, PrimaryContainer, PrimaryAccent),
-                        center = Offset(size.width / 2f, size.height / 2f)
+                        colors = listOf(PrimaryContainer, PrimaryAccent, Primary, PrimaryContainer),
+                        center = center
                     ),
                     startAngle = -90f,
                     sweepAngle = 360f * levelProgress.coerceIn(0f, 1f),
@@ -134,72 +110,45 @@ fun ProfileHeroCard(
                 )
             }
 
-            if (!avatarUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = avatarUrl,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .border(3.dp, PrimaryAccent.copy(alpha = 0.7f), CircleShape)
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onAvatarClick)
+                    .semantics { role = Role.Button },
+                contentAlignment = Alignment.Center
+            ) {
+                ProfileAvatarView(
+                    avatarUrl = avatarUrl,
+                    size = 96.dp,
+                    borderColor = Color.White.copy(alpha = 0.55f)
                 )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(
-                                    PrimaryAccent.copy(0.4f),
-                                    Primary.copy(0.25f)
-                                )
-                            )
-                        )
-                        .border(3.dp, PrimaryAccent.copy(alpha = 0.55f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
-                        tint = OnSurface,
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
             }
 
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .size(40.dp)
+                    .size(30.dp)
                     .clip(CircleShape)
                     .background(
-                        Brush.linearGradient(
-                            colors = listOf(PrimaryAccent, Primary)
-                        )
+                        Brush.linearGradient(listOf(PrimaryAccent, PrimaryContainer))
                     )
-                    .border(2.dp, OnSurface.copy(alpha = 0.2f), CircleShape),
+                    .border(2.dp, Color.White.copy(alpha = 0.5f), CircleShape)
+                    .clickable(onClick = onAvatarClick),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        stringResource(R.string.profile_level_short),
-                        style = LabelCaps.copy(fontSize = 7.sp),
-                        color = OnSurface.copy(alpha = 0.85f)
-                    )
-                    Text(
-                        level.toString(),
-                        style = DisplayStat.copy(fontSize = 16.sp, lineHeight = 16.sp),
-                        color = OnSurface,
-                        fontWeight = FontWeight.Black
-                    )
-                }
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = stringResource(R.string.profile_change_avatar),
+                    tint = Color.White,
+                    modifier = Modifier.size(15.dp)
+                )
             }
         }
 
         Text(
             displayName,
-            style = HeadlineLgMobile.copy(fontSize = 26.sp),
+            style = HeadlineLgMobile.copy(fontSize = 28.sp),
             color = OnSurface,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = Dimens.Md),
@@ -208,38 +157,78 @@ fun ProfileHeroCard(
             overflow = TextOverflow.Ellipsis
         )
 
-        Text(
-            stringResource(R.string.profile_workouts_completed, totalWorkouts),
-            style = BodyMd.copy(fontSize = 13.sp),
-            color = OnSurfaceVariant.copy(alpha = 0.8f),
-            modifier = Modifier.padding(top = 4.dp)
-        )
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(top = Dimens.Sm)
-                .clip(RoundedCornerShape(999.dp))
-                .background(
-                    if (isProMember) PrimaryAccent.copy(alpha = 0.18f)
-                    else OnSurfaceVariant.copy(alpha = 0.1f)
-                )
-                .padding(horizontal = 12.dp, vertical = 6.dp)
+            modifier = Modifier.padding(top = 10.dp)
         ) {
-            Icon(
-                Icons.Default.WorkspacePremium,
-                contentDescription = null,
-                tint = if (isProMember) PrimaryAccent else OnSurfaceVariant,
-                modifier = Modifier.size(16.dp)
-            )
             Text(
-                stringResource(
-                    if (isProMember) R.string.profile_member_pro else R.string.profile_member_free
-                ),
-                style = BodyMd.copy(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
-                color = if (isProMember) PrimaryAccent else OnSurfaceVariant.copy(0.85f),
-                modifier = Modifier.padding(start = 6.dp)
+                stringResource(R.string.profile_level_badge, level),
+                style = LabelCaps.copy(fontSize = 11.sp),
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(
+                        Brush.horizontalGradient(listOf(PrimaryAccent, PrimaryContainer))
+                    )
+                    .padding(horizontal = 12.dp, vertical = 5.dp)
+            )
+            if (isProMember) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .padding(start = 10.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Primary.copy(alpha = 0.35f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        Icons.Default.WorkspacePremium,
+                        contentDescription = null,
+                        tint = PrimaryAccent,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        stringResource(R.string.profile_member_pro),
+                        style = BodyMd.copy(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
+                        color = PrimaryAccent,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+            }
+        }
+
+        val fraction = levelProgress.coerceIn(0f, 1f)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Dimens.Md)
+                .height(7.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(Primary.copy(alpha = 0.25f))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(fraction)
+                    .height(7.dp)
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(Primary, PrimaryAccent, PrimaryContainer)
+                        )
+                    )
             )
         }
+
+        Text(
+            if (level >= LevelCalculator.MAX_LEVEL) {
+                stringResource(R.string.level_max_reached)
+            } else {
+                stringResource(R.string.level_progress_hint, workoutsUntilNext, level + 1)
+            },
+            style = BodyMd.copy(fontSize = 14.sp),
+            color = OnSurfaceVariant.copy(alpha = 0.8f),
+            modifier = Modifier.padding(top = 8.dp),
+            textAlign = TextAlign.Center
+        )
     }
 }

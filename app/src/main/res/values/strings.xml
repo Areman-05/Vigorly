@@ -334,7 +334,10 @@
     <string name="profile_stats_sessions">Sesiones totales</string>
     <string name="profile_weekly_progress">%1$d / %2$d sesiones</string>
     <string name="profile_milestones_showcase">Escaparate de logros</string>
-    <string name="profile_milestones_showcase_hint">Toca un hueco para equipar un logro desbloqueado, como en un escaparate.</string>
+    <string name="profile_milestones_showcase_hint">Toca un hueco para equipar un logro desbloqueado.</string>
+    <string name="profile_avatar_picker_title">Tu avatar</string>
+    <string name="profile_avatar_picker_subtitle">Elige un icono para tu perfil. Puedes cambiarlo cuando quieras.</string>
+    <string name="profile_change_avatar">Cambiar avatar</string>
     <string name="profile_view_milestones">Ver logros</string>
     <string name="profile_milestone_empty_slot">Hueco vacío</string>
     <string name="profile_milestone_add">Añadir logro</string>

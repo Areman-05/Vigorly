@@ -36,6 +36,7 @@ import com.example.vigorly.util.LevelCalculator
 import com.example.vigorly.util.HistorySanitizer
 import com.example.vigorly.util.StreakCalculator
 import java.time.ZoneId
+import com.example.vigorly.ui.profile.ProfileAvatarCatalog
 import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
@@ -866,6 +867,15 @@ class VigorlyRepository(context: Context) {
         }
     }
 
+    fun setAvatarPreset(presetId: String) {
+        if (ProfileAvatarCatalog.find(presetId) == null) return
+        scope.launch {
+            preferences.updateProfile(
+                profile.value.copy(avatarUrl = ProfileAvatarCatalog.encode(presetId))
+            )
+        }
+    }
+
     fun setNotificationsEnabled(enabled: Boolean) {
         scope.launch { preferences.setNotificationsEnabled(enabled) }
     }
@@ -928,12 +938,9 @@ class VigorlyRepository(context: Context) {
     companion object {
         const val REST_SECONDS_BETWEEN_EXERCISES = 45
 
-        private const val AVATAR =
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuDzR2WvctnwBapv2J6FHSJYaIFfmcx4nHOnSfxS9s9DsMaU2qiczrCg6K6NhCslo0gLmFhJeFxgq3ulqD3z4hn_iwC2SqplrHuVXc8M4dX42iQoUArvxVD8coCeO-eFvEm0nH01AT0YTr7lBWOj1x6PxWej2M0mb_di0SpnHD5YQlNDE8HN_mFBd0v7fi8YXV3vimrg4QhfnOvZyF67cIrb0UZsn17KmNEg51BL1vdtc5iKyvmZjwee-hzGVEGko2Qxq_iTKNCuwcM"
-
         fun defaultProfile() = UserProfile(
             displayName = "Usuario",
-            avatarUrl = AVATAR,
+            avatarUrl = ProfileAvatarCatalog.encode(ProfileAvatarCatalog.DEFAULT_ID),
             isProMember = false,
             totalWorkouts = 0,
             activeStreakDays = 0,

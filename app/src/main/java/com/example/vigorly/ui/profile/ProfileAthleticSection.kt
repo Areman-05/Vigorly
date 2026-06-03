@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,13 +11,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
-import com.example.vigorly.ui.components.FlatProgressBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.ui.components.AthleticRadarChart
+import com.example.vigorly.ui.components.FlatProgressBar
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.LabelCaps
@@ -33,7 +33,11 @@ import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
+import com.example.vigorly.ui.theme.PrimaryContainer
 import com.example.vigorly.util.AthleticStatLabels
+
+private val StatTeal = Color(0xFF20C997)
+private val StatViolet = Color(0xFF9775FA)
 
 @Composable
 fun ProfileAthleticSection(
@@ -46,12 +50,13 @@ fun ProfileAthleticSection(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Primary.copy(alpha = 0.1f),
-                        PrimaryAccent.copy(alpha = 0.04f)
+                        Primary.copy(alpha = 0.14f),
+                        PrimaryAccent.copy(alpha = 0.06f),
+                        PrimaryContainer.copy(alpha = 0.04f)
                     )
                 )
             )
@@ -66,15 +71,19 @@ fun ProfileAthleticSection(
                     AthleticStatLabels.displayLabel(top.label),
                     top.value
                 ),
-                style = BodyMd.copy(fontSize = 13.sp),
-                color = OnSurfaceVariant.copy(alpha = 0.85f),
-                modifier = Modifier.padding(top = 4.dp, bottom = Dimens.Sm)
+                style = BodyMd.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
+                color = PrimaryAccent,
+                modifier = Modifier
+                    .padding(top = 6.dp, bottom = Dimens.Sm)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(PrimaryAccent.copy(alpha = 0.12f))
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
             )
         }
 
         AthleticRadarChart(displayStats, Modifier.padding(bottom = Dimens.Md))
 
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             displayStats.forEach { stat ->
                 AthleticStatBar(stat = stat)
             }
@@ -91,8 +100,10 @@ private fun AthleticStatBar(stat: AthleticStat) {
     )
     val accent = when (AthleticStatLabels.normalizeKey(stat.label)) {
         "strength", "power" -> PrimaryAccent
-        "endurance", "stamina" -> Primary
-        else -> Primary.copy(alpha = 0.85f)
+        "endurance", "stamina" -> PrimaryContainer
+        "speed" -> StatViolet
+        "mobility" -> StatTeal
+        else -> Primary
     }
 
     Column {
@@ -103,13 +114,14 @@ private fun AthleticStatBar(stat: AthleticStat) {
         ) {
             Text(
                 stat.label,
-                style = BodyMd.copy(fontSize = 13.sp, fontWeight = FontWeight.Medium),
+                style = BodyMd.copy(fontSize = 15.sp, fontWeight = FontWeight.Medium),
                 color = OnSurface
             )
             Text(
                 "$animatedValue",
-                style = LabelCaps.copy(fontSize = 10.sp),
-                color = accent
+                style = LabelCaps.copy(fontSize = 12.sp),
+                color = accent,
+                fontWeight = FontWeight.SemiBold
             )
         }
         FlatProgressBar(
@@ -117,9 +129,9 @@ private fun AthleticStatBar(stat: AthleticStat) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 6.dp)
-                .height(5.dp),
+                .height(6.dp),
             color = accent,
-            trackColor = OnSurfaceVariant.copy(alpha = 0.12f)
+            trackColor = accent.copy(alpha = 0.15f)
         )
     }
 }

@@ -17,12 +17,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.HeadlineLgMobile
 import com.example.vigorly.ui.theme.OnSurface
+import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.workout.WorkoutDetailSectionEnter
 import com.example.vigorly.ui.workout.rememberWorkoutDetailVisible
 import com.example.vigorly.util.HistorySummaryCalculator
@@ -47,8 +49,13 @@ fun ProfileScreen(
     }
     val unlockedMilestones = remember(milestones) { milestones.filter { it.unlocked } }
     val contentVisible = rememberWorkoutDetailVisible()
+    val selectedAvatarId = remember(profile.avatarUrl) {
+        ProfileAvatarCatalog.presetId(profile.avatarUrl)
+            ?: ProfileAvatarCatalog.DEFAULT_ID
+    }
 
     var pickerVisible by remember { mutableStateOf(false) }
+    var avatarPickerVisible by remember { mutableStateOf(false) }
     var editingSlotIndex by remember { mutableIntStateOf(0) }
 
     val pickerCandidates = remember(unlockedMilestones, showcaseSlots, editingSlotIndex) {
@@ -68,6 +75,16 @@ fun ProfileScreen(
         }
     )
 
+    ProfileAvatarPickerSheet(
+        visible = avatarPickerVisible,
+        selectedId = selectedAvatarId,
+        onDismiss = { avatarPickerVisible = false },
+        onSelect = { id ->
+            repository.setAvatarPreset(id)
+            avatarPickerVisible = false
+        }
+    )
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -77,60 +94,52 @@ fun ProfileScreen(
         WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 0) {
             androidx.compose.material3.Text(
                 stringResource(R.string.profile_title),
-                style = HeadlineLgMobile.copy(fontSize = 28.sp),
-                color = OnSurface,
+                style = HeadlineLgMobile.copy(fontSize = 26.sp),
+                color = PrimaryAccent,
                 fontWeight = FontWeight.Bold
             )
         }
 
-        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 80) {
+        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 60) {
             ProfileHeroCard(
                 displayName = profile.displayName,
                 avatarUrl = profile.avatarUrl,
                 level = level,
                 levelProgress = LevelCalculator.progressToNextLevel(profile.totalWorkouts),
                 isProMember = profile.isProMember,
-                totalWorkouts = profile.totalWorkouts,
-                modifier = Modifier.padding(top = Dimens.Md)
-            )
-        }
-
-        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 160) {
-            ProfileSummaryCard(
-                sessions = profile.totalWorkouts,
-                totalMinutes = summary.totalMinutes,
-                totalCalories = summary.totalCalories,
-                streakDays = profile.activeStreakDays,
-                modifier = Modifier.padding(top = Dimens.Md)
-            )
-        }
-
-        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 240) {
-            ProfileLevelCard(
-                level = level,
-                progress = LevelCalculator.progressToNextLevel(profile.totalWorkouts),
                 workoutsUntilNext = LevelCalculator.workoutsUntilNextLevel(profile.totalWorkouts),
-                modifier = Modifier.padding(top = Dimens.Md)
-            )
-        }
-
-        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 320) {
-            ProfileStatsSection(
-                summary = summary,
-                weeklyGoal = weeklyGoal,
-                onOpenInsights = onOpenInsights,
+                onAvatarClick = { avatarPickerVisible = true },
                 modifier = Modifier.padding(top = Dimens.Lg)
             )
         }
 
-        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 400) {
+        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 120) {
+            ProfileQuickMetrics(
+                sessions = profile.totalWorkouts,
+                totalMinutes = summary.totalMinutes,
+                totalCalories = summary.totalCalories,
+                streakDays = profile.activeStreakDays,
+                modifier = Modifier.padding(top = Dimens.Lg)
+            )
+        }
+
+        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 180) {
+            ProfileInsightsLink(
+                weeklyCompleted = weeklyGoal.completedSessions,
+                weeklyTarget = weeklyGoal.targetSessions,
+                onOpenInsights = onOpenInsights,
+                modifier = Modifier.padding(top = Dimens.Md)
+            )
+        }
+
+        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 260) {
             ProfileAthleticSection(
                 stats = stats,
                 modifier = Modifier.padding(top = Dimens.Lg)
             )
         }
 
-        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 480) {
+        WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 340) {
             ProfileMilestoneShowcase(
                 slots = showcaseSlots,
                 milestones = milestones,
@@ -140,7 +149,7 @@ fun ProfileScreen(
                 },
                 onClearSlot = { index -> repository.setMilestoneShowcaseSlot(index, null) },
                 onViewAll = onViewAllMilestones,
-                modifier = Modifier.padding(top = Dimens.Lg)
+                modifier = Modifier.padding(top = Dimens.Xl)
             )
         }
 

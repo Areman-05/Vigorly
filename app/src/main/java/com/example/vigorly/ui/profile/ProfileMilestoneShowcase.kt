@@ -39,7 +39,10 @@ import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
+import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
+import com.example.vigorly.ui.theme.PrimaryContainer
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun ProfileMilestoneShowcase(
@@ -60,19 +63,33 @@ fun ProfileMilestoneShowcase(
         )
         Text(
             stringResource(R.string.profile_milestones_showcase_hint),
-            style = BodyMd.copy(fontSize = 13.sp),
-            color = OnSurfaceVariant.copy(alpha = 0.8f),
-            modifier = Modifier.padding(top = 4.dp, bottom = Dimens.Md)
+            style = BodyMd.copy(fontSize = 14.sp),
+            color = OnSurfaceVariant.copy(alpha = 0.75f),
+            modifier = Modifier.padding(top = 4.dp, bottom = Dimens.Sm)
         )
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            PrimaryAccent.copy(alpha = 0.1f),
+                            Primary.copy(alpha = 0.12f),
+                            PrimaryContainer.copy(alpha = 0.08f)
+                        )
+                    )
+                )
+                .padding(vertical = Dimens.Md, horizontal = 4.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
+            val slotTints = listOf(PrimaryAccent, PrimaryContainer, Primary, Color(0xFFFF922B))
             slots.forEachIndexed { index, milestoneId ->
                 val milestone = milestoneId?.let { milestoneMap[it] }
                 MilestoneShowcaseSlot(
                     milestone = milestone,
+                    slotTint = slotTints[index % slotTints.size],
                     onClick = { onSlotClick(index) },
                     onClear = if (milestone != null) ({ onClearSlot(index) }) else null,
                     modifier = Modifier.weight(1f)
@@ -98,6 +115,7 @@ fun ProfileMilestoneShowcase(
 @Composable
 private fun MilestoneShowcaseSlot(
     milestone: Milestone?,
+    slotTint: Color,
     onClick: () -> Unit,
     onClear: (() -> Unit)?,
     modifier: Modifier = Modifier
@@ -112,12 +130,13 @@ private fun MilestoneShowcaseSlot(
                     modifier = Modifier
                         .size(68.dp)
                         .clip(CircleShape)
+                        .background(slotTint.copy(alpha = 0.12f))
                         .clickable(onClick = onClick),
                     contentAlignment = Alignment.Center
                 ) {
                     Canvas(modifier = Modifier.matchParentSize()) {
                         drawCircle(
-                            color = OnSurfaceVariant.copy(alpha = 0.35f),
+                            color = slotTint.copy(alpha = 0.55f),
                             radius = size.minDimension / 2f,
                             style = Stroke(
                                 width = 2.dp.toPx(),
@@ -128,7 +147,7 @@ private fun MilestoneShowcaseSlot(
                     Icon(
                         Icons.Default.Add,
                         contentDescription = stringResource(R.string.profile_milestone_add),
-                        tint = PrimaryAccent.copy(alpha = 0.8f),
+                        tint = slotTint,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -140,19 +159,19 @@ private fun MilestoneShowcaseSlot(
                         .background(
                             Brush.radialGradient(
                                 colors = listOf(
-                                    PrimaryAccent.copy(alpha = 0.28f),
-                                    PrimaryAccent.copy(alpha = 0.08f)
+                                    slotTint.copy(alpha = 0.4f),
+                                    slotTint.copy(alpha = 0.12f)
                                 )
                             )
                         )
-                        .border(2.dp, PrimaryAccent.copy(alpha = 0.55f), CircleShape)
+                        .border(2.dp, slotTint.copy(alpha = 0.7f), CircleShape)
                         .clickable(onClick = onClick),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         iconForName(milestone.iconName),
                         contentDescription = milestone.title,
-                        tint = PrimaryAccent,
+                        tint = slotTint,
                         modifier = Modifier.size(30.dp)
                     )
                 }
