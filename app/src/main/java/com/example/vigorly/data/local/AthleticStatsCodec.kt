@@ -1,6 +1,7 @@
 package com.example.vigorly.data.local
 
 import com.example.vigorly.data.model.AthleticStat
+import com.example.vigorly.util.AthleticStatLabels
 
 object AthleticStatsCodec {
     private const val SEP = "|"
@@ -13,7 +14,8 @@ object AthleticStatsCodec {
         return raw.split(SEP).mapNotNull { part ->
             val pieces = part.split(":")
             if (pieces.size != 2) return@mapNotNull null
-            AthleticStat(pieces[0], pieces[1].toIntOrNull() ?: return@mapNotNull null)
+            val key = AthleticStatLabels.normalizeKey(pieces[0])
+            AthleticStat(key, pieces[1].toIntOrNull() ?: return@mapNotNull null)
         }
     }
 }

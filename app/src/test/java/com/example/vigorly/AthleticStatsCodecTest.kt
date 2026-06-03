@@ -10,6 +10,7 @@ class AthleticStatsCodecTest {
     @Test
     fun encodeDecode_preservesStats() {
         val stats = listOf(AthleticStat("Strength", 85), AthleticStat("Speed", 80))
-        assertEquals(stats, AthleticStatsCodec.decode(AthleticStatsCodec.encode(stats)))
+        val expected = listOf(AthleticStat("strength", 85), AthleticStat("speed", 80))
+        assertEquals(expected, AthleticStatsCodec.decode(AthleticStatsCodec.encode(stats)))
     }
 }

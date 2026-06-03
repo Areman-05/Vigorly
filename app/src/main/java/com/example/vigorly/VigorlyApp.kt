@@ -147,16 +147,7 @@ fun VigorlyApp(
                     onSettingsClick = {}
                 )
                 showBottomBar -> VigorlyMainTopBar(
-                    avatarUrl = profile.avatarUrl,
-                    onProfileClick = {
-                        navController.navigate(VigorlyRoutes.Profile) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+                    onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) }
                 )
             }
         },
@@ -272,13 +263,6 @@ fun VigorlyApp(
                 ProfileScreen(
                     repository = repository,
                     onViewAllMilestones = { navController.navigate(VigorlyRoutes.Milestones) },
-                    onOpenWorkouts = {
-                        navController.navigate(VigorlyRoutes.Workouts) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
                     onOpenInsights = { navController.navigate(VigorlyRoutes.Insights) },
                     onOpenHistory = {
                         navController.navigate(VigorlyRoutes.History) {
@@ -287,7 +271,6 @@ fun VigorlyApp(
                             restoreState = true
                         }
                     },
-                    onOpenSettings = { navController.navigate(VigorlyRoutes.Settings) },
                     onHistoryItemClick = { id ->
                         navController.navigate(VigorlyRoutes.historyDetail(id))
                     }

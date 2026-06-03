@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.data.model.AthleticStat
+import com.example.vigorly.util.AthleticStatLabels
 import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
@@ -74,7 +75,7 @@ fun AthleticRadarChart(
             val offsetX = (chartSize.value * 0.5f + labelRadius * cos(angle).toFloat()).dp - 24.dp
             val offsetY = (140f + labelRadius * sin(angle).toFloat()).dp - 8.dp
             Text(
-                text = stat.label,
+                text = AthleticStatLabels.displayLabel(stat.label),
                 style = LabelCaps,
                 color = OnSurfaceVariant,
                 modifier = Modifier.offset(x = offsetX, y = offsetY)

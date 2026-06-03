@@ -26,7 +26,9 @@ import com.example.vigorly.util.LocaleManager
 import com.example.vigorly.util.PasswordHasher
 import com.example.vigorly.util.PersonalizedCoachingTipEngine
 import com.example.vigorly.util.PersonalizedTipContext
+import com.example.vigorly.util.AthleticStatKeys
 import com.example.vigorly.util.WorkoutRecommender
+import com.example.vigorly.data.local.MilestoneShowcaseCodec
 import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
@@ -48,6 +50,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.combine
@@ -125,6 +129,9 @@ class VigorlyRepository(context: Context) {
     private val _milestones = MutableStateFlow(defaultMilestones())
     val milestones: StateFlow<List<Milestone>> = _milestones.asStateFlow()
 
+    private val _milestoneShowcase = MutableStateFlow(List(MilestoneShowcaseCodec.SLOT_COUNT) { null as String? })
+    val milestoneShowcase: StateFlow<List<String?>> = _milestoneShowcase.asStateFlow()
+
     private val _history = MutableStateFlow(defaultHistory())
     val history: StateFlow<List<WorkoutHistoryItem>> = _history.asStateFlow()
 
@@ -163,6 +170,7 @@ class VigorlyRepository(context: Context) {
         preferences.appLocale.onEach { _appLocale.value = it }.launchIn(scope)
         preferences.registeredAccounts.onEach { _accounts.value = it }.launchIn(scope)
         preferences.athleticStats.onEach { _athleticStats.value = it }.launchIn(scope)
+        preferences.milestoneShowcase.onEach { _milestoneShowcase.value = it }.launchIn(scope)
         preferences.favoriteWorkoutIds.onEach { _favorites.value = it }.launchIn(scope)
         preferences.onboardingCompleted.onEach { _onboardingCompleted.value = it }.launchIn(scope)
         combine(
@@ -296,6 +304,23 @@ class VigorlyRepository(context: Context) {
     }
 
     fun getWorkout(id: String): WorkoutDetail? = workouts[id]
+
+    fun getMilestone(id: String): Milestone? = _milestones.value.find { it.id == id }
+
+    fun setMilestoneShowcaseSlot(slotIndex: Int, milestoneId: String?) {
+        if (slotIndex !in 0 until MilestoneShowcaseCodec.SLOT_COUNT) return
+        _milestoneShowcase.update { slots ->
+            val updated = slots.toMutableList()
+            if (milestoneId != null) {
+                for (i in updated.indices) {
+                    if (i != slotIndex && updated[i] == milestoneId) updated[i] = null
+                }
+            }
+            updated[slotIndex] = milestoneId
+            updated
+        }
+        scope.launch { preferences.saveMilestoneShowcase(_milestoneShowcase.value) }
+    }
 
     fun listWorkoutIds(): List<String> = workouts.keys.toList()
 
@@ -817,19 +842,19 @@ class VigorlyRepository(context: Context) {
         )
 
         fun defaultAthleticStats() = listOf(
-            AthleticStat("Strength", 85),
-            AthleticStat("Endurance", 70),
-            AthleticStat("Mobility", 65),
-            AthleticStat("Speed", 80),
-            AthleticStat("Power", 90),
-            AthleticStat("Stamina", 75)
+            AthleticStat(AthleticStatKeys.STRENGTH, 85),
+            AthleticStat(AthleticStatKeys.ENDURANCE, 70),
+            AthleticStat(AthleticStatKeys.MOBILITY, 65),
+            AthleticStat(AthleticStatKeys.SPEED, 80),
+            AthleticStat(AthleticStatKeys.POWER, 90),
+            AthleticStat(AthleticStatKeys.STAMINA, 75)
         )
 
         fun defaultMilestones() = listOf(
-            Milestone("streak_100", "100 Day", "Streak", "local_fire_department", true),
-            Milestone("lift_10k", "10k Lbs", "Lifted", "fitness_center", true),
-            Milestone("run_5k", "Sub 20", "5K Run", "timer", true),
-            Milestone("elite", "Elite", "Status", "emoji_events", false)
+            Milestone("streak_100", "100 días", "Racha", "local_fire_department", true),
+            Milestone("lift_10k", "10 ton", "Levantado", "fitness_center", true),
+            Milestone("run_5k", "Sub 20", "5 km", "timer", true),
+            Milestone("elite", "Élite", "Estado", "emoji_events", false)
         )
 
         fun defaultHistory(): List<WorkoutHistoryItem> {
