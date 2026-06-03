@@ -245,7 +245,6 @@ class VigorlyRepository(context: Context) {
             refreshMilestones()
         }.launchIn(scope)
         preferences.userProfile.onEach { refreshMilestones() }.launchIn(scope)
-        scope.launch { restoreActiveUserSessionIfNeeded() }
         scope.launch {
             activityTracker.initialize()
             refreshActivityDayHistory()
@@ -533,7 +532,6 @@ class VigorlyRepository(context: Context) {
 
     suspend fun preloadAppData() {
         if (appDataPreloaded) return
-        restoreActiveUserSessionIfNeeded()
         listWorkouts()
         coachingTips.size
         preferences.registeredAccounts.first()
@@ -827,7 +825,7 @@ class VigorlyRepository(context: Context) {
                 )
             )
             preferences.saveAthleticStats(boostedStats)
-            val goal = weeklyGoal.value
+            val goal = preferences.weeklyGoal.first()
             preferences.saveWeeklyGoal(goal.copy(completedSessions = goal.completedSessions + 1))
         }
         refreshMilestones()
@@ -907,7 +905,7 @@ class VigorlyRepository(context: Context) {
     fun setWeeklyTargetSessions(target: Int) {
         if (target <= 0) return
         scope.launch {
-            val current = weeklyGoal.value
+            val current = preferences.weeklyGoal.first()
             preferences.saveWeeklyGoal(
                 current.copy(
                     targetSessions = target,

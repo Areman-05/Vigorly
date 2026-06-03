@@ -31,7 +31,14 @@ object AthleticStatLabels {
         AthleticStatKeys.STAMINA to "Estamina"
     )
 
-    fun normalizeKey(label: String): String = legacyToKey[label] ?: label.lowercase()
+    private val spanishToKey = spanishLabels.entries.associate { (key, display) ->
+        display.lowercase() to key
+    }
+
+    fun normalizeKey(label: String): String =
+        legacyToKey[label]
+            ?: spanishToKey[label.lowercase()]
+            ?: label.lowercase()
 
     fun displayLabel(label: String): String =
         spanishLabels[normalizeKey(label)] ?: label

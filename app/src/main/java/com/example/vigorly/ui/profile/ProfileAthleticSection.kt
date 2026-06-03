@@ -44,7 +44,6 @@ fun ProfileAthleticSection(
     stats: List<AthleticStat>,
     modifier: Modifier = Modifier
 ) {
-    val displayStats = AthleticStatLabels.forDisplay(stats)
     val dominant = AthleticStatLabels.dominantStat(stats)
 
     Column(
@@ -81,24 +80,32 @@ fun ProfileAthleticSection(
             )
         }
 
-        AthleticRadarChart(displayStats, Modifier.padding(bottom = Dimens.Md))
+        AthleticRadarChart(stats, Modifier.padding(bottom = Dimens.Md))
 
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            displayStats.forEach { stat ->
-                AthleticStatBar(stat = stat)
+            stats.forEach { stat ->
+                AthleticStatBar(
+                    label = AthleticStatLabels.displayLabel(stat.label),
+                    value = stat.value,
+                    statKey = AthleticStatLabels.normalizeKey(stat.label)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun AthleticStatBar(stat: AthleticStat) {
+private fun AthleticStatBar(
+    label: String,
+    value: Int,
+    statKey: String
+) {
     val animatedValue by animateIntAsState(
-        targetValue = stat.value,
+        targetValue = value,
         animationSpec = tween(700),
         label = "statBar"
     )
-    val accent = when (AthleticStatLabels.normalizeKey(stat.label)) {
+    val accent = when (statKey) {
         "strength", "power" -> PrimaryAccent
         "endurance", "stamina" -> PrimaryContainer
         "speed" -> StatViolet
@@ -113,7 +120,7 @@ private fun AthleticStatBar(stat: AthleticStat) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                stat.label,
+                label,
                 style = BodyMd.copy(fontSize = 17.sp, fontWeight = FontWeight.Medium),
                 color = OnSurface
             )
