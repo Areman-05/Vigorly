@@ -61,7 +61,7 @@ fun WeeklyGoalCard(
             Column(Modifier.weight(1f)) {
                 Text(
                     stringResource(R.string.weekly_goal_title),
-                    style = HeadlineMd.copy(fontSize = 18.sp),
+                    style = HeadlineMd.copy(fontSize = 20.sp),
                     color = OnSurface,
                     fontWeight = FontWeight.Bold
                 )
@@ -71,7 +71,7 @@ fun WeeklyGoalCard(
                     } else {
                         stringResource(R.string.weekly_goal_days_left, daysLeft)
                     },
-                    style = LabelCaps.copy(fontSize = 10.sp),
+                    style = LabelCaps.copy(fontSize = 13.sp),
                     color = OnSurfaceVariant.copy(alpha = 0.65f),
                     modifier = Modifier.padding(top = 4.dp)
                 )
@@ -114,7 +114,7 @@ fun WeeklyGoalCard(
                 remaining == 0 -> stringResource(R.string.weekly_goal_on_track)
                 else -> stringResource(R.string.weekly_goal_remaining, remaining, percent)
             },
-            style = BodyMd.copy(fontSize = 13.sp),
+            style = BodyMd.copy(fontSize = 16.sp),
             color = if (isComplete) PrimaryAccent.copy(0.9f) else OnSurfaceVariant.copy(alpha = 0.7f)
         )
     }

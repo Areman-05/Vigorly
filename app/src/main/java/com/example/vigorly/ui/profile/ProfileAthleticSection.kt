@@ -71,7 +71,7 @@ fun ProfileAthleticSection(
                     AthleticStatLabels.displayLabel(top.label),
                     top.value
                 ),
-                style = BodyMd.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
+                style = BodyMd.copy(fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
                 color = PrimaryAccent,
                 modifier = Modifier
                     .padding(top = 6.dp, bottom = Dimens.Sm)
@@ -114,12 +114,12 @@ private fun AthleticStatBar(stat: AthleticStat) {
         ) {
             Text(
                 stat.label,
-                style = BodyMd.copy(fontSize = 15.sp, fontWeight = FontWeight.Medium),
+                style = BodyMd.copy(fontSize = 17.sp, fontWeight = FontWeight.Medium),
                 color = OnSurface
             )
             Text(
                 "$animatedValue",
-                style = LabelCaps.copy(fontSize = 12.sp),
+                style = LabelCaps.copy(fontSize = 15.sp),
                 color = accent,
                 fontWeight = FontWeight.SemiBold
             )

@@ -68,7 +68,7 @@ fun ProfileAvatarPickerSheet(
             Box(Modifier.fillMaxWidth()) {
                 Text(
                     stringResource(R.string.profile_avatar_picker_title),
-                    style = HeadlineMd.copy(fontSize = 20.sp),
+                    style = HeadlineMd.copy(fontSize = 22.sp),
                     color = OnSurface,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.align(Alignment.CenterStart)
@@ -79,7 +79,7 @@ fun ProfileAvatarPickerSheet(
             }
             Text(
                 stringResource(R.string.profile_avatar_picker_subtitle),
-                style = BodyMd.copy(fontSize = 15.sp),
+                style = BodyMd.copy(fontSize = 17.sp),
                 color = OnSurfaceVariant.copy(alpha = 0.85f),
                 modifier = Modifier.padding(top = 6.dp, bottom = Dimens.Md)
             )

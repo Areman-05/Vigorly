@@ -276,7 +276,7 @@ fun ProfileSectionHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, style = HeadlineMd.copy(fontSize = 18.sp), color = PrimaryAccent, fontWeight = FontWeight.SemiBold)
+        Text(title, style = HeadlineMd.copy(fontSize = 20.sp), color = PrimaryAccent, fontWeight = FontWeight.SemiBold)
         if (actionLabel != null && onAction != null) {
             TextButton(onClick = onAction) {
                 Text(actionLabel, style = ButtonText, color = PrimaryAccent)

@@ -70,7 +70,7 @@ fun ProfileMilestonePickerSheet(
             ) {
                 Text(
                     stringResource(R.string.profile_milestone_pick_title),
-                    style = HeadlineMd,
+                    style = HeadlineMd.copy(fontSize = 22.sp),
                     color = OnSurface,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -80,7 +80,7 @@ fun ProfileMilestonePickerSheet(
             }
             Text(
                 stringResource(R.string.profile_milestone_pick_subtitle),
-                style = BodyMd,
+                style = BodyMd.copy(fontSize = 17.sp),
                 color = OnSurfaceVariant.copy(alpha = 0.85f),
                 modifier = Modifier.padding(bottom = Dimens.Md)
             )
@@ -88,7 +88,7 @@ fun ProfileMilestonePickerSheet(
             if (unlockedMilestones.isEmpty()) {
                 Text(
                     stringResource(R.string.profile_milestone_pick_empty),
-                    style = BodyMd,
+                    style = BodyMd.copy(fontSize = 16.sp),
                     color = OnSurfaceVariant,
                     modifier = Modifier.padding(vertical = Dimens.Lg)
                 )
@@ -125,7 +125,7 @@ fun ProfileMilestonePickerSheet(
                                 )
                                 Text(
                                     milestone.subtitle,
-                                    style = BodyMd.copy(fontSize = 12.sp),
+                                    style = BodyMd.copy(fontSize = 16.sp),
                                     color = OnSurfaceVariant.copy(alpha = 0.75f)
                                 )
                             }

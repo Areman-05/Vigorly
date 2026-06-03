@@ -3,7 +3,6 @@ package com.example.vigorly.ui.profile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,8 +32,6 @@ import com.example.vigorly.ui.theme.PrimaryContainer
 
 @Composable
 fun ProfileInsightsLink(
-    weeklyCompleted: Int,
-    weeklyTarget: Int,
     onOpenInsights: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -77,23 +74,14 @@ fun ProfileInsightsLink(
                 modifier = Modifier.size(24.dp)
             )
         }
-        Column(
-            Modifier
+        Text(
+            stringResource(R.string.profile_insights),
+            style = BodyMd.copy(fontSize = 18.sp, fontWeight = FontWeight.SemiBold),
+            color = OnSurface,
+            modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 12.dp)
-        ) {
-            Text(
-                stringResource(R.string.profile_insights),
-                style = BodyMd.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
-                color = OnSurface
-            )
-            Text(
-                stringResource(R.string.profile_weekly_progress, weeklyCompleted, weeklyTarget),
-                style = BodyMd.copy(fontSize = 14.sp),
-                color = PrimaryAccent.copy(alpha = 0.9f),
-                modifier = Modifier.padding(top = 2.dp)
-            )
-        }
+        )
         Icon(
             Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,

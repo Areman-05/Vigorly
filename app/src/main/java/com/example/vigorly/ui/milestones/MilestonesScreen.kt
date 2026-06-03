@@ -56,10 +56,14 @@ fun MilestonesScreen(
             .verticalScroll(rememberScrollState())
             .padding(Dimens.ContainerMargin)
     ) {
-        Text(stringResource(R.string.profile_milestones), style = HeadlineMd, color = OnSurface)
+        Text(
+            stringResource(R.string.profile_milestones),
+            style = HeadlineMd.copy(fontSize = 28.sp),
+            color = OnSurface
+        )
         Text(
             stringResource(R.string.profile_milestones_unlocked, unlocked.size, milestones.size),
-            style = LabelCaps,
+            style = LabelCaps.copy(fontSize = 14.sp),
             color = OnSurfaceVariant,
             modifier = Modifier.padding(top = Dimens.Xs, bottom = Dimens.Lg)
         )
@@ -67,7 +71,7 @@ fun MilestonesScreen(
         if (unlocked.isNotEmpty()) {
             Text(
                 stringResource(R.string.milestones_section_unlocked),
-                style = LabelCaps,
+                style = LabelCaps.copy(fontSize = 14.sp),
                 color = PrimaryAccent.copy(alpha = 0.9f),
                 modifier = Modifier.padding(bottom = Dimens.Sm)
             )
@@ -82,7 +86,7 @@ fun MilestonesScreen(
         if (locked.isNotEmpty()) {
             Text(
                 stringResource(R.string.milestones_section_locked),
-                style = LabelCaps,
+                style = LabelCaps.copy(fontSize = 14.sp),
                 color = OnSurfaceVariant.copy(alpha = 0.75f),
                 modifier = Modifier.padding(top = Dimens.Lg, bottom = Dimens.Sm)
             )
@@ -139,7 +143,7 @@ private fun MilestoneListItem(
         Column(Modifier.weight(1f)) {
             Text(
                 "${milestone.title} · ${milestone.subtitle}",
-                style = LabelCaps.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
+                style = LabelCaps.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
                 color = if (locked) OnSurfaceVariant else OnSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -148,7 +152,7 @@ private fun MilestoneListItem(
                 MilestoneHints.hint(milestone.id)?.let { hint ->
                     Text(
                         hint,
-                        style = BodyMd.copy(fontSize = 12.sp),
+                        style = BodyMd.copy(fontSize = 15.sp),
                         color = OnSurfaceVariant.copy(alpha = 0.75f),
                         modifier = Modifier.padding(top = 2.dp),
                         maxLines = 2,

@@ -145,12 +145,16 @@ fun VigorlyApp(
                 isSubScreen -> VigorlyDetailTopBar(
                     onBackClick = { navController.popBackStack() },
                     onSettingsClick = {
-                        if (currentRoute != VigorlyRoutes.Milestones) {
+                        if (currentRoute != VigorlyRoutes.Milestones &&
+                            currentRoute != VigorlyRoutes.Insights
+                        ) {
                             navController.navigate(VigorlyRoutes.Settings)
                         }
                     },
-                    showBrandTitle = currentRoute != VigorlyRoutes.Milestones,
-                    showSettingsAction = currentRoute != VigorlyRoutes.Milestones
+                    showBrandTitle = currentRoute != VigorlyRoutes.Milestones &&
+                        currentRoute != VigorlyRoutes.Insights,
+                    showSettingsAction = currentRoute != VigorlyRoutes.Milestones &&
+                        currentRoute != VigorlyRoutes.Insights
                 )
                 showBottomBar -> VigorlyMainTopBar(
                     onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) }

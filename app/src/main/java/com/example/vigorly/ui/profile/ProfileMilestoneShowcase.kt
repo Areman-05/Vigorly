@@ -63,7 +63,7 @@ fun ProfileMilestoneShowcase(
         )
         Text(
             stringResource(R.string.profile_milestones_showcase_hint),
-            style = BodyMd.copy(fontSize = 14.sp),
+            style = BodyMd.copy(fontSize = 16.sp),
             color = OnSurfaceVariant.copy(alpha = 0.75f),
             modifier = Modifier.padding(top = 4.dp, bottom = Dimens.Sm)
         )
@@ -197,7 +197,7 @@ private fun MilestoneShowcaseSlot(
         }
         Text(
             milestone?.title ?: stringResource(R.string.profile_milestone_empty_slot),
-            style = LabelCaps.copy(fontSize = 9.sp),
+            style = LabelCaps.copy(fontSize = 12.sp, lineHeight = 14.sp),
             color = if (milestone != null) OnSurface else OnSurfaceVariant.copy(0.65f),
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 6.dp),

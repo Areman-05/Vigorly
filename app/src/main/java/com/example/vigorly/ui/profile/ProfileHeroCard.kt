@@ -163,7 +163,7 @@ fun ProfileHeroCard(
         ) {
             Text(
                 stringResource(R.string.profile_level_badge, level),
-                style = LabelCaps.copy(fontSize = 11.sp),
+                style = LabelCaps.copy(fontSize = 14.sp),
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -190,7 +190,7 @@ fun ProfileHeroCard(
                     )
                     Text(
                         stringResource(R.string.profile_member_pro),
-                        style = BodyMd.copy(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
+                        style = BodyMd.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
                         color = PrimaryAccent,
                         modifier = Modifier.padding(start = 4.dp)
                     )
@@ -225,7 +225,7 @@ fun ProfileHeroCard(
             } else {
                 stringResource(R.string.level_progress_hint, workoutsUntilNext, level + 1)
             },
-            style = BodyMd.copy(fontSize = 14.sp),
+            style = BodyMd.copy(fontSize = 16.sp),
             color = OnSurfaceVariant.copy(alpha = 0.8f),
             modifier = Modifier.padding(top = 8.dp),
             textAlign = TextAlign.Center

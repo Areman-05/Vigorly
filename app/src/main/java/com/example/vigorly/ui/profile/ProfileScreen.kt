@@ -42,7 +42,6 @@ fun ProfileScreen(
     val milestones by repository.milestones.collectAsState()
     val showcaseSlots by repository.milestoneShowcase.collectAsState()
     val history by repository.history.collectAsState()
-    val weeklyGoal by repository.weeklyGoal.collectAsState()
     val summary = remember(history) { HistorySummaryCalculator.from(history) }
     val level = remember(profile.totalWorkouts) {
         LevelCalculator.levelFromWorkouts(profile.totalWorkouts)
@@ -94,7 +93,7 @@ fun ProfileScreen(
         WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 0) {
             androidx.compose.material3.Text(
                 stringResource(R.string.profile_title),
-                style = HeadlineLgMobile.copy(fontSize = 26.sp),
+                style = HeadlineLgMobile.copy(fontSize = 30.sp, lineHeight = 36.sp),
                 color = PrimaryAccent,
                 fontWeight = FontWeight.Bold
             )
@@ -125,8 +124,6 @@ fun ProfileScreen(
 
         WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 180) {
             ProfileInsightsLink(
-                weeklyCompleted = weeklyGoal.completedSessions,
-                weeklyTarget = weeklyGoal.targetSessions,
                 onOpenInsights = onOpenInsights,
                 modifier = Modifier.padding(top = Dimens.Md)
             )
