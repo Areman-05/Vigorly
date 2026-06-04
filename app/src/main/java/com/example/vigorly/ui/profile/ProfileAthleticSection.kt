@@ -28,7 +28,7 @@ import com.example.vigorly.ui.components.AthleticRadarChart
 import com.example.vigorly.ui.components.FlatProgressBar
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
-import com.example.vigorly.ui.theme.LabelCaps
+import com.example.vigorly.ui.theme.HeadlineMd
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
@@ -42,26 +42,47 @@ private val StatViolet = Color(0xFF9775FA)
 @Composable
 fun ProfileAthleticSection(
     stats: List<AthleticStat>,
-    modifier: Modifier = Modifier
+    totalSessions: Int,
+    modifier: Modifier = Modifier,
+    embeddedInPanel: Boolean = false
 ) {
+    if (stats.isEmpty()) return
     val dominant = AthleticStatLabels.dominantStat(stats)
 
-    Column(
-        modifier = modifier
+    val sectionModifier = if (embeddedInPanel) {
+        modifier.fillMaxWidth()
+    } else {
+        modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Primary.copy(alpha = 0.14f),
-                        PrimaryAccent.copy(alpha = 0.06f),
-                        PrimaryContainer.copy(alpha = 0.04f)
+                        Primary.copy(alpha = 0.12f),
+                        PrimaryAccent.copy(alpha = 0.05f)
                     )
                 )
             )
             .padding(Dimens.Md)
-    ) {
-        ProfileSectionHeader(title = stringResource(R.string.profile_athletic))
+    }
+
+    Column(modifier = sectionModifier) {
+        Text(
+            stringResource(R.string.profile_athletic),
+            style = HeadlineMd.copy(fontSize = 20.sp),
+            color = OnSurface,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            if (totalSessions == 0) {
+                stringResource(R.string.profile_athletic_empty)
+            } else {
+                stringResource(R.string.profile_athletic_subtitle)
+            },
+            style = BodyMd.copy(fontSize = 15.sp),
+            color = OnSurfaceVariant.copy(alpha = 0.85f),
+            modifier = Modifier.padding(top = 4.dp, bottom = Dimens.Sm)
+        )
 
         dominant?.let { top ->
             Text(
@@ -70,19 +91,22 @@ fun ProfileAthleticSection(
                     AthleticStatLabels.displayLabel(top.label),
                     top.value
                 ),
-                style = BodyMd.copy(fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
+                style = BodyMd.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
                 color = PrimaryAccent,
                 modifier = Modifier
-                    .padding(top = 6.dp, bottom = Dimens.Sm)
+                    .padding(bottom = Dimens.Sm)
                     .clip(RoundedCornerShape(10.dp))
                     .background(PrimaryAccent.copy(alpha = 0.12f))
                     .padding(horizontal = 10.dp, vertical = 6.dp)
             )
         }
 
-        AthleticRadarChart(stats, Modifier.padding(bottom = Dimens.Md))
+        AthleticRadarChart(stats, Modifier.fillMaxWidth())
 
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(
+            modifier = Modifier.padding(top = Dimens.Md),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             stats.forEach { stat ->
                 AthleticStatBar(
                     label = AthleticStatLabels.displayLabel(stat.label),
@@ -121,14 +145,13 @@ private fun AthleticStatBar(
         ) {
             Text(
                 label,
-                style = BodyMd.copy(fontSize = 17.sp, fontWeight = FontWeight.Medium),
+                style = BodyMd.copy(fontSize = 16.sp, fontWeight = FontWeight.Medium),
                 color = OnSurface
             )
             Text(
                 "$animatedValue",
-                style = LabelCaps.copy(fontSize = 15.sp),
-                color = accent,
-                fontWeight = FontWeight.SemiBold
+                style = BodyMd.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                color = accent
             )
         }
         FlatProgressBar(

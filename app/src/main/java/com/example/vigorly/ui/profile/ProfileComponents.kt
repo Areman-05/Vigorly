@@ -78,8 +78,9 @@ fun ProfileSummaryCard(
     ) {
         Text(
             stringResource(R.string.profile_summary_title),
-            style = LabelCaps.copy(fontSize = 10.sp),
-            color = PrimaryAccent.copy(alpha = 0.85f),
+            style = HeadlineMd.copy(fontSize = 18.sp),
+            color = OnSurface,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = Dimens.Sm)
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -116,12 +117,12 @@ fun ProfileSummaryCard(
         ) {
             Text(
                 stringResource(R.string.profile_streak_stat),
-                style = LabelCaps.copy(fontSize = 9.sp),
-                color = OnSurfaceVariant.copy(0.75f)
+                style = BodyMd.copy(fontSize = 14.sp),
+                color = OnSurfaceVariant.copy(0.85f)
             )
             Text(
                 "$streakDays ${stringResource(R.string.profile_stat_days)}",
-                style = BodyMd.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                style = BodyMd.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
                 color = PrimaryAccent
             )
         }
@@ -137,11 +138,11 @@ private fun ProfileSummaryMetric(
     suffix: String? = null
 ) {
     Column(modifier) {
-        Text(label, style = LabelCaps.copy(fontSize = 9.sp), color = OnSurfaceVariant.copy(0.8f))
+        Text(label, style = BodyMd.copy(fontSize = 13.sp), color = OnSurfaceVariant.copy(0.85f))
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 value,
-                style = DisplayStat.copy(fontSize = 22.sp, lineHeight = 24.sp),
+                style = DisplayStat.copy(fontSize = 26.sp, lineHeight = 28.sp),
                 color = accent,
                 fontWeight = FontWeight.Bold
             )

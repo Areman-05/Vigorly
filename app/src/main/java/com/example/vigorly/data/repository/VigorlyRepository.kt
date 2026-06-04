@@ -7,7 +7,7 @@ import com.example.vigorly.data.activity.DailyActivityTracker
 import com.example.vigorly.data.activity.DailyGoalsCalculator
 import com.example.vigorly.data.activity.WeeklyActivityRingDay
 import com.example.vigorly.data.activity.WeeklyActivityRingsBuilder
-import com.example.vigorly.data.AthleticStatBooster
+import com.example.vigorly.util.AthleticProfileCalculator
 import com.example.vigorly.data.MilestoneUnlocker
 import com.example.vigorly.data.catalog.WorkoutCatalog
 import com.example.vigorly.data.local.CoachingTipLoader
@@ -186,6 +186,14 @@ class VigorlyRepository(context: Context) {
         preferences.appLocale.onEach { _appLocale.value = it }.launchIn(scope)
         preferences.registeredAccounts.onEach { _accounts.value = it }.launchIn(scope)
         preferences.athleticStats.onEach { _athleticStats.value = it }.launchIn(scope)
+        combine(history, profile) { hist, prof ->
+            AthleticProfileCalculator.compute(hist, prof.activeStreakDays)
+        }.onEach { computed ->
+            if (computed != _athleticStats.value) {
+                _athleticStats.value = computed
+                scope.launch { preferences.saveAthleticStats(computed) }
+            }
+        }.launchIn(scope)
         preferences.milestoneShowcase.onEach { _milestoneShowcase.value = it }.launchIn(scope)
         preferences.favoriteWorkoutIds.onEach { _favorites.value = it }.launchIn(scope)
         preferences.onboardingCompleted.onEach { _onboardingCompleted.value = it }.launchIn(scope)
@@ -826,9 +834,6 @@ class VigorlyRepository(context: Context) {
         val completedAt = now
         val nowLabel = com.example.vigorly.util.HistoryLabels.formatTimestamp(completedAt)
 
-        val boostedStats = AthleticStatBooster.bump(_athleticStats.value, workout.type)
-        _athleticStats.value = boostedStats
-
         scope.launch {
             val currentProfile = profile.value
             val newTotal = currentProfile.totalWorkouts + 1
@@ -839,7 +844,6 @@ class VigorlyRepository(context: Context) {
                     level = LevelCalculator.levelFromWorkouts(newTotal)
                 )
             )
-            preferences.saveAthleticStats(boostedStats)
             val goal = preferences.weeklyGoal.first()
             preferences.saveWeeklyGoal(goal.copy(completedSessions = goal.completedSessions + 1))
         }
@@ -963,14 +967,8 @@ class VigorlyRepository(context: Context) {
             standHours = 0
         )
 
-        fun defaultAthleticStats() = listOf(
-            AthleticStat(AthleticStatKeys.STRENGTH, 85),
-            AthleticStat(AthleticStatKeys.ENDURANCE, 70),
-            AthleticStat(AthleticStatKeys.MOBILITY, 65),
-            AthleticStat(AthleticStatKeys.SPEED, 80),
-            AthleticStat(AthleticStatKeys.POWER, 90),
-            AthleticStat(AthleticStatKeys.STAMINA, 75)
-        )
+        fun defaultAthleticStats(): List<AthleticStat> =
+            AthleticProfileCalculator.compute(emptyList(), streakDays = 0)
 
         fun defaultMilestones() = MilestoneCatalog.all()
 

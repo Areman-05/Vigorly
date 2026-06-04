@@ -141,7 +141,12 @@ fun VigorlyApp(
             if (navState.showGradientBackground) {
                 AuthGradientBackground(Modifier.fillMaxSize()) {}
             }
-            val contentModifier = when {
+            val navHostModifier = when {
+                navState.isAuthFlow -> Modifier
+                navState.isActivityDetail && showActivityCalendar -> Modifier.fillMaxSize()
+                else -> Modifier
+            }
+            val screenPaddingModifier = when {
                 navState.isAuthFlow -> Modifier
                 navState.isActivityDetail && showActivityCalendar -> Modifier.fillMaxSize()
                 else -> Modifier.padding(padding)
@@ -149,7 +154,7 @@ fun VigorlyApp(
             NavHost(
                 navController = navController,
                 startDestination = VigorlyRoutes.Splash,
-                modifier = contentModifier
+                modifier = navHostModifier
             ) {
                 vigorlyNavGraph(
                     navController = navController,
@@ -160,7 +165,7 @@ fun VigorlyApp(
                     onNavigateFromSplash = ::navigateFromSplash,
                     onNavigateToLogin = ::navigateToLogin,
                     workoutCompletedMessage = workoutCompletedMessage,
-                    contentPaddingModifier = Modifier
+                    contentPaddingModifier = screenPaddingModifier
                 )
             }
         }

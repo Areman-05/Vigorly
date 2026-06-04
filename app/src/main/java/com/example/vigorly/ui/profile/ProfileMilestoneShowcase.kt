@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,12 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Canvas
 import com.example.vigorly.R
-import com.example.vigorly.core.testing.VigorlyTestTags
-import androidx.compose.ui.platform.testTag
 import com.example.vigorly.data.model.Milestone
 import com.example.vigorly.ui.iconForName
 import com.example.vigorly.ui.theme.BodyMd
-import com.example.vigorly.ui.theme.ButtonText
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnSurface
@@ -52,7 +48,6 @@ fun ProfileMilestoneShowcase(
     milestones: List<Milestone>,
     onSlotClick: (Int) -> Unit,
     onClearSlot: (Int) -> Unit,
-    onViewAll: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val milestoneMap = milestones.associateBy { it.id }
@@ -97,20 +92,6 @@ fun ProfileMilestoneShowcase(
                     modifier = Modifier.weight(1f)
                 )
             }
-        }
-
-        TextButton(
-            onClick = onViewAll,
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(top = Dimens.Sm)
-                .testTag(VigorlyTestTags.PROFILE_OPEN_MILESTONES)
-        ) {
-            Text(
-                stringResource(R.string.profile_view_milestones),
-                style = ButtonText,
-                color = PrimaryAccent
-            )
         }
     }
 }
