@@ -29,7 +29,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.MilestoneHints
+import androidx.compose.ui.platform.testTag
 import com.example.vigorly.data.model.Milestone
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.iconForName
@@ -53,6 +55,7 @@ fun MilestonesScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .testTag(VigorlyTestTags.MILESTONES)
             .verticalScroll(rememberScrollState())
             .padding(Dimens.ContainerMargin)
     ) {

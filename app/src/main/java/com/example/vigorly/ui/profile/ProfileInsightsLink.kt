@@ -24,6 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
+import androidx.compose.ui.platform.testTag
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.Primary
@@ -50,6 +52,7 @@ fun ProfileInsightsLink(
                 )
             )
             .clickable(onClick = onOpenInsights)
+            .testTag(VigorlyTestTags.PROFILE_OPEN_INSIGHTS)
             .padding(horizontal = 14.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

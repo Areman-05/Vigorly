@@ -520,18 +520,21 @@ class VigorlyRepository(context: Context) {
     }
 
     suspend fun initializeLocale() {
-        LocaleManager.applyLocale("es")
-        _appLocale.value = "es"
+        val locale = preferences.appLocale.first()
+        LocaleManager.applyLocale(locale)
+        _appLocale.value = locale
     }
 
-    suspend fun effectiveLocale(): String = "es"
+    suspend fun effectiveLocale(): String = preferences.appLocale.first()
+
+    suspend fun setAppLocaleAndAwait(code: String) {
+        preferences.setAppLocale(code)
+        LocaleManager.applyLocale(code)
+        _appLocale.value = code
+    }
 
     fun setAppLocale(code: String) {
-        scope.launch {
-            preferences.setAppLocale(code)
-            LocaleManager.applyLocale(code)
-            _appLocale.value = code
-        }
+        scope.launch { setAppLocaleAndAwait(code) }
     }
 
     suspend fun login(email: String, password: String): AuthResult {

@@ -41,6 +41,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
+import androidx.compose.ui.platform.testTag
 import com.example.vigorly.auth.GoogleSignInConfigException
 import com.example.vigorly.auth.GoogleSignInCancelledException
 import com.example.vigorly.auth.GoogleSignInHelper
@@ -85,6 +87,7 @@ fun LoginScreen(
         Column(
             Modifier
                 .fillMaxSize()
+                .testTag(VigorlyTestTags.LOGIN)
                 .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(Dimens.ContainerMargin),
@@ -124,7 +127,9 @@ fun LoginScreen(
                     value = email,
                     onValueChange = { email = it; authError = null },
                     label = { Text(stringResource(R.string.auth_email)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(VigorlyTestTags.LOGIN_EMAIL),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     colors = authFieldColors,
@@ -134,7 +139,9 @@ fun LoginScreen(
                     value = password,
                     onValueChange = { password = it; authError = null },
                     label = { Text(stringResource(R.string.auth_password)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(VigorlyTestTags.LOGIN_PASSWORD),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     colors = authFieldColors,
@@ -160,7 +167,8 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
-                        .padding(top = Dimens.Xs),
+                        .padding(top = Dimens.Xs)
+                        .testTag(VigorlyTestTags.LOGIN_SUBMIT),
                     shape = RoundedCornerShape(26.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = PrimaryContainer,

@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Canvas
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
+import androidx.compose.ui.platform.testTag
 import com.example.vigorly.data.model.Milestone
 import com.example.vigorly.ui.iconForName
 import com.example.vigorly.ui.theme.BodyMd
@@ -102,6 +104,7 @@ fun ProfileMilestoneShowcase(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(top = Dimens.Sm)
+                .testTag(VigorlyTestTags.PROFILE_OPEN_MILESTONES)
         ) {
             Text(
                 stringResource(R.string.profile_view_milestones),

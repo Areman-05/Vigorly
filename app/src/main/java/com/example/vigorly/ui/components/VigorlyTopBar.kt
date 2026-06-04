@@ -21,6 +21,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
+import androidx.compose.ui.platform.testTag
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.HeadlineMd
@@ -55,7 +57,10 @@ fun VigorlyMainTopBar(
             )
         },
         actions = {
-            IconButton(onClick = onSettingsClick) {
+            IconButton(
+                onClick = onSettingsClick,
+                modifier = Modifier.testTag(VigorlyTestTags.TOPBAR_SETTINGS)
+            ) {
                 Icon(
                     Icons.Default.Settings,
                     contentDescription = settingsLabel,

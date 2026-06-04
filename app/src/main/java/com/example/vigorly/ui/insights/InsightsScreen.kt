@@ -26,7 +26,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.repository.VigorlyRepository
+import androidx.compose.ui.platform.testTag
 import com.example.vigorly.ui.components.FlatProgressBar
 import com.example.vigorly.ui.components.WeeklyGoalCard
 import com.example.vigorly.ui.profile.ProfileQuickMetrics
@@ -63,6 +65,7 @@ fun InsightsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .testTag(VigorlyTestTags.INSIGHTS)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
     ) {

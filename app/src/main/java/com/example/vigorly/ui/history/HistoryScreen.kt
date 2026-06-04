@@ -40,7 +40,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.model.WorkoutHistoryItem
+import androidx.compose.ui.platform.testTag
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.EmptyState
 import com.example.vigorly.ui.iconForName
@@ -121,6 +123,7 @@ fun HistoryScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .testTag(VigorlyTestTags.HISTORY)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
     ) {

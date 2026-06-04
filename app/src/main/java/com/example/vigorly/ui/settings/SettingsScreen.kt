@@ -170,7 +170,8 @@ fun SettingsScreen(
         SettingsNavRow(
             title = stringResource(R.string.settings_open_insights),
             icon = Icons.Default.Insights,
-            onClick = onOpenInsights
+            onClick = onOpenInsights,
+            modifier = Modifier.testTag(VigorlyTestTags.SETTINGS_OPEN_INSIGHTS)
         )
 
         SettingsSectionTitle(stringResource(R.string.settings_section_data))

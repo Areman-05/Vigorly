@@ -33,7 +33,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.navigation.VigorlyRoutes
+import androidx.compose.ui.platform.testTag
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnSurface
@@ -45,7 +47,8 @@ import com.example.vigorly.ui.theme.SurfaceContainer
 private data class BottomNavItem(
     val route: String,
     val labelRes: Int,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val testTag: String
 )
 
 @Composable
@@ -55,10 +58,10 @@ fun VigorlyBottomBar(
     modifier: Modifier = Modifier
 ) {
     val items = listOf(
-        BottomNavItem(VigorlyRoutes.Dashboard, R.string.nav_dashboard, Icons.Default.Dashboard),
-        BottomNavItem(VigorlyRoutes.Workouts, R.string.nav_workouts, Icons.Default.FitnessCenter),
-        BottomNavItem(VigorlyRoutes.History, R.string.nav_history, Icons.Default.History),
-        BottomNavItem(VigorlyRoutes.Profile, R.string.nav_profile, Icons.Default.Person)
+        BottomNavItem(VigorlyRoutes.Dashboard, R.string.nav_dashboard, Icons.Default.Dashboard, VigorlyTestTags.NAV_DASHBOARD),
+        BottomNavItem(VigorlyRoutes.Workouts, R.string.nav_workouts, Icons.Default.FitnessCenter, VigorlyTestTags.NAV_WORKOUTS),
+        BottomNavItem(VigorlyRoutes.History, R.string.nav_history, Icons.Default.History, VigorlyTestTags.NAV_HISTORY),
+        BottomNavItem(VigorlyRoutes.Profile, R.string.nav_profile, Icons.Default.Person, VigorlyTestTags.NAV_PROFILE)
     )
 
     Box(
@@ -83,7 +86,9 @@ fun VigorlyBottomBar(
                     icon = item.icon,
                     selected = selected,
                     onClick = { onNavigate(item.route) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(item.testTag)
                 )
             }
         }

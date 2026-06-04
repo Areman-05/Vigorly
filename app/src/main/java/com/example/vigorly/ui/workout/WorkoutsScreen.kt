@@ -33,7 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.repository.VigorlyRepository
+import androidx.compose.ui.platform.testTag
 import com.example.vigorly.di.AppViewModelFactory
 import com.example.vigorly.ui.components.WorkoutFilterChips
 import com.example.vigorly.ui.components.WorkoutListCard
@@ -76,7 +78,11 @@ fun WorkoutsScreen(
         assistantFilters.highIntensityOnly ||
         assistantFilters.lowIntensityOnly
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(VigorlyTestTags.WORKOUTS)
+    ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(

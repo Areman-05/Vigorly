@@ -3,6 +3,7 @@ package com.example.vigorly.ui.profile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -12,8 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.vigorly.ui.iconForName
 
 @Composable
@@ -24,6 +27,7 @@ fun ProfileAvatarView(
     borderColor: Color = Color.White.copy(alpha = 0.35f),
     iconScale: Float = 0.42f
 ) {
+    val showRemote = ProfileAvatarCatalog.isRemoteUrl(avatarUrl)
     val preset = ProfileAvatarCatalog.resolve(avatarUrl)
 
     Box(
@@ -37,22 +41,40 @@ fun ProfileAvatarView(
             ),
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(preset.gradientStart, preset.gradientEnd)
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                iconForName(preset.iconName),
+        if (showRemote) {
+            AsyncImage(
+                model = avatarUrl,
                 contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(size * iconScale)
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
+        } else {
+            PresetAvatarContent(preset = preset, size = size, iconScale = iconScale)
         }
+    }
+}
+
+@Composable
+private fun PresetAvatarContent(
+    preset: ProfileAvatarCatalog.Preset,
+    size: Dp,
+    iconScale: Float
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(preset.gradientStart, preset.gradientEnd)
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            iconForName(preset.iconName),
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(size * iconScale)
+        )
     }
 }

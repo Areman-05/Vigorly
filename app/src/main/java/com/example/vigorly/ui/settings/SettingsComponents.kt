@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.testTag
+import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.DisplayStat
@@ -223,16 +225,25 @@ fun SettingsWeeklyStepper(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        SettingsStepperButton(onClick = onDecrease, enabled = targetSessions > 1) {
+        SettingsStepperButton(
+            onClick = onDecrease,
+            enabled = targetSessions > 1,
+            modifier = Modifier.testTag(VigorlyTestTags.WEEKLY_TARGET_DECREASE)
+        ) {
             Icon(Icons.Default.Remove, contentDescription = null, tint = OnSurface)
         }
         Text(
             text = targetSessions.toString(),
             style = DisplayStat.copy(fontSize = 32.sp, lineHeight = 34.sp),
             color = PrimaryAccent,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.testTag(VigorlyTestTags.WEEKLY_TARGET_VALUE)
         )
-        SettingsStepperButton(onClick = onIncrease, enabled = targetSessions < 14) {
+        SettingsStepperButton(
+            onClick = onIncrease,
+            enabled = targetSessions < 14,
+            modifier = Modifier.testTag(VigorlyTestTags.WEEKLY_TARGET_INCREASE)
+        ) {
             Icon(Icons.Default.Add, contentDescription = null, tint = OnSurface)
         }
     }
