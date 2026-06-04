@@ -88,7 +88,10 @@ fun ActivityDetailTopBar(
             scrolledContainerColor = Color.Transparent
         ),
         navigationIcon = {
-            IconButton(onClick = onBackClick) {
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier.testTag(VigorlyTestTags.TOPBAR_BACK)
+            ) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
@@ -123,7 +126,10 @@ fun VigorlyDetailTopBar(
             scrolledContainerColor = Color.Transparent
         ),
         navigationIcon = {
-            IconButton(onClick = onBackClick) {
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier.testTag(VigorlyTestTags.TOPBAR_BACK)
+            ) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",

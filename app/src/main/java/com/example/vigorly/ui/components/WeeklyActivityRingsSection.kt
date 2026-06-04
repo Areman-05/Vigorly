@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.UiTestEnvironment
 import com.example.vigorly.data.activity.WeeklyActivityRingDay
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
@@ -183,7 +184,10 @@ private fun WeeklyActivityRingDayCell(
             contentAlignment = Alignment.Center,
             modifier = Modifier.size(56.dp)
         ) {
-            if (day.isToday || isSelected) {
+            if (
+                !UiTestEnvironment.disableContinuousUiMotion &&
+                (day.isToday || isSelected)
+            ) {
                 TodayNebulaAura(Modifier.fillMaxSize())
             }
             MiniActivityRings(

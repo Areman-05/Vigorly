@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.example.vigorly.core.testing.UiTestEnvironment
 import com.example.vigorly.di.AppViewModelFactory
 import com.example.vigorly.presentation.app.AppViewModel
 import com.example.vigorly.ui.theme.VigorlyTheme
@@ -41,9 +42,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        UiTestEnvironment.refresh()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        requestActivityRecognitionIfNeeded()
+        if (!UiTestEnvironment.isInstrumentedTest) {
+            requestActivityRecognitionIfNeeded()
+        }
         setContent {
             VigorlyTheme {
                 VigorlyApp(repository = repository, appViewModel = appViewModel)
@@ -53,7 +57,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (ActivityPermission.hasRecognitionPermission(this)) {
+        if (
+            !UiTestEnvironment.isInstrumentedTest &&
+            ActivityPermission.hasRecognitionPermission(this)
+        ) {
             repository.startActivityTracking()
         }
     }

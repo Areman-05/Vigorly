@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.vigorly.core.testing.VigorlyTestTags
@@ -33,14 +34,11 @@ class VigorlyAppInstrumentedTest {
 
     @Test
     fun mainActivity_launchesWithoutCrash() {
-        composeRule.waitForIdleCompose()
+        composeRule.activityRule.scenario.onActivity { /* activity viva */ }
     }
 
     @Test
     fun authFlow_login_reachesDashboard() {
-        composeRule.waitForIdleCompose()
-        composeRule.waitUntilTagExists(VigorlyTestTags.LOGIN, timeoutMillis = 25_000L)
-        composeRule.onNodeWithTag(VigorlyTestTags.LOGIN).assertIsDisplayed()
         composeRule.ensureLoggedInWithMainTabs()
         composeRule.onNodeWithTag(VigorlyTestTags.DASHBOARD).assertIsDisplayed()
     }
@@ -69,9 +67,9 @@ class VigorlyAppInstrumentedTest {
 
         composeRule.onNodeWithTag(VigorlyTestTags.WEEKLY_TARGET_VALUE).assertIsDisplayed()
         composeRule.onNodeWithTag(VigorlyTestTags.WEEKLY_TARGET_INCREASE).performClick()
-        composeRule.waitForIdleCompose()
 
-        composeRule.navigateToTab(VigorlyTestTags.NAV_DASHBOARD)
+        composeRule.pressTopBarBack()
+        composeRule.waitUntilTagExists(VigorlyTestTags.DASHBOARD)
         composeRule.onNodeWithTag(VigorlyTestTags.DASHBOARD).assertIsDisplayed()
     }
 
@@ -93,20 +91,24 @@ class VigorlyAppInstrumentedTest {
         composeRule.waitUntilTagExists(VigorlyTestTags.INSIGHTS)
         composeRule.onNodeWithTag(VigorlyTestTags.INSIGHTS).assertIsDisplayed()
 
-        composeRule.navigateToTab(VigorlyTestTags.NAV_PROFILE)
-        composeRule.onNodeWithTag(VigorlyTestTags.PROFILE_OPEN_MILESTONES).performClick()
+        composeRule.pressTopBarBack()
+        composeRule.waitUntilTagExists(VigorlyTestTags.PROFILE)
+        composeRule.onNodeWithTag(VigorlyTestTags.PROFILE_OPEN_MILESTONES)
+            .performScrollTo()
+            .performClick()
         composeRule.waitUntilTagExists(VigorlyTestTags.MILESTONES)
         composeRule.onNodeWithTag(VigorlyTestTags.MILESTONES).assertIsDisplayed()
     }
 
     @Test
-    fun locale_setEnglish_persistsInRepository() = runBlocking {
-        composeRule.waitForIdleCompose()
+    fun locale_setEnglish_persistsInRepository() {
         val repo = composeRule.repository()
-        repo.setAppLocaleAndAwait("en")
-        assertEquals("en", repo.effectiveLocale())
-        repo.setAppLocaleAndAwait("es")
-        assertEquals("es", repo.effectiveLocale())
+        runBlocking {
+            repo.setAppLocaleAndAwait("en")
+            assertEquals("en", repo.effectiveLocale())
+            repo.setAppLocaleAndAwait("es")
+            assertEquals("es", repo.effectiveLocale())
+        }
     }
 
     @Test

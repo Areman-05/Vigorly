@@ -2,6 +2,7 @@ package com.example.vigorly
 
 import android.app.Application
 import android.content.Context
+import com.example.vigorly.core.testing.UiTestEnvironment
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.util.LocaleUtils
 import kotlinx.coroutines.runBlocking
@@ -16,6 +17,7 @@ class VigorlyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        UiTestEnvironment.refresh()
         repository = VigorlyRepository(this)
         runBlocking { repository.initializeLocale() }
     }

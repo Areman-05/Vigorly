@@ -43,7 +43,8 @@ fun VigorlyApp(
     val workoutCompletedMessage = stringResource(R.string.workout_completed)
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
-    val navState = NavigationUiState.fromRoute(backStack?.destination?.route)
+    val currentRoute = backStack?.destination?.route
+    val navState = remember(currentRoute) { NavigationUiState.fromRoute(currentRoute) }
     val snackbarHostState = remember { SnackbarHostState() }
     var showActivityCalendar by remember { mutableStateOf(false) }
 

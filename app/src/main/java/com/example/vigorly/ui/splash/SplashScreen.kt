@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.UiTestEnvironment
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.ui.components.ActivityRingsLogo
@@ -53,12 +54,14 @@ fun SplashScreen(
 
     LaunchedEffect(Unit) {
         repository.preloadAppData()
+        val stepDelay = if (UiTestEnvironment.isInstrumentedTest) 50L else 900L
+        val finishDelay = if (UiTestEnvironment.isInstrumentedTest) 50L else 700L
         loadProgress = 0.35f
-        delay(900)
+        delay(stepDelay)
         loadProgress = 0.72f
-        delay(900)
+        delay(stepDelay)
         loadProgress = 1f
-        delay(700)
+        delay(finishDelay)
         onFinished(repository.resolveStartDestination())
     }
 
@@ -69,7 +72,10 @@ fun SplashScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
         ) {
-            ActivityRingsLogo(size = 280.dp)
+            ActivityRingsLogo(
+                size = 280.dp,
+                animate = !UiTestEnvironment.disableContinuousUiMotion
+            )
             Text(
                 stringResource(R.string.brand_name),
                 style = DisplayHero.copy(fontWeight = FontWeight.Black),

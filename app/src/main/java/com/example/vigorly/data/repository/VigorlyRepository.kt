@@ -36,6 +36,7 @@ import com.example.vigorly.util.HistorySanitizer
 import com.example.vigorly.util.StreakCalculator
 import java.time.ZoneId
 import com.example.vigorly.ui.profile.ProfileAvatarCatalog
+import com.example.vigorly.core.testing.UiTestEnvironment
 import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
@@ -59,6 +60,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -72,6 +75,7 @@ import java.util.UUID
 class VigorlyRepository(context: Context) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val localeMutex = Mutex()
     private val appContext = context.applicationContext
     private val preferences = VigorlyPreferencesDataStore(appContext)
     private val activityTracker = DailyActivityTracker(appContext, preferences) { }
@@ -243,17 +247,19 @@ class VigorlyRepository(context: Context) {
             refreshMilestones()
         }.launchIn(scope)
         preferences.userProfile.onEach { refreshMilestones() }.launchIn(scope)
-        scope.launch {
-            activityTracker.initialize()
-            refreshActivityDayHistory()
-            syncActiveStreakDays()
-        }
-        activityTracker.detail.onEach {
+        if (!UiTestEnvironment.isInstrumentedTest) {
             scope.launch {
+                activityTracker.initialize()
                 refreshActivityDayHistory()
                 syncActiveStreakDays()
             }
-        }.launchIn(scope)
+            activityTracker.detail.onEach {
+                scope.launch {
+                    refreshActivityDayHistory()
+                    syncActiveStreakDays()
+                }
+            }.launchIn(scope)
+        }
     }
 
     fun selectActivityDate(date: LocalDate) {
@@ -528,13 +534,20 @@ class VigorlyRepository(context: Context) {
     suspend fun effectiveLocale(): String = preferences.appLocale.first()
 
     suspend fun setAppLocaleAndAwait(code: String) {
-        preferences.setAppLocale(code)
-        LocaleManager.applyLocale(code)
-        _appLocale.value = code
+        localeMutex.withLock {
+            preferences.setAppLocale(code)
+            LocaleManager.applyLocale(code)
+            _appLocale.value = code
+        }
     }
 
+    /** Aplica locale en memoria de inmediato y persiste en DataStore de forma serializada. */
     fun setAppLocale(code: String) {
-        scope.launch { setAppLocaleAndAwait(code) }
+        _appLocale.value = code
+        LocaleManager.applyLocale(code)
+        scope.launch {
+            localeMutex.withLock { preferences.setAppLocale(code) }
+        }
     }
 
     suspend fun login(email: String, password: String): AuthResult {
@@ -760,20 +773,38 @@ class VigorlyRepository(context: Context) {
         preferredTime: String
     ) {
         scope.launch {
-            preferences.setFitnessGoal(fitnessGoal)
-            preferences.setActivityLevel(activityLevel)
-            preferences.setWorkoutLocation(workoutLocation)
-            preferences.setPreferredTime(preferredTime)
-            preferences.setNotificationsEnabled(notifications)
-            preferences.saveWeeklyGoal(
-                weeklyGoal.value.copy(
-                    targetSessions = weeklySessions.coerceIn(1, 14),
-                    completedSessions = 0
-                )
+            saveSetupPreferencesAndAwait(
+                fitnessGoal,
+                activityLevel,
+                weeklySessions,
+                notifications,
+                workoutLocation,
+                preferredTime
             )
-            preferences.setOnboardingCompleted(true)
-            _onboardingCompleted.value = true
         }
+    }
+
+    suspend fun saveSetupPreferencesAndAwait(
+        fitnessGoal: String,
+        activityLevel: String,
+        weeklySessions: Int,
+        notifications: Boolean,
+        workoutLocation: String,
+        preferredTime: String
+    ) {
+        preferences.setFitnessGoal(fitnessGoal)
+        preferences.setActivityLevel(activityLevel)
+        preferences.setWorkoutLocation(workoutLocation)
+        preferences.setPreferredTime(preferredTime)
+        preferences.setNotificationsEnabled(notifications)
+        preferences.saveWeeklyGoal(
+            weeklyGoal.value.copy(
+                targetSessions = weeklySessions.coerceIn(1, 14),
+                completedSessions = 0
+            )
+        )
+        preferences.setOnboardingCompleted(true)
+        _onboardingCompleted.value = true
     }
 
     fun getHistoryItem(id: String): WorkoutHistoryItem? = _history.value.find { it.id == id }

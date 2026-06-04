@@ -8,7 +8,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.model.AuthResult
 import com.example.vigorly.data.repository.VigorlyRepository
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
 object VigorlyTestAccount {
@@ -21,16 +21,27 @@ object VigorlyTestAccount {
 typealias VigorlyComposeRule =
     AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>
 
+private val navTagToScreenTag = mapOf(
+    VigorlyTestTags.NAV_DASHBOARD to VigorlyTestTags.DASHBOARD,
+    VigorlyTestTags.NAV_WORKOUTS to VigorlyTestTags.WORKOUTS,
+    VigorlyTestTags.NAV_HISTORY to VigorlyTestTags.HISTORY,
+    VigorlyTestTags.NAV_PROFILE to VigorlyTestTags.PROFILE
+)
+
+private val postSplashTags = listOf(
+    VigorlyTestTags.DASHBOARD,
+    VigorlyTestTags.LOGIN,
+    VigorlyTestTags.REGISTER,
+    VigorlyTestTags.SETUP
+)
+
 fun VigorlyComposeRule.repository(): VigorlyRepository {
     val app = activity.application as VigorlyApplication
     return app.repository
 }
 
-fun VigorlyComposeRule.waitForIdleCompose() {
-    waitForIdle()
-    mainClock.advanceTimeByFrame()
-    waitForIdle()
-}
+/** No usar waitForIdle(): animaciones infinitas bloquean el idling de Compose. */
+fun VigorlyComposeRule.waitForIdleCompose() = Unit
 
 fun VigorlyComposeRule.waitUntilTagExists(
     tag: String,
@@ -44,13 +55,35 @@ fun VigorlyComposeRule.waitUntilTagExists(
     }
 }
 
-fun VigorlyComposeRule.ensureLoggedInWithMainTabs() {
-    waitForIdleCompose()
-    val repo = repository()
-    runBlocking {
-        seedTestAccount(repo)
-        delay(1_500)
+fun VigorlyComposeRule.waitUntilAnyTagExists(
+    tags: List<String>,
+    timeoutMillis: Long = 25_000L
+): String? {
+    var found: String? = null
+    waitUntil(timeoutMillis) {
+        tags.firstOrNull { tag ->
+            runCatching {
+                onNodeWithTag(tag).assertExists()
+                true
+            }.getOrDefault(false)
+        }?.also { found = it } != null
     }
+    return found
+}
+
+fun VigorlyComposeRule.ensureLoggedInWithMainTabs() {
+    val repo = repository()
+    runBlocking(Dispatchers.Default) {
+        seedTestAccount(repo)
+    }
+
+    if (runCatching { onNodeWithTag(VigorlyTestTags.DASHBOARD).assertExists(); true }
+        .getOrDefault(false)
+    ) {
+        return
+    }
+
+    waitUntilAnyTagExists(postSplashTags, timeoutMillis = 30_000L)
 
     if (runCatching { onNodeWithTag(VigorlyTestTags.DASHBOARD).assertExists(); true }
         .getOrDefault(false)
@@ -64,17 +97,18 @@ fun VigorlyComposeRule.ensureLoggedInWithMainTabs() {
         onNodeWithTag(VigorlyTestTags.LOGIN_EMAIL).performTextInput(VigorlyTestAccount.EMAIL)
         onNodeWithTag(VigorlyTestTags.LOGIN_PASSWORD).performTextInput(VigorlyTestAccount.PASSWORD)
         onNodeWithTag(VigorlyTestTags.LOGIN_SUBMIT).performClick()
-        waitForIdleCompose()
-        runBlocking { delay(2_000) }
+        waitUntilTagExists(VigorlyTestTags.DASHBOARD, timeoutMillis = 30_000L)
+        return
     }
 
     waitUntilTagExists(VigorlyTestTags.DASHBOARD, timeoutMillis = 30_000L)
 }
 
-fun VigorlyComposeRule.navigateToTab(tag: String) {
-    waitUntilTagExists(tag)
-    onNodeWithTag(tag).performClick()
-    waitForIdleCompose()
+fun VigorlyComposeRule.navigateToTab(navTag: String) {
+    val screenTag = navTagToScreenTag[navTag] ?: navTag
+    waitUntilTagExists(navTag)
+    onNodeWithTag(navTag).performClick()
+    waitUntilTagExists(screenTag)
 }
 
 fun VigorlyComposeRule.openSettingsFromMain() {
@@ -82,6 +116,11 @@ fun VigorlyComposeRule.openSettingsFromMain() {
     waitUntilTagExists(VigorlyTestTags.TOPBAR_SETTINGS)
     onNodeWithTag(VigorlyTestTags.TOPBAR_SETTINGS).performClick()
     waitUntilTagExists(VigorlyTestTags.SETTINGS)
+}
+
+fun VigorlyComposeRule.pressTopBarBack() {
+    waitUntilTagExists(VigorlyTestTags.TOPBAR_BACK)
+    onNodeWithTag(VigorlyTestTags.TOPBAR_BACK).performClick()
 }
 
 private suspend fun seedTestAccount(repository: VigorlyRepository) {
@@ -99,7 +138,7 @@ private suspend fun seedTestAccount(repository: VigorlyRepository) {
         )
     ) {
         is AuthResult.Success -> {
-            repository.saveSetupPreferences(
+            repository.saveSetupPreferencesAndAwait(
                 fitnessGoal = "wellness",
                 activityLevel = "moderate",
                 weeklySessions = 4,
@@ -107,7 +146,6 @@ private suspend fun seedTestAccount(repository: VigorlyRepository) {
                 workoutLocation = "home",
                 preferredTime = "flexible"
             )
-            delay(1_000)
         }
         is AuthResult.Error -> {
             repository.login(VigorlyTestAccount.EMAIL, VigorlyTestAccount.PASSWORD)

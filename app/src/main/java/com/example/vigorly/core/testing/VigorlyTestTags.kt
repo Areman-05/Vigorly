@@ -20,6 +20,7 @@ object VigorlyTestTags {
     const val NAV_PROFILE = "nav_profile"
 
     const val TOPBAR_SETTINGS = "action_settings"
+    const val TOPBAR_BACK = "action_back"
     const val LOGIN_EMAIL = "login_email"
     const val LOGIN_PASSWORD = "login_password"
     const val LOGIN_SUBMIT = "login_submit"
