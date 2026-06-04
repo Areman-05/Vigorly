@@ -137,23 +137,6 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         it[PreferenceKeys.WORKOUT_LOCATION] ?: "home"
     }
 
-    suspend fun getAppLocaleSync(): String {
-        val prefs = context.vigorlyDataStore.data.first()
-        val userSelected = prefs[PreferenceKeys.LOCALE_USER_SELECTED] == true
-        val locale = if (userSelected) {
-            prefs[PreferenceKeys.APP_LOCALE] ?: "es"
-        } else {
-            "es"
-        }
-        context.vigorlyDataStore.edit {
-            it[PreferenceKeys.APP_LOCALE] = locale
-            if (!userSelected) {
-                it[PreferenceKeys.LOCALE_USER_SELECTED] = false
-            }
-        }
-        return locale
-    }
-
     suspend fun setAppLocale(code: String) {
         context.vigorlyDataStore.edit {
             it[PreferenceKeys.APP_LOCALE] = code

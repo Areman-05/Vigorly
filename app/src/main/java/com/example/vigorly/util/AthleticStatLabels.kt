@@ -43,11 +43,6 @@ object AthleticStatLabels {
     fun displayLabel(label: String): String =
         spanishLabels[normalizeKey(label)] ?: label
 
-    fun forDisplay(stats: List<AthleticStat>): List<AthleticStat> =
-        stats.map { stat ->
-            stat.copy(label = displayLabel(stat.label))
-        }
-
     fun dominantStat(stats: List<AthleticStat>): AthleticStat? =
         stats.maxByOrNull { it.value }
 }

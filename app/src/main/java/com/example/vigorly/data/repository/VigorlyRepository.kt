@@ -30,7 +30,6 @@ import com.example.vigorly.util.AthleticStatKeys
 import com.example.vigorly.util.WorkoutRecommender
 import com.example.vigorly.data.MilestoneCatalog
 import com.example.vigorly.data.local.MilestoneShowcaseCodec
-import com.example.vigorly.util.HistoryItemMigration
 import com.example.vigorly.util.HistoryLabels
 import com.example.vigorly.util.LevelCalculator
 import com.example.vigorly.util.HistorySanitizer
@@ -61,7 +60,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
@@ -366,17 +364,6 @@ class VigorlyRepository(context: Context) {
         activityTracker.stop()
     }
 
-    fun closeActivityTracking() {
-        activityTracker.close()
-    }
-
-    private suspend fun restoreActiveUserSessionIfNeeded() {
-        if (!preferences.isLoggedIn.first()) return
-        val userId = preferences.currentUserId.first() ?: return
-        val saved = preferences.loadUserSession(userId) ?: return
-        applyUserSession(saved)
-    }
-
     private fun refreshMilestones() {
         _milestones.value = MilestoneUnlocker.apply(profile.value, MilestoneCatalog.all())
     }
@@ -399,8 +386,6 @@ class VigorlyRepository(context: Context) {
         }
         scope.launch { preferences.saveMilestoneShowcase(_milestoneShowcase.value) }
     }
-
-    fun listWorkoutIds(): List<String> = workouts.keys.toList()
 
     fun listWorkouts(): List<WorkoutDetail> = workoutList
 
@@ -506,10 +491,6 @@ class VigorlyRepository(context: Context) {
     }
 
     fun isFavorite(workoutId: String): Boolean = workoutId in _favorites.value
-
-    fun completeOnboarding() {
-        scope.launch { preferences.setOnboardingCompleted(true) }
-    }
 
     fun resetOnboarding() {
         scope.launch { preferences.setOnboardingCompleted(false) }
@@ -913,10 +894,6 @@ class VigorlyRepository(context: Context) {
                 )
             )
         }
-    }
-
-    fun refreshDailyGoalsFromActivity() {
-        scope.launch { activityTracker.syncNow() }
     }
 
     private fun MutableStateFlow<WorkoutSessionState?>.updateSession(
