@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -63,24 +64,32 @@ fun ProfileSummaryHeader(
     ) {
         Box(
             modifier = Modifier
-                .size(76.dp)
-                .clip(CircleShape)
-                .border(2.dp, PrimaryAccent.copy(alpha = 0.45f), CircleShape)
+                .size(84.dp)
                 .clickable(onClick = onAvatarClick)
-                .semantics { role = Role.Button },
-            contentAlignment = Alignment.Center
+                .semantics { role = Role.Button }
         ) {
-            ProfileAvatarView(
-                avatarUrl = avatarUrl,
-                size = 72.dp,
-                borderColor = Color.Transparent
-            )
+            Box(
+                modifier = Modifier
+                    .size(76.dp)
+                    .align(Alignment.Center)
+                    .clip(CircleShape)
+                    .border(2.dp, PrimaryAccent.copy(alpha = 0.45f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                ProfileAvatarView(
+                    avatarUrl = avatarUrl,
+                    size = 72.dp,
+                    borderColor = Color.Transparent
+                )
+            }
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .size(26.dp)
+                    .offset(x = 2.dp, y = 2.dp)
+                    .size(28.dp)
                     .clip(CircleShape)
                     .background(Brush.linearGradient(listOf(PrimaryAccent, PrimaryContainer)))
+                    .border(1.5.dp, Color.White.copy(alpha = 0.5f), CircleShape)
                     .clickable(onClick = onAvatarClick),
                 contentAlignment = Alignment.Center
             ) {
@@ -88,7 +97,7 @@ fun ProfileSummaryHeader(
                     Icons.Default.Edit,
                     contentDescription = stringResource(R.string.profile_change_avatar),
                     tint = Color.White,
-                    modifier = Modifier.size(13.dp)
+                    modifier = Modifier.size(15.dp)
                 )
             }
         }

@@ -185,7 +185,6 @@ class VigorlyRepository(context: Context) {
         preferences.isLoggedIn.onEach { _isLoggedIn.value = it }.launchIn(scope)
         preferences.appLocale.onEach { _appLocale.value = it }.launchIn(scope)
         preferences.registeredAccounts.onEach { _accounts.value = it }.launchIn(scope)
-        preferences.athleticStats.onEach { _athleticStats.value = it }.launchIn(scope)
         combine(history, profile) { hist, prof ->
             AthleticProfileCalculator.compute(hist, prof.activeStreakDays)
         }.onEach { computed ->
@@ -529,7 +528,7 @@ class VigorlyRepository(context: Context) {
         if (appDataPreloaded) return
         listWorkouts()
         coachingTips.size
-        preferences.registeredAccounts.first()
+        _accounts.value = preferences.registeredAccounts.first()
         appDataPreloaded = true
     }
 
@@ -700,7 +699,11 @@ class VigorlyRepository(context: Context) {
         preferences.setUnitsMetric(snapshot.unitsMetric)
         val sessionHistory = HistorySanitizer.clean(snapshot.workoutHistory)
         preferences.saveWorkoutHistory(sessionHistory)
-        preferences.saveAthleticStats(snapshot.athleticStats)
+        val computedAthletic = AthleticProfileCalculator.compute(
+            sessionHistory,
+            snapshot.profile.activeStreakDays
+        )
+        preferences.saveAthleticStats(computedAthletic)
         preferences.setFavoriteWorkoutIds(snapshot.favoriteWorkoutIds)
         preferences.setDailyTipIndex(snapshot.dailyTipIndex)
         _history.value = sessionHistory
@@ -717,7 +720,7 @@ class VigorlyRepository(context: Context) {
             sessionHistory,
             HistorySanitizer.removedCount(snapshot.workoutHistory, sessionHistory)
         )
-        _athleticStats.value = snapshot.athleticStats
+        _athleticStats.value = computedAthletic
         _favorites.value = snapshot.favoriteWorkoutIds
         _onboardingCompleted.value = snapshot.onboardingCompleted
         refreshMilestones()

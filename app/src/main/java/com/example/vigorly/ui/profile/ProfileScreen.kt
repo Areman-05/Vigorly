@@ -110,18 +110,20 @@ fun ProfileScreen(
             .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
     ) {
         WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 0) {
-            Text(
-                stringResource(R.string.profile_title),
-                style = HeadlineLgMobile,
-                color = OnSurface,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                stringResource(R.string.profile_subtitle),
-                style = BodyMd,
-                color = OnSurfaceVariant,
-                modifier = Modifier.padding(top = Dimens.Xs)
-            )
+            Column {
+                Text(
+                    stringResource(R.string.profile_title),
+                    style = HeadlineLgMobile,
+                    color = OnSurface,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    stringResource(R.string.profile_subtitle),
+                    style = BodyMd,
+                    color = OnSurfaceVariant,
+                    modifier = Modifier.padding(top = Dimens.Xs)
+                )
+            }
         }
 
         WorkoutDetailSectionEnter(visible = contentVisible, enterDelayMillis = 60) {

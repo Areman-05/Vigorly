@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -51,7 +50,6 @@ import com.example.vigorly.ui.theme.PrimaryContainer
 @Composable
 fun SettingsScreen(
     repository: VigorlyRepository,
-    onOpenInsights: () -> Unit = {},
     onRestartOnboarding: () -> Unit = {},
     onLogout: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -165,14 +163,6 @@ fun SettingsScreen(
                 }
             )
         }
-
-        SettingsSectionTitle(stringResource(R.string.settings_section_explore))
-        SettingsNavRow(
-            title = stringResource(R.string.settings_open_insights),
-            icon = Icons.Default.Insights,
-            onClick = onOpenInsights,
-            modifier = Modifier.testTag(VigorlyTestTags.SETTINGS_OPEN_INSIGHTS)
-        )
 
         SettingsSectionTitle(stringResource(R.string.settings_section_data))
         SettingsSectionCard {

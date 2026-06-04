@@ -132,7 +132,6 @@ fun NavGraphBuilder.vigorlyNavGraph(
         SettingsScreen(
             repository = repository,
             modifier = contentPaddingModifier,
-            onOpenInsights = { navController.navigate(VigorlyRoutes.Insights) },
             onRestartOnboarding = {
                 navController.navigate(VigorlyRoutes.Setup) {
                     popUpTo(navController.graph.findStartDestination().id) {

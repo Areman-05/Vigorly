@@ -28,7 +28,6 @@ object VigorlyTestTags {
     const val WEEKLY_TARGET_VALUE = "weekly_target_value"
     const val WEEKLY_TARGET_INCREASE = "weekly_target_increase"
     const val WEEKLY_TARGET_DECREASE = "weekly_target_decrease"
-    const val SETTINGS_OPEN_INSIGHTS = "settings_open_insights"
     const val PROFILE_OPEN_MILESTONES = "profile_open_milestones"
     const val PROFILE_OPEN_INSIGHTS = "profile_open_insights"
 }

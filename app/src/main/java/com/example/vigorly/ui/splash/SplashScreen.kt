@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.R
 import com.example.vigorly.core.testing.UiTestEnvironment
+import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.ui.components.ActivityRingsLogo
@@ -41,7 +43,9 @@ import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.PrimaryContainer
 import com.example.vigorly.ui.theme.RingTrack
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 @Composable
 fun SplashScreen(
@@ -54,18 +58,23 @@ fun SplashScreen(
 
     LaunchedEffect(Unit) {
         repository.preloadAppData()
-        val stepDelay = if (UiTestEnvironment.isInstrumentedTest) 50L else 900L
-        val finishDelay = if (UiTestEnvironment.isInstrumentedTest) 50L else 700L
+        val destination = repository.resolveStartDestination()
+        if (UiTestEnvironment.isInstrumentedTest) {
+            withContext(Dispatchers.Main.immediate) { onFinished(destination) }
+            return@LaunchedEffect
+        }
+        val stepDelay = 900L
+        val finishDelay = 700L
         loadProgress = 0.35f
         delay(stepDelay)
         loadProgress = 0.72f
         delay(stepDelay)
         loadProgress = 1f
         delay(finishDelay)
-        onFinished(repository.resolveStartDestination())
+        withContext(Dispatchers.Main.immediate) { onFinished(destination) }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize().testTag(VigorlyTestTags.SPLASH)) {
         SplashGradientBackground()
         Column(
             Modifier.fillMaxSize(),

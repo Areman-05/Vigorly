@@ -27,12 +27,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.ui.components.SetupActivityRingsGuide
 import com.example.vigorly.ui.components.SetupRhythmVisual
@@ -132,6 +134,7 @@ fun SetupWizardScreen(
         Column(
             Modifier
                 .fillMaxSize()
+                .testTag(VigorlyTestTags.SETUP)
                 .statusBarsPadding()
                 .padding(top = Dimens.Lg)
                 .padding(horizontal = if (isWideContentStep) Dimens.Sm else Dimens.ContainerMargin)

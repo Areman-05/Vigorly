@@ -9,6 +9,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,6 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.UiTestEnvironment
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.navigation.VigorlyDestinationGroups
@@ -47,6 +49,21 @@ fun VigorlyApp(
     val navState = remember(currentRoute) { NavigationUiState.fromRoute(currentRoute) }
     val snackbarHostState = remember { SnackbarHostState() }
     var showActivityCalendar by remember { mutableStateOf(false) }
+    val isLoggedIn by repository.isLoggedIn.collectAsState()
+
+    LaunchedEffect(isLoggedIn, currentRoute) {
+        if (!UiTestEnvironment.isInstrumentedTest || !isLoggedIn) return@LaunchedEffect
+        when (currentRoute) {
+            VigorlyRoutes.Splash, VigorlyRoutes.Login -> {
+                navController.navigate(VigorlyRoutes.Dashboard) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
 
     LaunchedEffect(appViewModel) {
         appViewModel.messages.collectLatest { message ->

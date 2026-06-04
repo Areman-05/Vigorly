@@ -3,7 +3,7 @@ package com.example.vigorly
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.model.AuthResult
@@ -28,7 +28,8 @@ private val navTagToScreenTag = mapOf(
     VigorlyTestTags.NAV_PROFILE to VigorlyTestTags.PROFILE
 )
 
-private val postSplashTags = listOf(
+private val bootstrapTags = listOf(
+    VigorlyTestTags.SPLASH,
     VigorlyTestTags.DASHBOARD,
     VigorlyTestTags.LOGIN,
     VigorlyTestTags.REGISTER,
@@ -71,37 +72,44 @@ fun VigorlyComposeRule.waitUntilAnyTagExists(
     return found
 }
 
+/**
+ * Semilla la sesión en el repositorio antes de esperar la UI, para que la splash resuelva a dashboard.
+ */
 fun VigorlyComposeRule.ensureLoggedInWithMainTabs() {
+    if (waitForTagOptional(VigorlyTestTags.DASHBOARD, timeoutMillis = 3_000L)) return
+
     val repo = repository()
-    runBlocking(Dispatchers.Default) {
-        seedTestAccount(repo)
-    }
+    val loggedIn = runBlocking(Dispatchers.Default) { seedTestAccount(repo) }
 
-    if (runCatching { onNodeWithTag(VigorlyTestTags.DASHBOARD).assertExists(); true }
-        .getOrDefault(false)
-    ) {
+    if (hasTag(VigorlyTestTags.DASHBOARD)) return
+
+    activityRule.scenario.recreate()
+
+    if (loggedIn) {
+        waitForDashboardOrCompleteSetup(repo, timeoutMillis = 45_000L)
         return
     }
 
-    waitUntilAnyTagExists(postSplashTags, timeoutMillis = 30_000L)
+    waitUntilAnyTagExists(bootstrapTags, timeoutMillis = 35_000L)
+    if (hasTag(VigorlyTestTags.DASHBOARD)) return
 
-    if (runCatching { onNodeWithTag(VigorlyTestTags.DASHBOARD).assertExists(); true }
-        .getOrDefault(false)
-    ) {
+    if (hasTag(VigorlyTestTags.SPLASH)) {
+        waitForDashboardOrCompleteSetup(repo, timeoutMillis = 45_000L)
         return
     }
 
-    if (runCatching { onNodeWithTag(VigorlyTestTags.LOGIN).assertExists(); true }
-        .getOrDefault(false)
-    ) {
-        onNodeWithTag(VigorlyTestTags.LOGIN_EMAIL).performTextInput(VigorlyTestAccount.EMAIL)
-        onNodeWithTag(VigorlyTestTags.LOGIN_PASSWORD).performTextInput(VigorlyTestAccount.PASSWORD)
-        onNodeWithTag(VigorlyTestTags.LOGIN_SUBMIT).performClick()
-        waitUntilTagExists(VigorlyTestTags.DASHBOARD, timeoutMillis = 30_000L)
+    if (hasTag(VigorlyTestTags.SETUP)) {
+        completeSetupAndReachDashboard(repo)
         return
     }
 
-    waitUntilTagExists(VigorlyTestTags.DASHBOARD, timeoutMillis = 30_000L)
+    if (hasTag(VigorlyTestTags.LOGIN)) {
+        submitLoginForm()
+        waitForDashboardOrCompleteSetup(repo, timeoutMillis = 40_000L)
+        return
+    }
+
+    waitUntilTagExists(VigorlyTestTags.DASHBOARD, timeoutMillis = 45_000L)
 }
 
 fun VigorlyComposeRule.navigateToTab(navTag: String) {
@@ -123,13 +131,67 @@ fun VigorlyComposeRule.pressTopBarBack() {
     onNodeWithTag(VigorlyTestTags.TOPBAR_BACK).performClick()
 }
 
-private suspend fun seedTestAccount(repository: VigorlyRepository) {
-    when (repository.login(VigorlyTestAccount.EMAIL, VigorlyTestAccount.PASSWORD)) {
-        is AuthResult.Success -> return
-        is AuthResult.Error -> Unit
+private fun VigorlyComposeRule.waitForDashboardOrCompleteSetup(
+    repo: VigorlyRepository,
+    timeoutMillis: Long
+) {
+    waitUntilAnyTagExists(
+        listOf(VigorlyTestTags.DASHBOARD, VigorlyTestTags.SETUP, VigorlyTestTags.LOGIN),
+        timeoutMillis = timeoutMillis
+    )
+    when {
+        hasTag(VigorlyTestTags.DASHBOARD) -> return
+        hasTag(VigorlyTestTags.SETUP) -> completeSetupAndReachDashboard(repo)
+        hasTag(VigorlyTestTags.LOGIN) -> {
+            submitLoginForm()
+            waitUntilTagExists(VigorlyTestTags.DASHBOARD, timeoutMillis = 35_000L)
+        }
+        else -> waitUntilTagExists(VigorlyTestTags.DASHBOARD, timeoutMillis)
     }
+}
 
-    when (
+private fun VigorlyComposeRule.completeSetupAndReachDashboard(repo: VigorlyRepository) {
+    runBlocking(Dispatchers.Default) { ensureOnboardingCompleted(repo) }
+    activityRule.scenario.recreate()
+    waitUntilTagExists(VigorlyTestTags.DASHBOARD, timeoutMillis = 45_000L)
+}
+
+private fun VigorlyComposeRule.submitLoginForm() {
+    onNodeWithTag(VigorlyTestTags.LOGIN_EMAIL).performTextReplacement(VigorlyTestAccount.EMAIL)
+    onNodeWithTag(VigorlyTestTags.LOGIN_PASSWORD).performTextReplacement(VigorlyTestAccount.PASSWORD)
+    onNodeWithTag(VigorlyTestTags.LOGIN_SUBMIT).performClick()
+}
+
+fun VigorlyComposeRule.waitForTagOptional(tag: String, timeoutMillis: Long): Boolean =
+    runCatching {
+        waitUntilTagExists(tag, timeoutMillis)
+        true
+    }.getOrDefault(false)
+
+private fun VigorlyComposeRule.hasTag(tag: String): Boolean =
+    runCatching {
+        onNodeWithTag(tag).assertExists()
+        true
+    }.getOrDefault(false)
+
+private suspend fun ensureOnboardingCompleted(repository: VigorlyRepository) {
+    if (repository.onboardingCompleted.value) return
+    repository.saveSetupPreferencesAndAwait(
+        fitnessGoal = "wellness",
+        activityLevel = "moderate",
+        weeklySessions = 4,
+        notifications = true,
+        workoutLocation = "home",
+        preferredTime = "flexible"
+    )
+}
+
+private suspend fun seedTestAccount(repository: VigorlyRepository): Boolean {
+    repository.preloadAppData()
+    val loggedIn = when (repository.login(VigorlyTestAccount.EMAIL, VigorlyTestAccount.PASSWORD)) {
+        is AuthResult.Success -> true
+        is AuthResult.Error -> false
+    } || when (
         repository.register(
             email = VigorlyTestAccount.EMAIL,
             password = VigorlyTestAccount.PASSWORD,
@@ -137,18 +199,11 @@ private suspend fun seedTestAccount(repository: VigorlyRepository) {
             birthDate = VigorlyTestAccount.BIRTH_DATE
         )
     ) {
-        is AuthResult.Success -> {
-            repository.saveSetupPreferencesAndAwait(
-                fitnessGoal = "wellness",
-                activityLevel = "moderate",
-                weeklySessions = 4,
-                notifications = true,
-                workoutLocation = "home",
-                preferredTime = "flexible"
-            )
-        }
-        is AuthResult.Error -> {
-            repository.login(VigorlyTestAccount.EMAIL, VigorlyTestAccount.PASSWORD)
-        }
+        is AuthResult.Success -> true
+        is AuthResult.Error ->
+            repository.login(VigorlyTestAccount.EMAIL, VigorlyTestAccount.PASSWORD) is AuthResult.Success
     }
+
+    if (loggedIn) ensureOnboardingCompleted(repository)
+    return loggedIn
 }

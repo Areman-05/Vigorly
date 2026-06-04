@@ -25,6 +25,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -33,6 +34,7 @@ import com.example.vigorly.util.BirthDateVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.model.AuthError
 import com.example.vigorly.data.model.AuthResult
 import com.example.vigorly.data.repository.VigorlyRepository
@@ -74,6 +76,7 @@ fun RegisterScreen(
         Column(
             Modifier
                 .fillMaxSize()
+                .testTag(VigorlyTestTags.REGISTER)
                 .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(Dimens.ContainerMargin),
