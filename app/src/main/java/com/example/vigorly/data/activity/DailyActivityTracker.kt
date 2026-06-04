@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.SystemClock
 import com.example.vigorly.data.local.VigorlyPreferencesDataStore
 import com.example.vigorly.data.model.DailyGoals
 import kotlinx.coroutines.CoroutineScope
@@ -52,6 +53,9 @@ class DailyActivityTracker(
     private var workoutCaloriesPerHour = IntArray(HourlyActivityCodec.HOURS)
     private var trackingDateKey: String = todayKey()
 
+    private var lastDiskPersistElapsedMs = 0L
+    private var pendingDiskPersist = false
+
     private val _metrics = MutableStateFlow(DailyActivityMetrics())
     val metrics: StateFlow<DailyActivityMetrics> = _metrics.asStateFlow()
 
@@ -67,7 +71,7 @@ class DailyActivityTracker(
         stateMutex.withLock {
             loadPersistedState()
         }
-        publishGoals(preserveWellness = true)
+        publishSnapshot(preserveWellness = true, forceDisk = true)
         initialized = true
         if (pendingStart) {
             pendingStart = false
@@ -94,6 +98,7 @@ class DailyActivityTracker(
             stateMutex.withLock {
                 persistTodaySummary()
             }
+            publishSnapshot(preserveWellness = true, forceDisk = true)
         }
     }
 
@@ -117,15 +122,14 @@ class DailyActivityTracker(
                 workoutCaloriesPerHour[hour] = (workoutCaloriesPerHour[hour] + calories)
                     .coerceAtMost(500)
                 markStandHour(hour)
-                persistState()
             }
-            publishGoals(preserveWellness = true)
+            publishSnapshot(preserveWellness = true, forceDisk = true)
         }
     }
 
     suspend fun syncNow() {
         stateMutex.withLock { ensureToday() }
-        publishGoals(preserveWellness = true)
+        publishSnapshot(preserveWellness = true, forceDisk = true)
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -133,32 +137,37 @@ class DailyActivityTracker(
         if (event?.sensor?.type != Sensor.TYPE_STEP_COUNTER) return
         val total = event.values[0].toLong()
         scope.launch {
+            var changed = false
             stateMutex.withLock {
                 ensureToday()
                 if (stepBaseline == null) {
                     stepBaseline = total
                     lastStepTotal = total
+                    changed = true
                 } else if (total >= lastStepTotal) {
                     val delta = total - lastStepTotal
                     if (delta > 0) {
                         val hour = currentHour()
                         stepsPerHour[hour] = (stepsPerHour[hour] + delta.toInt()).coerceAtMost(50_000)
                         markStandHour(hour)
+                        changed = true
                     }
                     lastStepTotal = total
                 } else {
                     stepBaseline = total
                     lastStepTotal = total
+                    changed = true
                 }
-                persistState()
             }
-            publishGoals(preserveWellness = true)
+            if (changed) {
+                publishSnapshot(preserveWellness = true, forceDisk = false)
+            }
         }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
 
-    private suspend fun publishGoals(preserveWellness: Boolean) {
+    private suspend fun publishSnapshot(preserveWellness: Boolean, forceDisk: Boolean) {
         val steps = todaySteps()
         val standCount = standHoursEarned.size
         _metrics.value = DailyActivityMetrics(
@@ -177,6 +186,13 @@ class DailyActivityTracker(
             totalExerciseMinutes = exerciseMinutes,
             totalWorkoutCalories = workoutCalories
         )
+
+        if (!shouldPersistToDisk(forceDisk)) {
+            pendingDiskPersist = true
+            return
+        }
+        pendingDiskPersist = false
+        stateMutex.withLock { persistState() }
         val previous = preferences.dailyGoalsState()
         val goals = DailyGoalsCalculator.build(
             steps = steps,
@@ -188,6 +204,19 @@ class DailyActivityTracker(
         )
         preferences.updateDailyGoals(goals)
         onMetricsUpdated(goals)
+    }
+
+    private fun shouldPersistToDisk(force: Boolean): Boolean {
+        if (force) {
+            lastDiskPersistElapsedMs = SystemClock.elapsedRealtime()
+            return true
+        }
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastDiskPersistElapsedMs >= DISK_PERSIST_INTERVAL_MS) {
+            lastDiskPersistElapsedMs = now
+            return true
+        }
+        return false
     }
 
     private fun todaySteps(): Int {
@@ -282,5 +311,9 @@ class DailyActivityTracker(
             exerciseMinutesPerHour = exerciseMinutesPerHour,
             workoutCaloriesPerHour = workoutCaloriesPerHour
         )
+    }
+
+    companion object {
+        private const val DISK_PERSIST_INTERVAL_MS = 8_000L
     }
 }

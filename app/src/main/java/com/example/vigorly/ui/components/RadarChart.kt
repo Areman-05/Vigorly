@@ -32,6 +32,7 @@ import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.PrimaryContainer
 import com.example.vigorly.util.AthleticProfileCalculator
+import com.example.vigorly.ui.performance.UiPerformance
 import com.example.vigorly.util.AthleticStatLabels
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -47,13 +48,12 @@ fun AthleticRadarChart(
 ) {
     if (!AthleticProfileCalculator.hasProfile(stats)) return
 
-    val animatedFractions = stats.map { stat ->
-        animateFloatAsState(
-            targetValue = stat.value / 100f,
-            animationSpec = tween(800),
-            label = "radar_${stat.label}"
-        )
-    }
+    val revealProgress by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = tween(if (UiPerformance.decorativeMotionEnabled) 400 else 0),
+        label = "radar_reveal"
+    )
+    val animatedFractions = stats.map { (it.value / 100f) * revealProgress }
 
     BoxWithConstraints(
         modifier = modifier
@@ -100,7 +100,7 @@ fun AthleticRadarChart(
             val dataPath = Path()
             stats.forEachIndexed { i, _ ->
                 val angle = vertexAngle(i, count)
-                val fraction = animatedFractions[i].value.coerceIn(0.08f, 1f)
+                val fraction = animatedFractions[i].coerceIn(0.08f, 1f)
                 val x = center.x + r * fraction * cos(angle)
                 val y = center.y + r * fraction * sin(angle)
                 if (i == 0) dataPath.moveTo(x, y) else dataPath.lineTo(x, y)
@@ -121,7 +121,7 @@ fun AthleticRadarChart(
 
             stats.forEachIndexed { i, stat ->
                 val angle = vertexAngle(i, count)
-                val fraction = animatedFractions[i].value.coerceIn(0.08f, 1f)
+                val fraction = animatedFractions[i].coerceIn(0.08f, 1f)
                 val point = Offset(
                     center.x + r * fraction * cos(angle),
                     center.y + r * fraction * sin(angle)
@@ -143,7 +143,7 @@ fun AthleticRadarChart(
             val angle = vertexAngle(i, count)
             val offsetX = (maxWidth * 0.5f + maxWidth * 0.38f * cos(angle)) - 40.dp
             val offsetY = (140.dp + 110.dp * sin(angle)) - 18.dp
-            val displayScore = (animatedFractions[i].value * 100f).roundToInt()
+            val displayScore = (animatedFractions[i] * 100f).roundToInt()
                 .coerceIn(0, 100)
             Column(
                 modifier = Modifier

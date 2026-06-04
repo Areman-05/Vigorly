@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
@@ -47,6 +48,7 @@ import com.example.vigorly.data.activity.WeeklyActivityRingsBuilder
 import com.example.vigorly.ui.components.ActivityCalendarSheet
 import com.example.vigorly.ui.components.ActivityHourlyBarChart
 import com.example.vigorly.ui.components.WeeklyActivityRingsSection
+import com.example.vigorly.ui.performance.UiPerformance
 import com.example.vigorly.util.MetricFormatter
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.DisplayStat
@@ -191,9 +193,9 @@ fun ActivityDetailScreen(
 
                 AnimatedVisibility(
                     visible = weekDays.isNotEmpty(),
-                    enter = fadeIn(tween(420, delayMillis = 400, easing = FastOutSlowInEasing)) +
+                    enter = fadeIn(detailFadeTween(400)) +
                         slideInVertically(
-                            animationSpec = tween(420, delayMillis = 400, easing = FastOutSlowInEasing),
+                            animationSpec = detailSlideTween(400),
                             initialOffsetY = { it / 5 }
                         )
                 ) {
@@ -220,6 +222,24 @@ fun ActivityDetailScreen(
     }
 }
 
+private val detailEnterEnabled: Boolean get() = UiPerformance.decorativeMotionEnabled
+
+private fun detailFadeTween(delayMillis: Int) = tween<Float>(
+    durationMillis = if (detailEnterEnabled) 420 else 0,
+    delayMillis = if (detailEnterEnabled) delayMillis else 0,
+    easing = FastOutSlowInEasing
+)
+
+private fun detailSlideTween(delayMillis: Int): androidx.compose.animation.core.FiniteAnimationSpec<IntOffset> = tween(
+    durationMillis = if (detailEnterEnabled) 420 else 0,
+    delayMillis = if (detailEnterEnabled) delayMillis else 0,
+    easing = FastOutSlowInEasing
+)
+
+private fun detailValueTween() = tween<Float>(
+    durationMillis = if (detailEnterEnabled) 260 else 0
+)
+
 @Composable
 private fun ActivityDetailMetricSection(
     visible: Boolean,
@@ -232,14 +252,12 @@ private fun ActivityDetailMetricSection(
     barColor: Color,
     valueStyle: androidx.compose.ui.text.TextStyle
 ) {
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(tween(420, delayMillis = enterDelayMillis, easing = FastOutSlowInEasing)) +
-            slideInVertically(
-                animationSpec = tween(420, delayMillis = enterDelayMillis, easing = FastOutSlowInEasing),
-                initialOffsetY = { it / 4 }
-            )
-    ) {
+    val sectionEnter = fadeIn(detailFadeTween(enterDelayMillis)) +
+        slideInVertically(
+            animationSpec = detailSlideTween(enterDelayMillis),
+            initialOffsetY = { it / 4 }
+        )
+    AnimatedVisibility(visible = visible, enter = sectionEnter) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -261,7 +279,7 @@ private fun ActivityDetailMetricSection(
             AnimatedContent(
                 targetState = value,
                 transitionSpec = {
-                    fadeIn(tween(260)) togetherWith fadeOut(tween(180))
+                    fadeIn(detailValueTween()) togetherWith fadeOut(detailValueTween())
                 },
                 label = "metricValue_$label"
             ) { animatedValue ->
@@ -295,9 +313,9 @@ private fun ActivitySummaryTile(
     AnimatedVisibility(
         visible = visible,
         modifier = modifier,
-        enter = fadeIn(tween(420, delayMillis = enterDelayMillis, easing = FastOutSlowInEasing)) +
+        enter = fadeIn(detailFadeTween(enterDelayMillis)) +
             slideInVertically(
-                animationSpec = tween(420, delayMillis = enterDelayMillis, easing = FastOutSlowInEasing),
+                animationSpec = detailSlideTween(enterDelayMillis),
                 initialOffsetY = { it / 5 }
             )
     ) {
@@ -318,7 +336,7 @@ private fun ActivitySummaryTile(
             AnimatedContent(
                 targetState = value,
                 transitionSpec = {
-                    fadeIn(tween(260)) togetherWith fadeOut(tween(180))
+                    fadeIn(detailValueTween()) togetherWith fadeOut(detailValueTween())
                 },
                 label = "summaryValue_$label"
             ) { animatedValue ->

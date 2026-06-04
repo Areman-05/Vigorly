@@ -32,6 +32,8 @@ import com.example.vigorly.presentation.navigation.NavigationUiState
 import com.example.vigorly.presentation.navigation.vigorlyNavGraph
 import com.example.vigorly.ui.components.ActivityDetailTopBar
 import com.example.vigorly.ui.components.AuthGradientBackground
+import com.example.vigorly.ui.components.MainShellBackground
+import com.example.vigorly.ui.performance.UiPerformance
 import com.example.vigorly.ui.components.VigorlyBottomBar
 import com.example.vigorly.ui.components.VigorlyDetailTopBar
 import com.example.vigorly.ui.components.VigorlyMainTopBar
@@ -155,8 +157,12 @@ fun VigorlyApp(
         }
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
-            if (navState.showGradientBackground) {
-                AuthGradientBackground(Modifier.fillMaxSize()) {}
+            when {
+                navState.isAuthFlow -> AuthGradientBackground(Modifier.fillMaxSize()) {}
+                navState.showGradientBackground && UiPerformance.useLightMainBackground -> {
+                    MainShellBackground(Modifier.fillMaxSize())
+                }
+                navState.showGradientBackground -> AuthGradientBackground(Modifier.fillMaxSize()) {}
             }
             val navHostModifier = when {
                 navState.isAuthFlow -> Modifier

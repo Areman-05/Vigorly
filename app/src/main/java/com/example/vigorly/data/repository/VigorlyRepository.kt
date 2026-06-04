@@ -57,6 +57,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -187,12 +189,16 @@ class VigorlyRepository(context: Context) {
         preferences.registeredAccounts.onEach { _accounts.value = it }.launchIn(scope)
         combine(history, profile) { hist, prof ->
             AthleticProfileCalculator.compute(hist, prof.activeStreakDays)
-        }.onEach { computed ->
-            if (computed != _athleticStats.value) {
-                _athleticStats.value = computed
-                scope.launch { preferences.saveAthleticStats(computed) }
+        }
+            .distinctUntilChanged()
+            .debounce(500)
+            .onEach { computed ->
+                if (computed != _athleticStats.value) {
+                    _athleticStats.value = computed
+                    preferences.saveAthleticStats(computed)
+                }
             }
-        }.launchIn(scope)
+            .launchIn(scope)
         preferences.milestoneShowcase.onEach { _milestoneShowcase.value = it }.launchIn(scope)
         preferences.favoriteWorkoutIds.onEach { _favorites.value = it }.launchIn(scope)
         preferences.onboardingCompleted.onEach { _onboardingCompleted.value = it }.launchIn(scope)
@@ -222,9 +228,12 @@ class VigorlyRepository(context: Context) {
                 streakDays = prof.activeStreakDays,
                 recentWorkoutTitles = hist.take(3).map { it.title }
             )
-        }.onEach { context ->
-            _dailyTip.value = PersonalizedCoachingTipEngine.generate(appContext, context)
-        }.launchIn(scope)
+        }
+            .debounce(750)
+            .onEach { context ->
+                _dailyTip.value = PersonalizedCoachingTipEngine.generate(appContext, context)
+            }
+            .launchIn(scope)
         profile.onEach { refreshStreakBannerVisibility() }.launchIn(scope)
         scope.launch { refreshStreakBannerVisibility() }
         preferences.workoutHistory.onEach { stored ->
@@ -260,12 +269,13 @@ class VigorlyRepository(context: Context) {
                 refreshActivityDayHistory()
                 syncActiveStreakDays()
             }
-            activityTracker.detail.onEach {
-                scope.launch {
+            activityTracker.detail
+                .debounce(2_500)
+                .onEach {
                     refreshActivityDayHistory()
                     syncActiveStreakDays()
                 }
-            }.launchIn(scope)
+                .launchIn(scope)
         }
     }
 

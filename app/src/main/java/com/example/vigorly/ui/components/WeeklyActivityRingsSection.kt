@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
 import com.example.vigorly.core.testing.UiTestEnvironment
+import com.example.vigorly.ui.performance.UiPerformance
 import com.example.vigorly.data.activity.WeeklyActivityRingDay
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
@@ -53,7 +54,7 @@ fun WeeklyActivityRingsSection(
     modifier: Modifier = Modifier,
     selectedDate: LocalDate? = null,
     onDayClick: (LocalDate) -> Unit = {},
-    animate: Boolean = true
+    animate: Boolean = UiPerformance.decorativeMotionEnabled
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -185,6 +186,7 @@ private fun WeeklyActivityRingDayCell(
             modifier = Modifier.size(56.dp)
         ) {
             if (
+                UiPerformance.decorativeMotionEnabled &&
                 !UiTestEnvironment.disableContinuousUiMotion &&
                 (day.isToday || isSelected)
             ) {
