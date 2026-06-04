@@ -25,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -32,7 +34,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.repository.VigorlyRepository
+import com.example.vigorly.di.AppViewModelFactory
+import com.example.vigorly.presentation.feature.settings.SettingsViewModel
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.HeadlineLgMobile
@@ -49,18 +54,20 @@ fun SettingsScreen(
     onOpenInsights: () -> Unit = {},
     onRestartOnboarding: () -> Unit = {},
     onLogout: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: SettingsViewModel = viewModel(factory = AppViewModelFactory(repository))
 ) {
-    val profile by repository.profile.collectAsState()
-    val notifications by repository.notificationsEnabled.collectAsState()
-    val unitsMetric by repository.unitsMetric.collectAsState()
-    val weeklyGoal by repository.weeklyGoal.collectAsState()
+    val profile by viewModel.profile.collectAsState()
+    val notifications by viewModel.notificationsEnabled.collectAsState()
+    val unitsMetric by viewModel.unitsMetric.collectAsState()
+    val weeklyGoal by viewModel.weeklyGoal.collectAsState()
     var nameInput by remember(profile.displayName) { mutableStateOf(profile.displayName) }
     val nameDirty = nameInput != profile.displayName && nameInput.isNotBlank()
 
     Column(
         modifier = modifier
             .fillMaxSize()
+            .testTag(VigorlyTestTags.SETTINGS)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
     ) {
@@ -113,7 +120,7 @@ fun SettingsScreen(
             if (nameDirty) {
                 SettingsPrimaryButton(
                     text = stringResource(R.string.settings_save_profile),
-                    onClick = { repository.updateDisplayName(nameInput.trim()) },
+                    onClick = { viewModel.updateDisplayName(nameInput.trim()) },
                     modifier = Modifier.padding(top = Dimens.Md)
                 )
             }
@@ -125,13 +132,13 @@ fun SettingsScreen(
                 label = stringResource(R.string.settings_reminders),
                 subtitle = stringResource(R.string.settings_reminders_hint),
                 checked = notifications,
-                onCheckedChange = repository::setNotificationsEnabled
+                onCheckedChange = viewModel::setNotificationsEnabled
             )
             SettingsToggleRow(
                 label = stringResource(R.string.settings_metric_units),
                 subtitle = stringResource(R.string.settings_metric_units_hint),
                 checked = unitsMetric,
-                onCheckedChange = repository::setUnitsMetric
+                onCheckedChange = viewModel::setUnitsMetric
             )
         }
 
@@ -151,10 +158,10 @@ fun SettingsScreen(
             SettingsWeeklyStepper(
                 targetSessions = weeklyGoal.targetSessions,
                 onDecrease = {
-                    repository.setWeeklyTargetSessions((weeklyGoal.targetSessions - 1).coerceAtLeast(1))
+                    viewModel.setWeeklyTargetSessions((weeklyGoal.targetSessions - 1).coerceAtLeast(1))
                 },
                 onIncrease = {
-                    repository.setWeeklyTargetSessions((weeklyGoal.targetSessions + 1).coerceAtMost(14))
+                    viewModel.setWeeklyTargetSessions((weeklyGoal.targetSessions + 1).coerceAtMost(14))
                 }
             )
         }
@@ -172,7 +179,7 @@ fun SettingsScreen(
                 title = stringResource(R.string.reset_onboarding),
                 subtitle = stringResource(R.string.settings_reset_onboarding_hint),
                 onClick = {
-                    repository.resetOnboarding()
+                    viewModel.resetOnboarding()
                     onRestartOnboarding()
                 }
             )
@@ -180,19 +187,19 @@ fun SettingsScreen(
             SettingsActionRow(
                 title = stringResource(R.string.reset_daily_goals),
                 subtitle = stringResource(R.string.settings_reset_daily_hint),
-                onClick = repository::resetDailyGoals
+                onClick = viewModel::resetDailyGoals
             )
             Spacer(Modifier.height(8.dp))
             SettingsActionRow(
                 title = stringResource(R.string.reset_weekly_progress),
                 subtitle = stringResource(R.string.settings_reset_weekly_hint),
-                onClick = repository::resetWeeklyProgress
+                onClick = viewModel::resetWeeklyProgress
             )
             Spacer(Modifier.height(8.dp))
             SettingsActionRow(
                 title = stringResource(R.string.clear_history),
                 subtitle = stringResource(R.string.settings_clear_history_hint),
-                onClick = repository::clearWorkoutHistory,
+                onClick = viewModel::clearWorkoutHistory,
                 destructive = true
             )
         }

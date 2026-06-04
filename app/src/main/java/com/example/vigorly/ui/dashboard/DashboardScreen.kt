@@ -29,6 +29,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -39,7 +41,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.repository.VigorlyRepository
+import com.example.vigorly.di.AppViewModelFactory
+import com.example.vigorly.presentation.feature.dashboard.DashboardViewModel
 import com.example.vigorly.ui.components.ActivityRings
 import com.example.vigorly.ui.components.DailyTipCard
 import com.example.vigorly.ui.components.RecommendedWorkoutCard
@@ -62,17 +67,22 @@ fun DashboardScreen(
     repository: VigorlyRepository,
     onActivityDetailClick: () -> Unit = {},
     onRecommendedWorkoutClick: (String) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: DashboardViewModel = viewModel(factory = AppViewModelFactory(repository))
 ) {
-    val goals by repository.dailyGoals.collectAsState()
-    val weeklyGoal by repository.weeklyGoal.collectAsState()
-    val profile by repository.profile.collectAsState()
-    val dailyTip by repository.dailyTip.collectAsState()
-    val showStreakBanner by repository.showStreakBanner.collectAsState()
-    val recommended = repository.getRecommendedWorkout()
+    val goals by viewModel.dailyGoals.collectAsState()
+    val weeklyGoal by viewModel.weeklyGoal.collectAsState()
+    val profile by viewModel.profile.collectAsState()
+    val dailyTip by viewModel.dailyTip.collectAsState()
+    val showStreakBanner by viewModel.showStreakBanner.collectAsState()
+    val recommended = viewModel.getRecommendedWorkout()
     val firstName = profile.displayName.substringBefore(" ").ifBlank { profile.displayName }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(VigorlyTestTags.DASHBOARD)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -181,7 +191,7 @@ fun DashboardScreen(
         StreakBannerPopup(
             visible = showStreakBanner,
             streakDays = profile.activeStreakDays,
-            onDismiss = repository::dismissStreakBanner,
+            onDismiss = viewModel::dismissStreakBanner,
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = Dimens.Sm)

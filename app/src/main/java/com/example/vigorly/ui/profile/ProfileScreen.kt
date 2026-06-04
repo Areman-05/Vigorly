@@ -15,12 +15,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
+import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.repository.VigorlyRepository
+import com.example.vigorly.di.AppViewModelFactory
+import com.example.vigorly.presentation.feature.profile.ProfileViewModel
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.HeadlineLgMobile
 import com.example.vigorly.ui.theme.OnSurface
@@ -35,13 +40,14 @@ fun ProfileScreen(
     repository: VigorlyRepository,
     onViewAllMilestones: () -> Unit = {},
     onOpenInsights: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: ProfileViewModel = viewModel(factory = AppViewModelFactory(repository))
 ) {
-    val profile by repository.profile.collectAsState()
-    val stats by repository.athleticStats.collectAsState()
-    val milestones by repository.milestones.collectAsState()
-    val showcaseSlots by repository.milestoneShowcase.collectAsState()
-    val history by repository.history.collectAsState()
+    val profile by viewModel.profile.collectAsState()
+    val stats by viewModel.athleticStats.collectAsState()
+    val milestones by viewModel.milestones.collectAsState()
+    val showcaseSlots by viewModel.milestoneShowcase.collectAsState()
+    val history by viewModel.history.collectAsState()
     val summary = remember(history) { HistorySummaryCalculator.from(history) }
     val level = remember(profile.totalWorkouts) {
         LevelCalculator.levelFromWorkouts(profile.totalWorkouts)
@@ -69,7 +75,7 @@ fun ProfileScreen(
         unlockedMilestones = pickerCandidates,
         onDismiss = { pickerVisible = false },
         onSelect = { milestone ->
-            repository.setMilestoneShowcaseSlot(editingSlotIndex, milestone.id)
+            viewModel.setMilestoneShowcaseSlot(editingSlotIndex, milestone.id)
             pickerVisible = false
         }
     )
@@ -79,7 +85,7 @@ fun ProfileScreen(
         selectedId = selectedAvatarId,
         onDismiss = { avatarPickerVisible = false },
         onSelect = { id ->
-            repository.setAvatarPreset(id)
+            viewModel.setAvatarPreset(id)
             avatarPickerVisible = false
         }
     )
@@ -87,6 +93,7 @@ fun ProfileScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .testTag(VigorlyTestTags.PROFILE)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Dimens.ContainerMargin, vertical = Dimens.Lg)
     ) {
