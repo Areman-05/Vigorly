@@ -31,6 +31,7 @@ import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.PrimaryContainer
+import com.example.vigorly.util.AthleticProfileCalculator
 import com.example.vigorly.util.AthleticStatLabels
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -44,7 +45,7 @@ fun AthleticRadarChart(
     stats: List<AthleticStat>,
     modifier: Modifier = Modifier
 ) {
-    if (stats.isEmpty()) return
+    if (!AthleticProfileCalculator.hasProfile(stats)) return
 
     val animatedFractions = stats.map { stat ->
         animateFloatAsState(

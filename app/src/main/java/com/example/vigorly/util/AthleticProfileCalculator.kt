@@ -7,13 +7,10 @@ import kotlin.math.ln
 import kotlin.math.roundToInt
 
 /**
- * Deriva el perfil atlético del historial real: tipo de entreno, duración, calorías,
- * constancia (racha) y volumen acumulado. Sin datos, parte de una base realista (~25).
+ * Perfil atlético derivado solo del historial real. Sin entrenamientos registrados devuelve lista vacía.
  */
 object AthleticProfileCalculator {
 
-    private const val BASELINE = 25.0
-    private const val MIN_SCORE = 12
     private const val MAX_SCORE = 100
     private const val RECENT_WINDOW_MS = 14L * 24 * 60 * 60 * 1000
 
@@ -26,15 +23,16 @@ object AthleticProfileCalculator {
         AthleticStatKeys.STAMINA
     )
 
+    fun hasProfile(stats: List<AthleticStat>): Boolean =
+        stats.isNotEmpty() && stats.any { it.value > 0 }
+
     fun compute(
         history: List<WorkoutHistoryItem>,
         streakDays: Int
     ): List<AthleticStat> {
-        val scores = statOrder.associateWith { BASELINE }.toMutableMap()
-        if (history.isEmpty()) {
-            return statOrder.map { AthleticStat(it, BASELINE.roundToInt()) }
-        }
+        if (history.isEmpty()) return emptyList()
 
+        val scores = statOrder.associateWith { 0.0 }.toMutableMap()
         val now = System.currentTimeMillis()
         val typeCounts = mutableMapOf<WorkoutType, Int>()
 
@@ -91,7 +89,7 @@ object AthleticProfileCalculator {
         return statOrder.map { key ->
             AthleticStat(
                 label = key,
-                value = scores.getValue(key).roundToInt().coerceIn(MIN_SCORE, MAX_SCORE)
+                value = scores.getValue(key).roundToInt().coerceIn(0, MAX_SCORE)
             )
         }
     }

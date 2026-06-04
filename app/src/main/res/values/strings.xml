@@ -324,7 +324,7 @@
     <string name="profile_subtitle">Tu actividad, nivel y progreso</string>
     <string name="profile_athletic">Perfil atlético</string>
     <string name="profile_athletic_subtitle">Se actualiza con cada entrenamiento según tipo, duración y constancia.</string>
-    <string name="profile_athletic_empty">Completa entrenamientos para generar tu perfil técnico.</string>
+    <string name="profile_athletic_empty">Aún no hay datos. Completa entrenamientos y aquí aparecerán tu gráfico y puntuaciones por área (fuerza, resistencia, etc.).</string>
     <string name="profile_milestones">Logros</string>
     <string name="profile_view_all">Ver todo</string>
     <string name="profile_recent_history">Historial reciente</string>

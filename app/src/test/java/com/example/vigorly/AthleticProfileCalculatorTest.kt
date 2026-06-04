@@ -4,15 +4,17 @@ import com.example.vigorly.data.model.WorkoutHistoryItem
 import com.example.vigorly.util.AthleticProfileCalculator
 import com.example.vigorly.util.AthleticStatKeys
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AthleticProfileCalculatorTest {
 
     @Test
-    fun emptyHistory_startsAtBaseline() {
+    fun emptyHistory_returnsEmpty() {
         val stats = AthleticProfileCalculator.compute(emptyList(), streakDays = 0)
-        stats.forEach { assertEquals(25, it.value) }
+        assertTrue(stats.isEmpty())
+        assertFalse(AthleticProfileCalculator.hasProfile(stats))
     }
 
     @Test
@@ -30,6 +32,7 @@ class AthleticProfileCalculatorTest {
             )
         }
         val stats = AthleticProfileCalculator.compute(history, streakDays = 3)
+        assertTrue(AthleticProfileCalculator.hasProfile(stats))
         val strength = stats.first { it.label == AthleticStatKeys.STRENGTH }.value
         val power = stats.first { it.label == AthleticStatKeys.POWER }.value
         val mobility = stats.first { it.label == AthleticStatKeys.MOBILITY }.value
@@ -46,7 +49,7 @@ class AthleticProfileCalculatorTest {
         )
         val stats = AthleticProfileCalculator.compute(history, streakDays = 5)
         val endurance = stats.first { it.label == AthleticStatKeys.ENDURANCE }.value
-        assertTrue(endurance >= 40)
+        assertTrue(endurance > 20)
     }
 
     private fun session(type: String, minutes: Int, kcal: Int) = WorkoutHistoryItem(

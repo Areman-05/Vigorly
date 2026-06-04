@@ -34,6 +34,7 @@ import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.PrimaryContainer
+import com.example.vigorly.util.AthleticProfileCalculator
 import com.example.vigorly.util.AthleticStatLabels
 
 private val StatTeal = Color(0xFF20C997)
@@ -46,8 +47,8 @@ fun ProfileAthleticSection(
     modifier: Modifier = Modifier,
     embeddedInPanel: Boolean = false
 ) {
-    if (stats.isEmpty()) return
-    val dominant = AthleticStatLabels.dominantStat(stats)
+    val hasProfile = AthleticProfileCalculator.hasProfile(stats) && totalSessions > 0
+    val dominant = if (hasProfile) AthleticStatLabels.dominantStat(stats) else null
 
     val sectionModifier = if (embeddedInPanel) {
         modifier.fillMaxWidth()
@@ -74,7 +75,7 @@ fun ProfileAthleticSection(
             fontWeight = FontWeight.Bold
         )
         Text(
-            if (totalSessions == 0) {
+            if (!hasProfile) {
                 stringResource(R.string.profile_athletic_empty)
             } else {
                 stringResource(R.string.profile_athletic_subtitle)
@@ -83,6 +84,8 @@ fun ProfileAthleticSection(
             color = OnSurfaceVariant.copy(alpha = 0.85f),
             modifier = Modifier.padding(top = 4.dp, bottom = Dimens.Sm)
         )
+
+        if (!hasProfile) return@Column
 
         dominant?.let { top ->
             Text(
