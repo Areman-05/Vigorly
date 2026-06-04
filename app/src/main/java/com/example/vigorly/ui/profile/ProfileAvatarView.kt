@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.example.vigorly.ui.iconForName
 
 @Composable
@@ -26,7 +25,6 @@ fun ProfileAvatarView(
     iconScale: Float = 0.42f
 ) {
     val preset = ProfileAvatarCatalog.resolve(avatarUrl)
-    val showRemote = ProfileAvatarCatalog.isRemoteUrl(avatarUrl)
 
     Box(
         modifier = modifier
@@ -39,30 +37,22 @@ fun ProfileAvatarView(
             ),
         contentAlignment = Alignment.Center
     ) {
-        if (showRemote) {
-            AsyncImage(
-                model = avatarUrl,
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(preset.gradientStart, preset.gradientEnd)
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                iconForName(preset.iconName),
                 contentDescription = null,
-                modifier = Modifier.matchParentSize()
+                tint = Color.White,
+                modifier = Modifier.size(size * iconScale)
             )
-        } else {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(preset.gradientStart, preset.gradientEnd)
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    iconForName(preset.iconName),
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(size * iconScale)
-                )
-            }
         }
     }
 }
