@@ -133,16 +133,13 @@ gradlew.bat :app:assembleDebug
 ./gradlew :app:assembleDebug
 ```
 
-**No hay APK incluido en el repositorio** (la carpeta `build/` no se sube a Git). Generas el instalable en tu máquina con Gradle o desde Android Studio.
+Instala el APK en `app/build/outputs/apk/debug/` o ejecuta desde Android Studio en emulador o dispositivo.
 
-Tras compilar, el APK queda aquí:
+Para build de release (minificación y shrink de recursos activos):
 
-| Build | Comando | Archivo |
-|-------|---------|---------|
-| Debug (pruebas) | `gradlew.bat :app:assembleDebug` | `app/build/outputs/apk/debug/app-debug.apk` |
-| Release (optimizado) | `gradlew.bat :app:assembleRelease` | `app/build/outputs/apk/release/app-release-unsigned.apk` |
-
-Copia el `.apk` al móvil e instálalo, o ejecuta directamente desde Android Studio en emulador o dispositivo. El release sale sin firmar: para distribuir fuera del IDE necesitas configurar tu keystore en `app/build.gradle.kts`.
+```bash
+gradlew.bat :app:assembleRelease
+```
 
 ## Tests automatizados
 
@@ -175,6 +172,8 @@ Si te interesa el cómo está hecha:
 | Tests | JUnit, Robolectric, Compose UI Test, harness E2E en `androidTest` |
 
 **Estructura de paquetes resumida:** `presentation/` (ViewModels y grafo de navegación), `data/` (repositorio, modelos, activity tracker, catálogo), `ui/` (pantallas y componentes Compose), `navigation/`, `util/`, `core/testing/`, `auth/`.
+
+**Versión actual de referencia:** 1.0 (`versionCode` 1).
 
 ---
 
