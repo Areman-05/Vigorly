@@ -7,9 +7,6 @@ import com.example.vigorly.data.model.WorkoutType
 
 internal object WorkoutCatalogBuilder {
 
-    private const val HERO =
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuBd3x6wDhs4mvlSe6KRxaf0AmxSxvC3I_RXu8RSfCAO3FoX2jJg6HWH3_Eifc7cO0_IP1GRxu8Vc38rAxZH8WzJz7pDH7LO6y_b0V20O6GivmKOPKilmUd2pV5WtIUZZTmgLAeRstDQJJBgS6sURHeKicXGZm4sxk6UXJ_dDoErD6EhHiAU_vIWRTPu8iuLh-FBW0WEeIqJRAOWC6i1EGv2imVu8LodYUjEqkm562BgosyImUlmQ6k9I7Te42yfpWZw89XngMZ8xHo"
-
     fun detail(
         id: String,
         name: String,
@@ -21,14 +18,15 @@ internal object WorkoutCatalogBuilder {
         intensity: String,
         estimatedCalories: Int,
         blocks: List<WorkoutBlock>,
-        anatomyImageUrl: String? = null
+        anatomyImageUrl: String? = null,
+        heroImageUrl: String? = null
     ) = WorkoutDetail(
         id = id,
         name = name,
         description = description,
         type = type,
         durationMinutes = durationMinutes,
-        heroImageUrl = HERO,
+        heroImageUrl = heroImageUrl ?: WorkoutCoverUrls.forKey(id),
         targetMuscles = targetMuscles,
         targetDescription = targetDescription,
         anatomyImageUrl = anatomyImageUrl,
@@ -48,6 +46,13 @@ internal object WorkoutCatalogBuilder {
         id: String,
         name: String,
         setsReps: String,
-        iconName: String = "fitness_center"
-    ) = Exercise(id, name, setsReps, null, iconName)
+        iconName: String = "fitness_center",
+        imageUrl: String? = null
+    ) = Exercise(
+        id = id,
+        name = name,
+        setsRepsLabel = setsReps,
+        imageUrl = imageUrl ?: WorkoutCoverUrls.forKey("ex_$id"),
+        iconName = iconName
+    )
 }

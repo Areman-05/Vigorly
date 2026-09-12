@@ -1,6 +1,6 @@
 package com.example.vigorly.data.model
 
-enum class WorkoutType { STRENGTH, CARDIO, HIIT, RECOVERY, SWIM }
+enum class WorkoutType { STRENGTH, HIIT, CARDIO, RECOVERY, PILATES, MOBILITY, SWIM }
 
 data class UserProfile(
     val displayName: String,

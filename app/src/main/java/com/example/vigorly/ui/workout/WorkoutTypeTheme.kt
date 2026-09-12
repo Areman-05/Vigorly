@@ -9,6 +9,7 @@ import androidx.compose.material.icons.rounded.SelfImprovement
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.vigorly.data.model.WorkoutType
+import com.example.vigorly.ui.theme.GlassLabel
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
@@ -21,6 +22,8 @@ object WorkoutTypeTheme {
         WorkoutType.HIIT -> PrimaryContainer
         WorkoutType.CARDIO -> Primary
         WorkoutType.RECOVERY -> OnSurfaceVariant
+        WorkoutType.PILATES -> Primary.copy(alpha = 0.92f)
+        WorkoutType.MOBILITY -> GlassLabel
         WorkoutType.SWIM -> Primary.copy(alpha = 0.88f)
     }
 
@@ -29,6 +32,8 @@ object WorkoutTypeTheme {
         WorkoutType.HIIT -> Icons.Rounded.LocalFireDepartment
         WorkoutType.CARDIO -> Icons.Rounded.DirectionsRun
         WorkoutType.RECOVERY -> Icons.Rounded.SelfImprovement
+        WorkoutType.PILATES -> Icons.Rounded.SelfImprovement
+        WorkoutType.MOBILITY -> Icons.Rounded.SelfImprovement
         WorkoutType.SWIM -> Icons.Rounded.Pool
     }
 }

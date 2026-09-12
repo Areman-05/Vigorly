@@ -221,7 +221,7 @@ internal fun allCatalogWorkouts() = listOf(
         id = "mobility_flow",
         name = "Movilidad activa",
         description = "Secuencia de movilidad articular para mejorar rango y reducir rigidez.",
-        type = WorkoutType.RECOVERY,
+        type = WorkoutType.MOBILITY,
         durationMinutes = 25,
         targetMuscles = "Caderas y espalda",
         targetDescription = "Movilidad",
@@ -578,7 +578,7 @@ internal fun allCatalogWorkouts() = listOf(
         id = "pilates_core",
         name = "Pilates core",
         description = "Control y respiración para core profundo y alineación postural.",
-        type = WorkoutType.RECOVERY,
+        type = WorkoutType.PILATES,
         durationMinutes = 35,
         targetMuscles = "Core",
         targetDescription = "Control motor",
@@ -666,7 +666,7 @@ internal fun allCatalogWorkouts() = listOf(
         id = "balance_stability",
         name = "Equilibrio y estabilidad",
         description = "Ejercicios unilaterales y propiocepción para prevenir lesiones.",
-        type = WorkoutType.RECOVERY,
+        type = WorkoutType.MOBILITY,
         durationMinutes = 28,
         targetMuscles = "Piernas y core",
         targetDescription = "Estabilidad",
@@ -782,5 +782,160 @@ internal fun allCatalogWorkouts() = listOf(
                 exercise("py2", "Cuervo o modificaciones", "5 min", "self_improvement")
             ))
         )
+    ),
+    detail(
+        id = "pilates_core_flow",
+        name = "Pilates core flow",
+        description = "Secuencia de pilates para estabilizar el tronco y mejorar control postural.",
+        type = WorkoutType.PILATES,
+        durationMinutes = 30,
+        targetMuscles = "Core y abdomen",
+        targetDescription = "Control y postura",
+        intensity = "Moderada",
+        estimatedCalories = 180,
+        blocks = listOf(
+            block("a", "A", "Mat pilates", listOf(
+                exercise("pc1", "Hundred", "1 serie · 100 reps", "self_improvement"),
+                exercise("pc2", "Roll up", "8–10 reps", "self_improvement"),
+                exercise("pc3", "Single leg stretch", "10 por lado", "self_improvement")
+            ))
+        )
+    ),
+    detail(
+        id = "pilates_beginner",
+        name = "Pilates principiante",
+        description = "Introducción suave al método pilates con foco en respiración y alineación.",
+        type = WorkoutType.PILATES,
+        durationMinutes = 25,
+        targetMuscles = "Cuerpo completo",
+        targetDescription = "Fundamentos",
+        intensity = "Baja",
+        estimatedCalories = 120,
+        blocks = listOf(
+            block("a", "A", "Base", listOf(
+                exercise("pb1", "Pelvic curl", "8 reps", "self_improvement"),
+                exercise("pb2", "Spine twist", "8 por lado", "self_improvement"),
+                exercise("pb3", "Side kick prep", "10 por lado", "self_improvement")
+            ))
+        )
+    ),
+    detail(
+        id = "pilates_glutes",
+        name = "Pilates glúteos y cadera",
+        description = "Trabajo lateral y puente para activar glúteos sin impacto.",
+        type = WorkoutType.PILATES,
+        durationMinutes = 28,
+        targetMuscles = "Glúteos y cadera",
+        targetDescription = "Tren inferior",
+        intensity = "Moderada",
+        estimatedCalories = 160,
+        blocks = listOf(
+            block("a", "A", "Lateral", listOf(
+                exercise("pg1", "Clamshell", "12 por lado", "self_improvement"),
+                exercise("pg2", "Side-lying leg lift", "12 por lado", "self_improvement"),
+                exercise("pg3", "Shoulder bridge", "10 reps", "self_improvement")
+            ))
+        )
+    ),
+    detail(
+        id = "pilates_arms_mat",
+        name = "Pilates brazos en mat",
+        description = "Tonificación de hombros y brazos con peso corporal y control.",
+        type = WorkoutType.PILATES,
+        durationMinutes = 22,
+        targetMuscles = "Brazos y hombros",
+        targetDescription = "Tren superior",
+        intensity = "Moderada",
+        estimatedCalories = 140,
+        blocks = listOf(
+            block("a", "A", "Upper body", listOf(
+                exercise("pa1", "Push-up pilates", "8–10 reps"),
+                exercise("pa2", "Triceps dip en suelo", "10 reps"),
+                exercise("pa3", "Arm circles", "20 por sentido", "self_improvement")
+            ))
+        )
+    ),
+    detail(
+        id = "mobility_hips_open",
+        name = "Apertura de cadera",
+        description = "Movilidad de cadera para sentadillas más profundas y menos tensión lumbar.",
+        type = WorkoutType.MOBILITY,
+        durationMinutes = 18,
+        targetMuscles = "Cadera y glúteos",
+        targetDescription = "Movilidad",
+        intensity = "Baja",
+        estimatedCalories = 70,
+        blocks = listOf(
+            block("a", "A", "Flujo", listOf(
+                exercise("mh1", "90/90 hip switch", "8 por lado", "self_improvement"),
+                exercise("mh2", "World's greatest stretch", "5 por lado", "self_improvement"),
+                exercise("mh3", "Frog stretch", "90 s", "self_improvement")
+            ))
+        )
+    ),
+    detail(
+        id = "mobility_thoracic",
+        name = "Movilidad torácica",
+        description = "Desbloquea la zona media de la espalda para mejor postura y press overhead.",
+        type = WorkoutType.MOBILITY,
+        durationMinutes = 15,
+        targetMuscles = "Espalda y hombros",
+        targetDescription = "Columna torácica",
+        intensity = "Baja",
+        estimatedCalories = 55,
+        blocks = listOf(
+            block("a", "A", "Rotaciones", listOf(
+                exercise("mt1", "Open book", "8 por lado", "self_improvement"),
+                exercise("mt2", "Thread the needle", "8 por lado", "self_improvement"),
+                exercise("mt3", "Cat-cow flow", "10 ciclos", "self_improvement")
+            ))
+        )
+    ),
+    detail(
+        id = "mobility_full_body",
+        name = "Movilidad cuerpo completo",
+        description = "Rutina diaria de 20 minutos para mantener rangos de movimiento útiles.",
+        type = WorkoutType.MOBILITY,
+        durationMinutes = 20,
+        targetMuscles = "Cuerpo completo",
+        targetDescription = "Mantenimiento",
+        intensity = "Baja",
+        estimatedCalories = 80,
+        blocks = listOf(
+            block("a", "A", "Circuito", listOf(
+                exercise("mf1", "Inchworm to down dog", "6 reps", "self_improvement"),
+                exercise("mf2", "Deep squat hold", "60 s", "self_improvement"),
+                exercise("mf3", "Shoulder CARs", "5 por lado", "self_improvement")
+            ))
+        )
+    ),
+    detail(
+        id = "mobility_desk_reset",
+        name = "Reset de oficina",
+        description = "Descompresión rápida de cuello, pecho y cadera tras muchas horas sentado.",
+        type = WorkoutType.MOBILITY,
+        durationMinutes = 12,
+        targetMuscles = "Cuello y cadera",
+        targetDescription = "Anti-sedentarismo",
+        intensity = "Baja",
+        estimatedCalories = 40,
+        blocks = listOf(
+            block("a", "A", "Mini flujo", listOf(
+                exercise("md1", "Chin tucks", "10 reps", "self_improvement"),
+                exercise("md2", "Doorway chest stretch", "45 s", "self_improvement"),
+                exercise("md3", "Figure-4 stretch", "45 s por lado", "self_improvement")
+            ))
+        )
     )
-)
+).let { workouts ->
+    val intensityCycle = listOf("Baja", "Moderada", "Alta")
+    val intensityCounters = mutableMapOf<WorkoutType, Int>()
+    workouts.map { workout ->
+        val intensityIndex = intensityCounters.getOrDefault(workout.type, 0)
+        intensityCounters[workout.type] = intensityIndex + 1
+        workout.copy(
+            intensity = intensityCycle[intensityIndex % intensityCycle.size],
+            heroImageUrl = WorkoutCoverUrls.forWorkout(workout.id, workout.type)
+        )
+    }
+}

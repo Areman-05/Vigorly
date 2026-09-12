@@ -12,7 +12,9 @@ object WorkoutLabels {
         WorkoutType.STRENGTH -> stringResource(R.string.workout_type_strength)
         WorkoutType.CARDIO -> stringResource(R.string.workout_type_cardio)
         WorkoutType.HIIT -> stringResource(R.string.workout_type_hiit)
-        WorkoutType.RECOVERY -> stringResource(R.string.workout_type_recovery)
+        WorkoutType.RECOVERY -> stringResource(R.string.workout_type_yoga)
+        WorkoutType.PILATES -> stringResource(R.string.workout_type_pilates)
+        WorkoutType.MOBILITY -> stringResource(R.string.workout_type_mobility)
         WorkoutType.SWIM -> stringResource(R.string.workout_type_swim)
     }
 
