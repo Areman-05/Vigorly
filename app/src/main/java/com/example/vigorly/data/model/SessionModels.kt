@@ -9,6 +9,8 @@ data class WorkoutSessionState(
     val isPaused: Boolean,
     val restSecondsRemaining: Int = 0,
     val restDurationSeconds: Int = 0,
+    val exerciseSecondsRemaining: Int = 0,
+    val exerciseDurationSeconds: Int = 0,
     val completedExerciseIds: Set<String> = emptySet()
 )
 
