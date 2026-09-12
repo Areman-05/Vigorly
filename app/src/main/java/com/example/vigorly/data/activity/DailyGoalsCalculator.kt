@@ -24,16 +24,16 @@ object DailyGoalsCalculator {
         sleepHours: Float = 0f
     ): DailyGoals {
         val moveCaloriesFromSteps = (steps * CALORIES_PER_STEP).toInt()
-        val moveCalories = (moveCaloriesFromSteps + workoutCalories).coerceAtMost(MOVE_CALORIES_GOAL * 2)
+        val moveCalories = moveCaloriesFromSteps + workoutCalories
         return DailyGoals(
             moveProgress = (moveCalories.toFloat() / MOVE_CALORIES_GOAL).coerceIn(0f, 1f),
             exerciseProgress = (exerciseMinutes.toFloat() / EXERCISE_MINUTES_GOAL).coerceIn(0f, 1f),
             standProgress = (standHours.toFloat() / STAND_HOURS_GOAL).coerceIn(0f, 1f),
             moveCalories = moveCalories,
             moveCaloriesGoal = MOVE_CALORIES_GOAL,
-            steps = steps.coerceAtMost(STEPS_GOAL * 2),
+            steps = steps,
             stepsGoal = STEPS_GOAL,
-            exerciseMinutes = exerciseMinutes.coerceAtMost(EXERCISE_MINUTES_GOAL * 2),
+            exerciseMinutes = exerciseMinutes,
             exerciseMinutesGoal = EXERCISE_MINUTES_GOAL,
             standHours = standHours.coerceAtMost(STAND_HOURS_GOAL),
             standHoursGoal = STAND_HOURS_GOAL,

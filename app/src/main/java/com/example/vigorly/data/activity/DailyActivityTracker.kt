@@ -114,13 +114,11 @@ class DailyActivityTracker(
         scope.launch {
             stateMutex.withLock {
                 ensureToday()
-                exerciseMinutes = (exerciseMinutes + durationMinutes).coerceAtMost(180)
-                workoutCalories = (workoutCalories + calories).coerceAtMost(2000)
+                exerciseMinutes = exerciseMinutes + durationMinutes
+                workoutCalories = workoutCalories + calories
                 val hour = currentHour()
-                exerciseMinutesPerHour[hour] = (exerciseMinutesPerHour[hour] + durationMinutes)
-                    .coerceAtMost(180)
-                workoutCaloriesPerHour[hour] = (workoutCaloriesPerHour[hour] + calories)
-                    .coerceAtMost(500)
+                exerciseMinutesPerHour[hour] = exerciseMinutesPerHour[hour] + durationMinutes
+                workoutCaloriesPerHour[hour] = workoutCaloriesPerHour[hour] + calories
                 markStandHour(hour)
             }
             publishSnapshot(preserveWellness = true, forceDisk = true)
