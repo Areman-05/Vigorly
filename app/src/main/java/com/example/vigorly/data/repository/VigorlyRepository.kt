@@ -162,6 +162,9 @@ class VigorlyRepository(context: Context) {
     private val _favorites = MutableStateFlow<Set<String>>(emptySet())
     val favorites: StateFlow<Set<String>> = _favorites.asStateFlow()
 
+    private val _playlists = MutableStateFlow<List<com.example.vigorly.data.model.WorkoutPlaylist>>(emptyList())
+    val playlists: StateFlow<List<com.example.vigorly.data.model.WorkoutPlaylist>> = _playlists.asStateFlow()
+
     private val _onboardingCompleted = MutableStateFlow(false)
     val onboardingCompleted: StateFlow<Boolean> = _onboardingCompleted.asStateFlow()
 
@@ -200,7 +203,13 @@ class VigorlyRepository(context: Context) {
             }
             .launchIn(scope)
         preferences.milestoneShowcase.onEach { _milestoneShowcase.value = it }.launchIn(scope)
-        preferences.favoriteWorkoutIds.onEach { _favorites.value = it }.launchIn(scope)
+        preferences.favoriteWorkoutIds.onEach { ids ->
+            _favorites.value = ids
+        }.launchIn(scope)
+        preferences.workoutPlaylists.onEach { stored ->
+            // Solo listas creadas por el usuario (mezcla libre de categorías)
+            _playlists.value = stored.filterNot { it.isAuto }
+        }.launchIn(scope)
         preferences.onboardingCompleted.onEach { _onboardingCompleted.value = it }.launchIn(scope)
         combine(
             combine(
@@ -410,6 +419,22 @@ class VigorlyRepository(context: Context) {
         scope.launch { preferences.saveMilestoneShowcase(_milestoneShowcase.value) }
     }
 
+    fun tipCards(count: Int = 2): List<CoachingTip> {
+        val primary = _dailyTip.value
+        if (count <= 1) return listOf(primary)
+        val extras = coachingTips
+            .asSequence()
+            .filter { it.id != primary.id && it.text.isNotBlank() }
+            .take((count - 1).coerceAtLeast(0))
+            .toList()
+        val fallback = coachingTips.filter { it.text.isNotBlank() }
+        return (listOf(primary) + extras)
+            .ifEmpty { fallback }
+            .distinctBy { it.id }
+            .take(count)
+            .ifEmpty { listOf(primary) }
+    }
+
     fun listWorkouts(): List<WorkoutDetail> = workoutList
 
     fun flatExercises(workout: WorkoutDetail): List<Exercise> =
@@ -419,29 +444,60 @@ class VigorlyRepository(context: Context) {
         val workout = getWorkout(workoutId) ?: return null
         val exercises = flatExercises(workout)
         if (exercises.isEmpty()) return null
+        val exerciseSecs = exerciseDurationFor(workout, exercises.size)
         val session = WorkoutSessionState(
             workoutId = workoutId,
             workoutName = workout.name,
             currentExerciseIndex = 0,
             totalExercises = exercises.size,
             elapsedSeconds = 0,
-            isPaused = false
+            isPaused = false,
+            exerciseSecondsRemaining = exerciseSecs,
+            exerciseDurationSeconds = exerciseSecs
         )
         _activeSession.value = session
         return session
     }
 
-    fun tickSession() {
-        _activeSession.updateSession { session ->
-            if (session.restSecondsRemaining > 0) {
-                val nextRest = session.restSecondsRemaining - 1
-                session.copy(
-                    restSecondsRemaining = nextRest,
-                    restDurationSeconds = if (nextRest <= 0) 0 else session.restDurationSeconds
+    /**
+     * @return true si el entrenamiento terminó (hay que navegar al resumen).
+     */
+    fun tickSession(): Boolean {
+        val session = _activeSession.value ?: return false
+        if (session.restSecondsRemaining > 0) {
+            val nextRest = session.restSecondsRemaining - 1
+            if (nextRest <= 0) {
+                val workout = getWorkout(session.workoutId) ?: return false
+                val secs = exerciseDurationFor(workout, session.totalExercises)
+                _activeSession.value = session.copy(
+                    restSecondsRemaining = 0,
+                    restDurationSeconds = 0,
+                    exerciseSecondsRemaining = secs,
+                    exerciseDurationSeconds = secs,
+                    isPaused = false
                 )
             } else {
-                session.copy(elapsedSeconds = session.elapsedSeconds + 1)
+                _activeSession.value = session.copy(restSecondsRemaining = nextRest)
             }
+            return false
+        }
+        if (session.isPaused) return false
+
+        val nextExerciseSecs = session.exerciseSecondsRemaining - 1
+        val elapsed = session.elapsedSeconds + 1
+        return if (nextExerciseSecs <= 0) {
+            completeCurrentExerciseAndAdvance(
+                session.copy(
+                    elapsedSeconds = elapsed,
+                    exerciseSecondsRemaining = 0
+                )
+            )
+        } else {
+            _activeSession.value = session.copy(
+                elapsedSeconds = elapsed,
+                exerciseSecondsRemaining = nextExerciseSecs
+            )
+            false
         }
     }
 
@@ -450,44 +506,90 @@ class VigorlyRepository(context: Context) {
     }
 
     fun nextExercise() {
+        val session = _activeSession.value ?: return
+        if (session.restSecondsRemaining > 0) return
+        completeCurrentExerciseAndAdvance(session)
+    }
+
+    fun skipRest() {
+        val session = _activeSession.value ?: return
+        if (session.restSecondsRemaining <= 0) return
+        val workout = getWorkout(session.workoutId) ?: return
+        val secs = exerciseDurationFor(workout, session.totalExercises)
+        _activeSession.value = session.copy(
+            restSecondsRemaining = 0,
+            restDurationSeconds = 0,
+            exerciseSecondsRemaining = secs,
+            exerciseDurationSeconds = secs,
+            isPaused = false
+        )
+    }
+
+    /**
+     * Marca el ejercicio actual, para el tiempo y pasa a descanso o resumen.
+     * @return true si el entrenamiento terminó.
+     */
+    fun markCurrentExerciseComplete(): Boolean {
+        val session = _activeSession.value ?: return false
+        if (session.restSecondsRemaining > 0) return false
+        return completeCurrentExerciseAndAdvance(session)
+    }
+
+    fun previousExercise() {
         _activeSession.updateSession { session ->
-            if (session.currentExerciseIndex < session.totalExercises - 1) {
+            if (session.currentExerciseIndex > 0) {
+                val workout = getWorkout(session.workoutId)
+                val secs = workout?.let { exerciseDurationFor(it, session.totalExercises) } ?: EXERCISE_SECONDS_DEFAULT
                 session.copy(
-                    currentExerciseIndex = session.currentExerciseIndex + 1,
-                    restSecondsRemaining = REST_SECONDS_BETWEEN_EXERCISES,
-                    restDurationSeconds = REST_SECONDS_BETWEEN_EXERCISES,
+                    currentExerciseIndex = session.currentExerciseIndex - 1,
+                    restSecondsRemaining = 0,
+                    restDurationSeconds = 0,
+                    exerciseSecondsRemaining = secs,
+                    exerciseDurationSeconds = secs,
                     isPaused = false
                 )
             } else session
         }
     }
 
-    fun skipRest() {
-        _activeSession.updateSession {
-            it.copy(restSecondsRemaining = 0, restDurationSeconds = 0)
-        }
-    }
-
-    fun markCurrentExerciseComplete() {
-        val workout = _activeSession.value?.workoutId?.let { getWorkout(it) } ?: return
+    /**
+     * @return true si se cerró la sesión (último ejercicio).
+     */
+    private fun completeCurrentExerciseAndAdvance(session: WorkoutSessionState): Boolean {
+        val workout = getWorkout(session.workoutId) ?: return false
         val exercises = flatExercises(workout)
-        val current = _activeSession.value ?: return
-        val exerciseId = exercises.getOrNull(current.currentExerciseIndex)?.id ?: return
-        _activeSession.updateSession {
-            it.copy(completedExerciseIds = it.completedExerciseIds + exerciseId)
+        val exerciseId = exercises.getOrNull(session.currentExerciseIndex)?.id
+        val completed = if (exerciseId != null) {
+            session.completedExerciseIds + exerciseId
+        } else {
+            session.completedExerciseIds
         }
+        val withDone = session.copy(
+            completedExerciseIds = completed,
+            exerciseSecondsRemaining = 0,
+            isPaused = false
+        )
+
+        if (withDone.currentExerciseIndex >= withDone.totalExercises - 1) {
+            _activeSession.value = withDone
+            completeWorkoutSession()
+            return true
+        }
+
+        _activeSession.value = withDone.copy(
+            currentExerciseIndex = withDone.currentExerciseIndex + 1,
+            restSecondsRemaining = REST_SECONDS_BETWEEN_EXERCISES,
+            restDurationSeconds = REST_SECONDS_BETWEEN_EXERCISES,
+            exerciseSecondsRemaining = 0,
+            exerciseDurationSeconds = 0
+        )
+        return false
     }
 
-    fun previousExercise() {
-        _activeSession.updateSession { session ->
-            if (session.currentExerciseIndex > 0) {
-                session.copy(
-                    currentExerciseIndex = session.currentExerciseIndex - 1,
-                    restSecondsRemaining = 0,
-                    restDurationSeconds = 0
-                )
-            } else session
-        }
+    private fun exerciseDurationFor(workout: WorkoutDetail, exerciseCount: Int): Int {
+        val count = exerciseCount.coerceAtLeast(1)
+        val fromPlan = (workout.durationMinutes.coerceAtLeast(1) * 60) / count
+        return fromPlan.coerceIn(45, 180)
     }
 
     fun completeWorkoutSession() {
@@ -510,10 +612,52 @@ class VigorlyRepository(context: Context) {
             if (contains(workoutId)) remove(workoutId) else add(workoutId)
         }
         _favorites.value = updated
-        scope.launch { preferences.setFavoriteWorkoutIds(updated) }
+        scope.launch {
+            preferences.setFavoriteWorkoutIds(updated)
+        }
     }
 
     fun isFavorite(workoutId: String): Boolean = workoutId in _favorites.value
+
+    fun createPlaylist(name: String, workoutIds: List<String> = emptyList()) {
+        val cleanName = name.trim().ifBlank { return }
+        val list = com.example.vigorly.data.model.WorkoutPlaylist(
+            id = "custom_${System.currentTimeMillis()}",
+            name = cleanName,
+            workoutIds = workoutIds.distinct(),
+            isAuto = false
+        )
+        val next = _playlists.value + list
+        _playlists.value = next
+        scope.launch { persistPlaylists(next) }
+    }
+
+    fun renamePlaylist(playlistId: String, name: String) {
+        val cleanName = name.trim().ifBlank { return }
+        val next = _playlists.value.map {
+            if (it.id == playlistId) it.copy(name = cleanName) else it
+        }
+        _playlists.value = next
+        scope.launch { persistPlaylists(next) }
+    }
+
+    fun updatePlaylistWorkouts(playlistId: String, workoutIds: List<String>) {
+        val next = _playlists.value.map {
+            if (it.id == playlistId) it.copy(workoutIds = workoutIds.distinct()) else it
+        }
+        _playlists.value = next
+        scope.launch { persistPlaylists(next) }
+    }
+
+    fun deletePlaylist(playlistId: String) {
+        val next = _playlists.value.filterNot { it.id == playlistId }
+        _playlists.value = next
+        scope.launch { persistPlaylists(next) }
+    }
+
+    private suspend fun persistPlaylists(lists: List<com.example.vigorly.data.model.WorkoutPlaylist>) {
+        preferences.setWorkoutPlaylists(lists.filterNot { it.isAuto })
+    }
 
     fun resetOnboarding() {
         scope.launch { preferences.setOnboardingCompleted(false) }
@@ -955,7 +1099,7 @@ class VigorlyRepository(context: Context) {
 
     private fun iconForWorkoutType(type: String): String = when (type) {
         "HIIT" -> "directions_run"
-        "RECOVERY" -> "self_improvement"
+        "RECOVERY", "YOGA", "PILATES", "MOBILITY" -> "self_improvement"
         "CARDIO" -> "directions_run"
         "SWIM" -> "pool"
         else -> "fitness_center"
@@ -963,6 +1107,7 @@ class VigorlyRepository(context: Context) {
 
     companion object {
         const val REST_SECONDS_BETWEEN_EXERCISES = 45
+        const val EXERCISE_SECONDS_DEFAULT = 90
 
         fun defaultProfile() = UserProfile(
             displayName = "Usuario",

@@ -29,6 +29,7 @@ object PreferenceKeys {
     val WEEKLY_COMPLETED_SESSIONS = intPreferencesKey("weekly_completed_sessions")
     val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
     val FAVORITE_WORKOUTS = stringPreferencesKey("favorite_workouts")
+    val WORKOUT_PLAYLISTS = stringPreferencesKey("workout_playlists")
     val DAILY_TIP_INDEX = intPreferencesKey("daily_tip_index")
     val APP_LOCALE = stringPreferencesKey("app_locale")
     val LOCALE_USER_SELECTED = booleanPreferencesKey("locale_user_selected")

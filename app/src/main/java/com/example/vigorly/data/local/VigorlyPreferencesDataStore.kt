@@ -91,6 +91,11 @@ class VigorlyPreferencesDataStore(private val context: Context) {
         FavoritesCodec.decode(prefs[PreferenceKeys.FAVORITE_WORKOUTS])
     }
 
+    val workoutPlaylists: Flow<List<com.example.vigorly.data.model.WorkoutPlaylist>> =
+        context.vigorlyDataStore.data.map { prefs ->
+            WorkoutPlaylistCodec.decode(prefs[PreferenceKeys.WORKOUT_PLAYLISTS])
+        }
+
     val dailyTipIndex: Flow<Int> = context.vigorlyDataStore.data.map {
         it[PreferenceKeys.DAILY_TIP_INDEX] ?: 0
     }
@@ -332,6 +337,12 @@ class VigorlyPreferencesDataStore(private val context: Context) {
 
     suspend fun setFavoriteWorkoutIds(ids: Set<String>) {
         context.vigorlyDataStore.edit { it[PreferenceKeys.FAVORITE_WORKOUTS] = FavoritesCodec.encode(ids) }
+    }
+
+    suspend fun setWorkoutPlaylists(lists: List<com.example.vigorly.data.model.WorkoutPlaylist>) {
+        context.vigorlyDataStore.edit {
+            it[PreferenceKeys.WORKOUT_PLAYLISTS] = WorkoutPlaylistCodec.encode(lists)
+        }
     }
 
     suspend fun advanceDailyTip(tipCount: Int) {
