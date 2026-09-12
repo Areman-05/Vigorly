@@ -120,7 +120,7 @@ fun VigorlyComposeRule.navigateToTab(navTag: String) {
 }
 
 fun VigorlyComposeRule.openSettingsFromMain() {
-    navigateToTab(VigorlyTestTags.NAV_DASHBOARD)
+    navigateToTab(VigorlyTestTags.NAV_HISTORY)
     waitUntilTagExists(VigorlyTestTags.TOPBAR_SETTINGS)
     onNodeWithTag(VigorlyTestTags.TOPBAR_SETTINGS).performClick()
     waitUntilTagExists(VigorlyTestTags.SETTINGS)

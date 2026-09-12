@@ -231,6 +231,6 @@ fun ProfileScreen(
             )
         }
 
-        Spacer(Modifier.height(Dimens.Md))
+        Spacer(Modifier.height(Dimens.FloatingNavClearance))
     }
 }

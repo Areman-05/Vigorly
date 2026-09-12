@@ -118,6 +118,15 @@ object AthleticProfileCalculator {
                 add(scores, AthleticStatKeys.MOBILITY, 5.5 * boost)
                 add(scores, AthleticStatKeys.ENDURANCE, 1.2 * boost)
             }
+            WorkoutType.PILATES -> {
+                add(scores, AthleticStatKeys.MOBILITY, 4.2 * boost)
+                add(scores, AthleticStatKeys.STRENGTH, 2.4 * boost)
+                add(scores, AthleticStatKeys.STAMINA, 1.8 * boost)
+            }
+            WorkoutType.MOBILITY -> {
+                add(scores, AthleticStatKeys.MOBILITY, 6.0 * boost)
+                add(scores, AthleticStatKeys.ENDURANCE, 0.8 * boost)
+            }
             WorkoutType.SWIM -> {
                 add(scores, AthleticStatKeys.ENDURANCE, 4.2 * boost)
                 add(scores, AthleticStatKeys.STAMINA, 4.8 * boost)
@@ -138,6 +147,8 @@ object AthleticProfileCalculator {
         WorkoutType.HIIT -> statKey in setOf(AthleticStatKeys.SPEED, AthleticStatKeys.STAMINA)
         WorkoutType.CARDIO -> statKey in setOf(AthleticStatKeys.ENDURANCE, AthleticStatKeys.STAMINA)
         WorkoutType.RECOVERY -> statKey == AthleticStatKeys.MOBILITY
+        WorkoutType.PILATES -> statKey in setOf(AthleticStatKeys.MOBILITY, AthleticStatKeys.STRENGTH)
+        WorkoutType.MOBILITY -> statKey == AthleticStatKeys.MOBILITY
         WorkoutType.SWIM -> statKey in setOf(AthleticStatKeys.ENDURANCE, AthleticStatKeys.STAMINA)
         null -> false
     }
