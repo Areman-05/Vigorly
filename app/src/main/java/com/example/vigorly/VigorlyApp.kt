@@ -1,6 +1,10 @@
 package com.example.vigorly
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,9 +18,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -25,7 +32,6 @@ import com.example.vigorly.R
 import com.example.vigorly.core.testing.UiTestEnvironment
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.navigation.AppDestination
-import com.example.vigorly.navigation.VigorlyDestinationGroups
 import com.example.vigorly.navigation.VigorlyRoutes
 import com.example.vigorly.presentation.app.AppViewModel
 import com.example.vigorly.presentation.navigation.NavigationUiState
@@ -33,10 +39,10 @@ import com.example.vigorly.presentation.navigation.vigorlyNavGraph
 import com.example.vigorly.ui.components.ActivityDetailTopBar
 import com.example.vigorly.ui.components.AuthGradientBackground
 import com.example.vigorly.ui.components.MainShellBackground
-import com.example.vigorly.ui.performance.UiPerformance
 import com.example.vigorly.ui.components.VigorlyBottomBar
 import com.example.vigorly.ui.components.VigorlyDetailTopBar
 import com.example.vigorly.ui.components.VigorlyMainTopBar
+import com.example.vigorly.ui.theme.Background
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -51,7 +57,9 @@ fun VigorlyApp(
     val navState = remember(currentRoute) { NavigationUiState.fromRoute(currentRoute) }
     val snackbarHostState = remember { SnackbarHostState() }
     var showActivityCalendar by remember { mutableStateOf(false) }
+    var hideBottomBarOverlay by remember { mutableStateOf(false) }
     val isLoggedIn by repository.isLoggedIn.collectAsState()
+    val layoutDirection = LocalLayoutDirection.current
 
     LaunchedEffect(isLoggedIn, currentRoute) {
         if (!UiTestEnvironment.isInstrumentedTest || !isLoggedIn) return@LaunchedEffect
@@ -70,6 +78,12 @@ fun VigorlyApp(
     LaunchedEffect(appViewModel) {
         appViewModel.messages.collectLatest { message ->
             snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    LaunchedEffect(navState.currentRoute) {
+        if (navState.currentRoute != VigorlyRoutes.Workouts) {
+            hideBottomBarOverlay = false
         }
     }
 
@@ -110,6 +124,10 @@ fun VigorlyApp(
                     onBackClick = { navController.popBackStack() },
                     onCalendarClick = { showActivityCalendar = true }
                 )
+                navState.isDetailOrSession && currentRoute?.startsWith("workout/") == true -> {}
+                navState.isDetailOrSession &&
+                    currentRoute?.startsWith("session/") == true &&
+                    !navState.isSummary -> {}
                 navState.isDetailOrSession || navState.isHistoryDetail -> VigorlyDetailTopBar(
                     onBackClick = { navController.popBackStack() },
                     onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) },
@@ -133,37 +151,33 @@ fun VigorlyApp(
                         navState.currentRoute != VigorlyRoutes.Insights &&
                         navState.currentRoute != VigorlyRoutes.Settings
                 )
-                navState.showBottomBar -> VigorlyMainTopBar(
-                    onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) }
-                )
-            }
-        },
-        bottomBar = {
-            if (navState.showBottomBar) {
-                VigorlyBottomBar(
-                    currentRoute = navState.currentRoute ?: VigorlyRoutes.Dashboard,
-                    onNavigate = { route ->
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                navState.showBottomBar &&
+                    navState.currentRoute != VigorlyRoutes.Dashboard &&
+                    navState.currentRoute != VigorlyRoutes.Workouts ->
+                    VigorlyMainTopBar(
+                        onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) }
+                    )
             }
         }
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
             when {
                 navState.isAuthFlow -> AuthGradientBackground(Modifier.fillMaxSize()) {}
-                navState.showGradientBackground && UiPerformance.useLightMainBackground -> {
-                    MainShellBackground(Modifier.fillMaxSize())
-                }
-                navState.showGradientBackground -> AuthGradientBackground(Modifier.fillMaxSize()) {}
+                navState.showGradientBackground -> MainShellBackground(Modifier.fillMaxSize())
+                else -> Box(Modifier.fillMaxSize().background(Background))
             }
+
+            val contentPadding = if (navState.showBottomBar) {
+                PaddingValues(
+                    start = padding.calculateStartPadding(layoutDirection),
+                    top = padding.calculateTopPadding(),
+                    end = padding.calculateEndPadding(layoutDirection),
+                    bottom = 0.dp
+                )
+            } else {
+                padding
+            }
+
             val navHostModifier = when {
                 navState.isAuthFlow -> Modifier
                 navState.isActivityDetail && showActivityCalendar -> Modifier.fillMaxSize()
@@ -172,8 +186,9 @@ fun VigorlyApp(
             val screenPaddingModifier = when {
                 navState.isAuthFlow -> Modifier
                 navState.isActivityDetail && showActivityCalendar -> Modifier.fillMaxSize()
-                else -> Modifier.padding(padding)
+                else -> Modifier.padding(contentPadding)
             }
+
             NavHost(
                 navController = navController,
                 startDestination = VigorlyRoutes.Splash,
@@ -188,7 +203,26 @@ fun VigorlyApp(
                     onNavigateFromSplash = ::navigateFromSplash,
                     onNavigateToLogin = ::navigateToLogin,
                     workoutCompletedMessage = workoutCompletedMessage,
-                    contentPaddingModifier = screenPaddingModifier
+                    contentPaddingModifier = screenPaddingModifier,
+                    onWorkoutsFilterOverlayChange = { hideBottomBarOverlay = it }
+                )
+            }
+
+            if (navState.showBottomBar && !hideBottomBarOverlay) {
+                VigorlyBottomBar(
+                    currentRoute = navState.currentRoute ?: VigorlyRoutes.Dashboard,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
                 )
             }
         }

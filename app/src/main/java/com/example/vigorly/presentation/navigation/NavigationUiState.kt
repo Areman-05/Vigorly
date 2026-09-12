@@ -28,7 +28,7 @@ data class NavigationUiState(
             val showGradientBackground = showBottomBar ||
                 isSubScreen ||
                 isActivityDetail ||
-                isDetailOrSession ||
+                (isDetailOrSession && route?.startsWith("session/") == true) ||
                 isSummary ||
                 isHistoryDetail
 

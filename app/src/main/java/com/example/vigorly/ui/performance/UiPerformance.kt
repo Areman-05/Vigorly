@@ -6,5 +6,6 @@ package com.example.vigorly.ui.performance
  */
 object UiPerformance {
     const val decorativeMotionEnabled: Boolean = false
-    const val useLightMainBackground: Boolean = true
+    /** Aurora del shell principal; false = MainShellBackground rico (glass + manchas). */
+    const val useLightMainBackground: Boolean = false
 }

@@ -3,6 +3,7 @@ package com.example.vigorly.presentation.navigation
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraphBuilder
@@ -42,7 +43,8 @@ fun NavGraphBuilder.vigorlyNavGraph(
     onNavigateFromSplash: (AppDestination) -> Unit,
     onNavigateToLogin: () -> Unit,
     workoutCompletedMessage: String,
-    contentPaddingModifier: Modifier
+    contentPaddingModifier: Modifier,
+    onWorkoutsFilterOverlayChange: (Boolean) -> Unit = {}
 ) {
     composable(VigorlyRoutes.Splash) {
         SplashScreen(
@@ -90,6 +92,15 @@ fun NavGraphBuilder.vigorlyNavGraph(
             onActivityDetailClick = { navController.navigate(VigorlyRoutes.ActivityDetail) },
             onRecommendedWorkoutClick = { id ->
                 navController.navigate(VigorlyRoutes.workoutDetail(id))
+            },
+            onViewAllWorkoutsClick = {
+                navController.navigate(VigorlyRoutes.Workouts) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
             }
         )
     }
@@ -108,7 +119,8 @@ fun NavGraphBuilder.vigorlyNavGraph(
         WorkoutsScreen(
             repository = repository,
             modifier = contentPaddingModifier,
-            onWorkoutClick = { id -> navController.navigate(VigorlyRoutes.workoutDetail(id)) }
+            onWorkoutClick = { id -> navController.navigate(VigorlyRoutes.workoutDetail(id)) },
+            onFilterOverlayChange = onWorkoutsFilterOverlayChange
         )
     }
     composable(VigorlyRoutes.History) {
@@ -168,6 +180,11 @@ fun NavGraphBuilder.vigorlyNavGraph(
             WorkoutDetailScreen(
                 workout = workout,
                 repository = repository,
+                modifier = Modifier.fillMaxSize(),
+                onBackClick = { navController.popBackStack() },
+                onRelatedWorkoutClick = { relatedId ->
+                    navController.navigate(VigorlyRoutes.workoutDetail(relatedId))
+                },
                 onStartWorkout = { navController.navigate(VigorlyRoutes.activeSession(id)) }
             )
         }
@@ -181,7 +198,6 @@ fun NavGraphBuilder.vigorlyNavGraph(
             repository = repository,
             workoutId = id,
             onComplete = {
-                appViewModel.showMessage(workoutCompletedMessage)
                 navController.navigate(VigorlyRoutes.SessionSummary) {
                     popUpTo(VigorlyRoutes.activeSession(id)) { inclusive = true }
                 }
@@ -195,6 +211,7 @@ fun NavGraphBuilder.vigorlyNavGraph(
         if (summary != null) {
             SessionSummaryScreen(
                 summary = summary,
+                coverUrl = repository.getWorkout(summary.workoutId)?.heroImageUrl,
                 onDone = {
                     repository.clearSessionSummary()
                     navController.popBackStack(VigorlyRoutes.Dashboard, false)
