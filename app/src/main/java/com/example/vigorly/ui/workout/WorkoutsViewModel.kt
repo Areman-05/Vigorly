@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.vigorly.data.model.WorkoutDetail
 import com.example.vigorly.data.model.WorkoutType
 import com.example.vigorly.data.repository.VigorlyRepository
-import com.example.vigorly.util.WorkoutAssistantEngine
+import com.example.vigorly.util.WorkoutBrowseFilters
 import com.example.vigorly.util.WorkoutFilter
 import com.example.vigorly.util.WorkoutSort
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 class WorkoutsViewModel(
@@ -33,8 +34,15 @@ class WorkoutsViewModel(
     private val _favoritesOnly = MutableStateFlow(false)
     val favoritesOnly: StateFlow<Boolean> = _favoritesOnly.asStateFlow()
 
-    private val _assistantFilters = MutableStateFlow(WorkoutAssistantEngine.Result())
-    val assistantFilters: StateFlow<WorkoutAssistantEngine.Result> = _assistantFilters.asStateFlow()
+    private val _selectedPlaylistId = MutableStateFlow<String?>(null)
+    val selectedPlaylistId: StateFlow<String?> = _selectedPlaylistId.asStateFlow()
+
+    private val _browseFilters = MutableStateFlow(WorkoutBrowseFilters())
+    val browseFilters: StateFlow<WorkoutBrowseFilters> = _browseFilters.asStateFlow()
+
+    val favoriteWorkouts: StateFlow<List<WorkoutDetail>> = repository.favorites
+        .map { ids -> allWorkouts.filter { it.id in ids } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val filteredWorkouts: StateFlow<List<WorkoutDetail>> = combine(
         combine(
@@ -46,8 +54,8 @@ class WorkoutsViewModel(
         ) { query, type, sort, favoritesOnly, favoriteIds ->
             FilterState(query, type, sort, favoritesOnly, favoriteIds)
         },
-        _assistantFilters
-    ) { filter, assistant ->
+        _browseFilters
+    ) { filter, browse ->
         buildWorkoutList(
             all = allWorkouts,
             searchQuery = filter.query,
@@ -55,7 +63,7 @@ class WorkoutsViewModel(
             sort = filter.sort,
             favoritesOnly = filter.favoritesOnly,
             favoriteIds = filter.favoriteIds,
-            assistant = assistant
+            browse = browse
         )
     }.stateIn(
         scope = viewModelScope,
@@ -67,43 +75,53 @@ class WorkoutsViewModel(
         _searchQuery.value = query
     }
 
-    fun selectAll() {
-        _selectedType.value = null
-        _favoritesOnly.value = false
-    }
-
     fun selectType(type: WorkoutType) {
         _selectedType.value = type
         _favoritesOnly.value = false
+        _selectedPlaylistId.value = null
     }
 
-    fun onFavoritesChipClick() {
-        if (_favoritesOnly.value) {
-            _favoritesOnly.value = false
-        } else {
-            _favoritesOnly.value = true
-            _selectedType.value = null
+    fun clearSelectedType() {
+        _selectedType.value = null
+    }
+
+    fun showAllFavorites() {
+        _favoritesOnly.value = true
+        _selectedType.value = null
+        _selectedPlaylistId.value = null
+    }
+
+    fun clearFavoritesMode() {
+        _favoritesOnly.value = false
+        _selectedPlaylistId.value = null
+        _searchQuery.value = ""
+    }
+
+    fun openPlaylist(playlistId: String) {
+        _selectedPlaylistId.value = playlistId
+        _favoritesOnly.value = true
+        _selectedType.value = null
+    }
+
+    fun clearSelectedPlaylist() {
+        _selectedPlaylistId.value = null
+    }
+
+    fun applyBrowseFilters(filters: WorkoutBrowseFilters) {
+        _browseFilters.value = filters
+        when {
+            filters.types.size == 1 -> _selectedType.value = filters.types.first()
+            filters.types.isEmpty() -> Unit
+            else -> _selectedType.value = null
         }
     }
 
-    fun cycleSort() {
-        _sort.value = when (_sort.value) {
-            WorkoutSort.DURATION_ASC -> WorkoutSort.DURATION_DESC
-            WorkoutSort.DURATION_DESC -> WorkoutSort.NAME_ASC
-            WorkoutSort.NAME_ASC -> WorkoutSort.DURATION_ASC
-        }
-    }
-
-    fun applyAssistant(result: WorkoutAssistantEngine.Result) {
-        _searchQuery.value = result.searchQuery
-        _selectedType.value = result.type
-        result.sort?.let { _sort.value = it }
-        _favoritesOnly.value = result.favoritesOnly
-        _assistantFilters.value = result.copy(searchQuery = "")
-    }
-
-    fun clearAssistantConstraints() {
-        _assistantFilters.value = WorkoutAssistantEngine.Result()
+    fun clearAllFilters() {
+        _searchQuery.value = ""
+        _selectedType.value = null
+        _favoritesOnly.value = false
+        _selectedPlaylistId.value = null
+        _browseFilters.value = WorkoutBrowseFilters()
     }
 
     private data class FilterState(
@@ -121,18 +139,16 @@ class WorkoutsViewModel(
         sort: WorkoutSort,
         favoritesOnly: Boolean,
         favoriteIds: Set<String>,
-        assistant: WorkoutAssistantEngine.Result
+        browse: WorkoutBrowseFilters
     ): List<WorkoutDetail> {
         var workouts = WorkoutFilter.filter(all, searchQuery, selectedFilter, sort)
         if (favoritesOnly) {
             workouts = WorkoutFilter.filterFavorites(workouts, favoriteIds)
         }
-        return workouts.filter {
-            WorkoutAssistantEngine.matchesConstraints(
-                durationMinutes = it.durationMinutes,
-                intensity = it.intensity,
-                filters = assistant
-            )
+        if (!browse.isEmpty) {
+            val rest = browse.copy(types = if (selectedFilter != null) emptySet() else browse.types)
+            workouts = workouts.filter { rest.matches(it) }
         }
+        return workouts
     }
 }

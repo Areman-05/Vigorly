@@ -66,7 +66,7 @@ fun WorkoutDetailExerciseRow(
         ) {
             Text(
                 "$index",
-                style = LabelCaps.copy(fontSize = 11.sp),
+                style = LabelCaps.copy(fontSize = 12.sp),
                 color = accent,
                 fontWeight = FontWeight.Bold
             )
@@ -89,7 +89,7 @@ fun WorkoutDetailExerciseRow(
         ) {
             Text(
                 exercise.name,
-                style = HeadlineMd.copy(fontSize = 16.sp, lineHeight = 20.sp),
+                style = HeadlineMd.copy(fontSize = 17.sp, lineHeight = 21.sp),
                 color = OnSurface,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
@@ -97,7 +97,7 @@ fun WorkoutDetailExerciseRow(
             )
             Text(
                 exercise.setsRepsLabel,
-                style = BodyMd.copy(fontSize = 13.sp),
+                style = BodyMd.copy(fontSize = 14.sp),
                 color = OnSurfaceVariant.copy(alpha = 0.72f),
                 modifier = Modifier.padding(top = 2.dp),
                 maxLines = 1,

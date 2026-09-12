@@ -39,12 +39,12 @@ fun WorkoutDetailTitleSection(
     ) {
         Text(
             WorkoutLabels.typeLabel(workout.type).uppercase(),
-            style = LabelCaps.copy(fontSize = 11.sp),
+            style = LabelCaps.copy(fontSize = 13.sp),
             color = accent.copy(alpha = 0.95f)
         )
         Text(
             workout.name,
-            style = HeadlineLgMobile.copy(fontSize = 28.sp, lineHeight = 32.sp),
+            style = HeadlineLgMobile.copy(fontSize = 30.sp, lineHeight = 34.sp),
             color = OnSurface,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
@@ -68,7 +68,7 @@ fun WorkoutDetailTitleSection(
         }
         Text(
             workout.description,
-            style = BodyMd.copy(fontSize = 15.sp, lineHeight = 22.sp),
+            style = BodyMd.copy(fontSize = 16.sp, lineHeight = 23.sp),
             color = OnSurfaceVariant.copy(alpha = 0.82f),
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 14.dp, start = Dimens.Sm, end = Dimens.Sm)

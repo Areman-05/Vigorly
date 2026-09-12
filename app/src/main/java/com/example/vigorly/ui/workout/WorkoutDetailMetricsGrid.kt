@@ -127,7 +127,7 @@ private fun WorkoutMetricTile(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(label, style = LabelCaps.copy(fontSize = 9.sp), color = OnSurfaceVariant.copy(0.85f))
+            Text(label, style = LabelCaps.copy(fontSize = 11.sp), color = OnSurfaceVariant.copy(0.85f))
             Box(
                 Modifier
                     .size(28.dp)
@@ -154,7 +154,7 @@ private fun WorkoutMetricTile(
             subLabel?.let {
                 Text(
                     it,
-                    style = BodyMd.copy(fontSize = 13.sp),
+                    style = BodyMd.copy(fontSize = 14.sp),
                     color = OnSurfaceVariant.copy(0.65f),
                     modifier = Modifier.padding(start = 4.dp, bottom = if (compactValue) 2.dp else 4.dp)
                 )

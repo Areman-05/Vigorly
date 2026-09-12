@@ -1,5 +1,6 @@
 package com.example.vigorly.ui.workout
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,23 +23,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
-import androidx.annotation.StringRes
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.vigorly.R
 import com.example.vigorly.ui.theme.ButtonText
 import com.example.vigorly.ui.theme.Dimens
-import com.example.vigorly.ui.theme.OnPrimaryContainer
-import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
+import com.example.vigorly.ui.theme.PrimaryContainer
 
 @Composable
 fun WorkoutDetailStartCta(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     @StringRes labelRes: Int = R.string.start_workout,
-    showPlayIcon: Boolean = true
+    showPlayIcon: Boolean = true,
+    cornerRadius: Dp = 999.dp
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -48,10 +50,10 @@ fun WorkoutDetailStartCta(
         modifier = modifier
             .fillMaxWidth()
             .scale(scale)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(cornerRadius))
             .background(
                 Brush.horizontalGradient(
-                    colors = listOf(PrimaryAccent, Primary.copy(alpha = 0.85f))
+                    colors = listOf(PrimaryAccent, PrimaryContainer)
                 )
             )
             .clickable(
@@ -67,15 +69,15 @@ fun WorkoutDetailStartCta(
             Icon(
                 Icons.Default.PlayArrow,
                 contentDescription = null,
-                tint = OnPrimaryContainer,
+                tint = Color.White,
                 modifier = Modifier.size(26.dp)
             )
         }
         Text(
             stringResource(labelRes),
             style = ButtonText.copy(fontWeight = FontWeight.Bold),
-            color = OnPrimaryContainer,
-            modifier = Modifier.padding(start = Dimens.Sm)
+            color = Color.White,
+            modifier = Modifier.padding(start = if (showPlayIcon) Dimens.Sm else 0.dp)
         )
     }
 }
