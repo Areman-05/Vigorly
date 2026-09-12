@@ -23,7 +23,7 @@ fun IntensityBadge(
     val isHigh = WorkoutLabels.intensityIsHigh(intensity)
     Text(
         text = WorkoutLabels.intensityLabel(intensity).uppercase(),
-        style = LabelCaps.copy(fontSize = 9.sp, lineHeight = 11.sp),
+        style = LabelCaps.copy(fontSize = 11.sp, lineHeight = 13.sp),
         color = if (isHigh) PrimaryAccent else OnSurface.copy(alpha = 0.85f),
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))

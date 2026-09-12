@@ -44,5 +44,30 @@ val ErrorContainer = Color(0xFF93000A)
 val OnErrorContainer = Color(0xFFFFDAD6)
 
 val RingTrack = Color(0xFF333333)
-val GlassOverlay = Color(0x14FFFFFF)
-val GlassBorder = Color(0x1AFFFFFF)
+val GlassOverlay = Color(0x1AFFFFFF)
+val GlassOverlayStrong = Color(0x28FFFFFF)
+val GlassBorder = Color(0x33FFFFFF)
+val GlassBorderSoft = Color(0x14FFFFFF)
+val GlassHighlight = Color(0x22FFFFFF)
+/** Cristal semitransparente: deja ver el aurora sin lavado blanco sólido */
+val GlassCrystalLift = Color(0x8A4A4B55)
+val GlassCrystalBase = Color(0x9916181E)
+val GlassCrystalEdge = Color(0x59FFFFFF)
+val GlassCrystalSheen = Color(0x33FFFFFF)
+
+/** Acentos de anillos del home — evolución natural de Kinetic Pulse */
+val StatRingMove = Color(0xFFFF6B4A)
+val StatRingTime = Color(0xFFB48CFF)
+val StatRingExercise = Color(0xFFB8E63A)
+
+val AuroraCore = Color(0xFFFF5167)
+val AuroraWarm = Color(0xFFFF2D55)
+val AuroraDeep = Color(0xFF6B1A2A)
+val AuroraViolet = Color(0xFF5A2A4A)
+/** Rosa claro / blanquecino para el lado derecho del aurora */
+val AuroraMist = Color(0xFFFFDADA)
+val AuroraSoft = Color(0xFFFFB3B5)
+
+/** Texto secundario legible sobre glass (evita el rosa OnSurfaceVariant) */
+val GlassLabel = Color(0xFFD8D7DC)
+val RingTrackGlass = Color(0x66FFFFFF)

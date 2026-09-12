@@ -11,4 +11,6 @@ object Dimens {
     val Lg = 24.dp
     val Xl = 40.dp
     val Xxl = 64.dp
+    /** Espacio final de scroll para que el contenido pase bajo la nav flotante. */
+    val FloatingNavClearance = 108.dp
 }

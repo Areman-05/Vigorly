@@ -72,7 +72,7 @@ private fun FilterPill(
     Text(
         text = label,
         style = BodyMd.copy(
-            fontSize = 12.sp,
+            fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
         ),
         color = if (selected) OnSurface else OnSurfaceVariant.copy(alpha = 0.75f),

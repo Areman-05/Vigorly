@@ -47,30 +47,30 @@ val HeadlineMd = TextStyle(
 val BodyLg = TextStyle(
     fontFamily = VigorlyFontFamily,
     fontWeight = FontWeight.Normal,
-    fontSize = 18.sp,
+    fontSize = 19.sp,
     lineHeight = 28.sp
 )
 
 val BodyMd = TextStyle(
     fontFamily = VigorlyFontFamily,
     fontWeight = FontWeight.Normal,
-    fontSize = 16.sp,
-    lineHeight = 24.sp
+    fontSize = 17.sp,
+    lineHeight = 25.sp
 )
 
 val LabelCaps = TextStyle(
     fontFamily = VigorlyFontFamily,
     fontWeight = FontWeight.Bold,
-    fontSize = 12.sp,
-    lineHeight = 16.sp,
+    fontSize = 13.sp,
+    lineHeight = 17.sp,
     letterSpacing = 0.1.em
 )
 
 val ButtonText = TextStyle(
     fontFamily = VigorlyFontFamily,
     fontWeight = FontWeight.SemiBold,
-    fontSize = 16.sp,
-    lineHeight = 20.sp
+    fontSize = 17.sp,
+    lineHeight = 21.sp
 )
 
 val Typography = Typography(

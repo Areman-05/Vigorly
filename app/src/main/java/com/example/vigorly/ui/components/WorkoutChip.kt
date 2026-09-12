@@ -23,7 +23,7 @@ fun WorkoutChip(
 ) {
     Text(
         text = text.uppercase(),
-        style = LabelCaps.copy(fontSize = 9.sp, lineHeight = 11.sp),
+        style = LabelCaps.copy(fontSize = 11.sp, lineHeight = 13.sp),
         color = if (filled) OnSurface else accent.copy(alpha = 0.9f),
         modifier = modifier
             .clip(RoundedCornerShape(999.dp))
