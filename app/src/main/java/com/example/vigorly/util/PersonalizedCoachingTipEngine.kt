@@ -22,10 +22,26 @@ data class PersonalizedTipContext(
 
 object PersonalizedCoachingTipEngine {
 
-    fun generate(context: Context, input: PersonalizedTipContext): CoachingTip {
+    fun generate(context: Context, input: PersonalizedTipContext): CoachingTip =
+        generateMany(context, input, count = 1).first()
+
+    fun generateMany(context: Context, input: PersonalizedTipContext, count: Int): List<CoachingTip> {
         val candidates = buildCandidates(context, input)
-        val index = (LocalDate.now().toEpochDay() % candidates.size).toInt().coerceAtLeast(0)
-        return CoachingTip(id = "personalized-$index", text = candidates[index])
+        if (candidates.isEmpty()) {
+            return listOf(
+                CoachingTip(
+                    id = "personalized-0",
+                    text = context.getString(R.string.coaching_tip_fallback)
+                )
+            )
+        }
+        val day = LocalDate.now().toEpochDay()
+        val size = candidates.size
+        val take = count.coerceAtLeast(1).coerceAtMost(size)
+        return List(take) { offset ->
+            val index = ((day + offset) % size).toInt().coerceAtLeast(0)
+            CoachingTip(id = "personalized-$index-$offset", text = candidates[index])
+        }.distinctBy { it.text }
     }
 
     private fun buildCandidates(context: Context, input: PersonalizedTipContext): List<String> {
