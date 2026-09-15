@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import com.example.vigorly.core.testing.UiTestEnvironment
 import com.example.vigorly.data.repository.VigorlyRepository
+import com.example.vigorly.notifications.WorkoutReminderScheduler
 import com.example.vigorly.util.LocaleUtils
 import kotlinx.coroutines.runBlocking
 
@@ -20,5 +21,12 @@ class VigorlyApplication : Application() {
         UiTestEnvironment.refresh()
         repository = VigorlyRepository(this)
         runBlocking { repository.initializeLocale() }
+        if (!UiTestEnvironment.isInstrumentedTest) {
+            WorkoutReminderScheduler.sync(
+                context = this,
+                enabled = repository.notificationsEnabled.value,
+                preferredTime = repository.preferredTime.value
+            )
+        }
     }
 }
