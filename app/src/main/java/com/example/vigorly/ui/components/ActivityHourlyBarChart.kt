@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -26,7 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.ui.theme.BodyMd
-import com.example.vigorly.ui.theme.OnSurfaceVariant
+import com.example.vigorly.ui.theme.GlassLabel
 
 private const val HOUR_COUNT = 24
 
@@ -52,8 +53,9 @@ fun ActivityHourlyBarChart(
     values: List<Float>,
     barColor: Color,
     modifier: Modifier = Modifier,
-    height: Dp = 96.dp,
-    maxValue: Float? = null
+    height: Dp = 112.dp,
+    maxValue: Float? = null,
+    highlightColor: Color = barColor.copy(alpha = 0.35f)
 ) {
     val dataKey = remember(values) { values.hashCode() }
     val progress = remember { Animatable(0f) }
@@ -62,7 +64,7 @@ fun ActivityHourlyBarChart(
         progress.snapTo(0f)
         progress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 720, easing = FastOutSlowInEasing)
+            animationSpec = tween(durationMillis = 820, easing = FastOutSlowInEasing)
         )
     }
 
@@ -74,6 +76,9 @@ fun ActivityHourlyBarChart(
     val peak = maxValue ?: normalizedValues.maxOrNull()?.coerceAtLeast(0f) ?: 0f
     val normalizedMax = if (peak > 0f) peak else 1f
     val barProgress = progress.value
+    val peakIndex = remember(normalizedValues) {
+        normalizedValues.withIndex().maxByOrNull { it.value }?.index ?: -1
+    }
 
     Column(modifier = modifier.fillMaxWidth()) {
         Canvas(
@@ -82,7 +87,15 @@ fun ActivityHourlyBarChart(
                 .height(height)
         ) {
             val layout = computeHourlyBarLayout(size.width, HOUR_COUNT)
-            val topRadius = layout.barWidth / 2f.coerceAtMost(6f)
+            val topRadius = layout.barWidth / 2f.coerceAtMost(7f)
+
+            // Guía horizontal suave
+            drawLine(
+                color = Color.White.copy(alpha = 0.06f),
+                start = Offset(0f, size.height),
+                end = Offset(size.width, size.height),
+                strokeWidth = 1.5f
+            )
 
             normalizedValues.forEachIndexed { index, value ->
                 if (value <= 0f) return@forEachIndexed
@@ -91,8 +104,17 @@ fun ActivityHourlyBarChart(
                 if (barHeight < 1f) return@forEachIndexed
                 val x = layout.barStartX(index)
                 val y = size.height - barHeight
+                val isPeak = index == peakIndex
+                val brush = Brush.verticalGradient(
+                    colors = listOf(
+                        if (isPeak) barColor else barColor.copy(alpha = 0.88f),
+                        highlightColor
+                    ),
+                    startY = y,
+                    endY = size.height
+                )
                 drawRoundRect(
-                    color = barColor.copy(alpha = 0.92f),
+                    brush = brush,
                     topLeft = Offset(x, y),
                     size = Size(layout.barWidth, barHeight),
                     cornerRadius = CornerRadius(topRadius, topRadius)
@@ -103,7 +125,7 @@ fun ActivityHourlyBarChart(
         ActivityChartHourLabels(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp)
+                .padding(top = 10.dp)
         )
     }
 }
@@ -122,10 +144,10 @@ private fun ActivityChartHourLabels(modifier: Modifier = Modifier) {
             Text(
                 text = hour.toString(),
                 style = BodyMd.copy(
-                    fontSize = 10.sp,
-                    fontWeight = if (isEdge) FontWeight.Medium else FontWeight.Normal
+                    fontSize = 11.sp,
+                    fontWeight = if (isEdge) FontWeight.SemiBold else FontWeight.Medium
                 ),
-                color = OnSurfaceVariant.copy(alpha = if (isEdge) 0.72f else 0.58f),
+                color = GlassLabel.copy(alpha = if (isEdge) 0.72f else 0.48f),
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )

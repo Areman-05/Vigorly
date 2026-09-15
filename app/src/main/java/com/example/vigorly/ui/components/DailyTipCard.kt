@@ -33,7 +33,8 @@ import com.example.vigorly.ui.theme.PrimaryAccent
 fun DailyTipCard(
     tip: CoachingTip,
     modifier: Modifier = Modifier,
-    coverIndex: Int = 0
+    coverIndex: Int = 0,
+    showPersonalizedHint: Boolean = tip.id.startsWith("personalized")
 ) {
     val coverUrl = WorkoutCoverUrls.tip(coverIndex)
 
@@ -89,12 +90,14 @@ fun DailyTipCard(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 8.dp)
                 )
-                Text(
-                    text = stringResource(R.string.coaching_tip_personalized_hint),
-                    style = BodyMd.copy(fontSize = 14.sp, lineHeight = 18.sp),
-                    color = GlassLabel.copy(alpha = 0.9f),
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                if (showPersonalizedHint) {
+                    Text(
+                        text = stringResource(R.string.coaching_tip_personalized_hint),
+                        style = BodyMd.copy(fontSize = 14.sp, lineHeight = 18.sp),
+                        color = GlassLabel.copy(alpha = 0.9f),
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
             }
         }
     }

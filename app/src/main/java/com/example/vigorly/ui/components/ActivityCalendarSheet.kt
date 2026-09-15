@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +33,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,12 +44,12 @@ import com.example.vigorly.R
 import com.example.vigorly.data.activity.DailyActivityDaySummary
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
+import com.example.vigorly.ui.theme.GlassLabel
 import com.example.vigorly.ui.theme.HeadlineMd
-import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnSurface
-import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
+import com.example.vigorly.ui.theme.PrimaryContainer
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -92,20 +94,20 @@ fun ActivityCalendarSheet(
             listState.scrollToItem(todayMonthIndex)
         }
 
-        AuthGradientBackground(Modifier.fillMaxSize()) {
+        // Transparente: usa el aurora del shell (Kinetic Pulse)
+        Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
                 ActivityCalendarTopBar(onBack = onBack)
-
                 CalendarWeekdayHeader(locale = locale)
 
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    contentPadding = PaddingValues(
                         horizontal = Dimens.ContainerMargin,
                         vertical = Dimens.Md
                     ),
@@ -139,24 +141,29 @@ private fun ActivityCalendarTopBar(onBack: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = Dimens.Xs, vertical = Dimens.Xs),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onBack) {
+        FrostedGlassCircleButton(onClick = onBack) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = backLabel,
-                tint = OnSurfaceVariant
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
             )
         }
         Text(
             text = title,
-            style = HeadlineMd.copy(fontWeight = FontWeight.Bold),
+            style = HeadlineMd.copy(
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.2).sp
+            ),
             color = OnSurface,
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center
         )
-        Spacer(Modifier.size(48.dp))
+        Spacer(Modifier.size(44.dp))
     }
 }
 
@@ -175,9 +182,15 @@ private fun CalendarWeekdayHeader(locale: Locale) {
     ) {
         labels.forEach { label ->
             Text(
-                text = label.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() },
-                style = LabelCaps.copy(fontSize = 11.sp, letterSpacing = 0.05.sp),
-                color = OnSurfaceVariant,
+                text = label.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase(locale) else it.toString()
+                },
+                style = BodyMd.copy(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.2.sp
+                ),
+                color = GlassLabel.copy(alpha = 0.7f),
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Center
             )
@@ -205,7 +218,7 @@ private fun CalendarMonthSection(
         Text(
             text = title,
             style = HeadlineMd.copy(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
-            color = Primary,
+            color = PrimaryAccent,
             modifier = Modifier.padding(bottom = Dimens.Md)
         )
         month.days.chunked(7).forEach { week ->
@@ -255,32 +268,48 @@ private fun CalendarDayCell(
     Column(
         modifier = modifier
             .padding(vertical = 3.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(14.dp))
             .then(
                 when {
-                    isSelected -> Modifier.background(Primary.copy(alpha = 0.22f))
+                    isSelected -> Modifier.background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                PrimaryAccent.copy(alpha = 0.28f),
+                                PrimaryContainer.copy(alpha = 0.14f)
+                            )
+                        )
+                    )
+                    isToday -> Modifier.background(Color.White.copy(alpha = 0.05f))
                     else -> Modifier
+                }
+            )
+            .then(
+                if (isToday && !isSelected) {
+                    Modifier.border(
+                        width = 1.dp,
+                        brush = Brush.linearGradient(
+                            listOf(
+                                PrimaryAccent.copy(alpha = 0.55f),
+                                Primary.copy(alpha = 0.35f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(14.dp)
+                    )
+                } else {
+                    Modifier
                 }
             )
             .clickable(enabled = date != null && !isFuture) { onClick(date) }
             .padding(vertical = 6.dp, horizontal = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+        verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         if (date == null) {
             Spacer(Modifier.size(40.dp))
         } else {
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(38.dp)
-                    .then(
-                        if (isToday && !isSelected) {
-                            Modifier.border(1.5.dp, PrimaryAccent.copy(alpha = 0.7f), CircleShape)
-                        } else {
-                            Modifier
-                        }
-                    )
+                modifier = Modifier.size(38.dp)
             ) {
                 if (!isFuture) {
                     MiniActivityRings(
@@ -301,10 +330,10 @@ private fun CalendarDayCell(
                     }
                 ),
                 color = when {
-                    isFuture -> OnSurfaceVariant.copy(alpha = 0.28f)
+                    isFuture -> GlassLabel.copy(alpha = 0.28f)
                     isSelected -> PrimaryAccent
                     isToday -> Primary
-                    else -> OnSurface.copy(alpha = 0.85f)
+                    else -> OnSurface.copy(alpha = 0.88f)
                 }
             )
         }

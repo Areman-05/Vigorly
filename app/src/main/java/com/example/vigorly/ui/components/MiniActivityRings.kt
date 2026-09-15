@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.PrimaryContainer
-import com.example.vigorly.ui.theme.RingTrack
+import com.example.vigorly.ui.theme.RingTrackGlass
 
 @Composable
 fun MiniActivityRings(
@@ -33,7 +33,7 @@ fun MiniActivityRings(
                 val topLeft = Offset(this.size.width / 2 - radius, this.size.height / 2 - radius)
                 val arcSize = Size(radius * 2, radius * 2)
                 drawArc(
-                    color = RingTrack,
+                    color = RingTrackGlass,
                     startAngle = -90f,
                     sweepAngle = 360f,
                     useCenter = false,

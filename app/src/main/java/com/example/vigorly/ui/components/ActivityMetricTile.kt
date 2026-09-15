@@ -69,10 +69,15 @@ fun ActivityMetricTile(
                 modifier = Modifier
                     .size(28.dp)
                     .clip(CircleShape)
-                    .background(accent.copy(alpha = 0.18f)),
+                    .background(Color.White.copy(alpha = 0.10f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(16.dp))
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = OnSurface,
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
         Spacer(Modifier.height(10.dp))

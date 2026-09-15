@@ -39,7 +39,7 @@ import com.example.vigorly.ui.performance.UiPerformance
 import com.example.vigorly.data.activity.WeeklyActivityRingDay
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
-import com.example.vigorly.ui.theme.LabelCaps
+import com.example.vigorly.ui.theme.GlassLabel
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.OnSurfaceVariant
 import com.example.vigorly.ui.theme.Primary
@@ -59,15 +59,18 @@ fun WeeklyActivityRingsSection(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.activity_weekly_title),
-            style = LabelCaps,
-            color = OnSurfaceVariant
+            style = BodyMd.copy(
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold
+            ),
+            color = OnSurface
         )
         if (weekRangeLabel.isNotBlank()) {
             Spacer(Modifier.height(Dimens.Xs))
             Text(
                 text = weekRangeLabel,
                 style = BodyMd.copy(fontSize = 13.sp),
-                color = OnSurfaceVariant.copy(alpha = 0.75f)
+                color = GlassLabel.copy(alpha = 0.78f)
             )
         }
         Spacer(Modifier.height(Dimens.Md))
