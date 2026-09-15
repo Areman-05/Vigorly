@@ -70,16 +70,14 @@ fun ProfileSummaryHeader(
         ) {
             Box(
                 modifier = Modifier
-                    .size(76.dp)
+                    .size(72.dp)
                     .align(Alignment.Center)
-                    .clip(CircleShape)
-                    .border(2.dp, PrimaryAccent.copy(alpha = 0.45f), CircleShape),
+                    .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 ProfileAvatarView(
                     avatarUrl = avatarUrl,
-                    size = 72.dp,
-                    borderColor = Color.Transparent
+                    size = 72.dp
                 )
             }
             Box(
