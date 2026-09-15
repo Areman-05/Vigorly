@@ -57,4 +57,7 @@ object PreferenceKeys {
     val ACTIVITY_DAY_HISTORY = stringPreferencesKey("activity_day_history")
     val STREAK_BANNER_DISMISSED_DATE = stringPreferencesKey("streak_banner_dismissed_date")
     val MILESTONE_SHOWCASE = stringPreferencesKey("milestone_showcase")
+    val WEIGHT_LOG = stringPreferencesKey("weight_log")
+    val WEIGHT_GOAL_KG = floatPreferencesKey("weight_goal_kg")
+    val MILESTONE_UNLOCK_DATES = stringPreferencesKey("milestone_unlock_dates")
 }

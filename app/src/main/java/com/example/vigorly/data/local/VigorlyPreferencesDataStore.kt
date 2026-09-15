@@ -13,6 +13,7 @@ import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
 import com.example.vigorly.data.model.UserProfile
 import com.example.vigorly.data.model.WeeklyGoal
+import com.example.vigorly.data.model.WeightLogEntry
 import com.example.vigorly.data.model.WorkoutHistoryItem
 import com.example.vigorly.data.repository.VigorlyRepository
 import kotlinx.coroutines.flow.Flow
@@ -74,6 +75,18 @@ class VigorlyPreferencesDataStore(private val context: Context) {
 
     val milestoneShowcase: Flow<List<String?>> = context.vigorlyDataStore.data.map { prefs ->
         MilestoneShowcaseCodec.decode(prefs[PreferenceKeys.MILESTONE_SHOWCASE])
+    }
+
+    val weightLog: Flow<List<WeightLogEntry>> = context.vigorlyDataStore.data.map { prefs ->
+        WeightLogCodec.decode(prefs[PreferenceKeys.WEIGHT_LOG])
+    }
+
+    val weightGoalKg: Flow<Float?> = context.vigorlyDataStore.data.map { prefs ->
+        prefs[PreferenceKeys.WEIGHT_GOAL_KG]
+    }
+
+    val milestoneUnlockDates: Flow<Map<String, Long>> = context.vigorlyDataStore.data.map { prefs ->
+        MilestoneUnlockDatesCodec.decode(prefs[PreferenceKeys.MILESTONE_UNLOCK_DATES])
     }
 
     val weeklyGoal: Flow<WeeklyGoal> = context.vigorlyDataStore.data.map { prefs ->
@@ -321,6 +334,25 @@ class VigorlyPreferencesDataStore(private val context: Context) {
     suspend fun saveMilestoneShowcase(slots: List<String?>) {
         context.vigorlyDataStore.edit { prefs ->
             prefs[PreferenceKeys.MILESTONE_SHOWCASE] = MilestoneShowcaseCodec.encode(slots)
+        }
+    }
+
+    suspend fun saveWeightLog(items: List<WeightLogEntry>) {
+        context.vigorlyDataStore.edit { prefs ->
+            prefs[PreferenceKeys.WEIGHT_LOG] = WeightLogCodec.encode(items)
+        }
+    }
+
+    suspend fun saveWeightGoalKg(goalKg: Float?) {
+        context.vigorlyDataStore.edit { prefs ->
+            if (goalKg == null) prefs.remove(PreferenceKeys.WEIGHT_GOAL_KG)
+            else prefs[PreferenceKeys.WEIGHT_GOAL_KG] = goalKg
+        }
+    }
+
+    suspend fun saveMilestoneUnlockDates(dates: Map<String, Long>) {
+        context.vigorlyDataStore.edit { prefs ->
+            prefs[PreferenceKeys.MILESTONE_UNLOCK_DATES] = MilestoneUnlockDatesCodec.encode(dates)
         }
     }
 

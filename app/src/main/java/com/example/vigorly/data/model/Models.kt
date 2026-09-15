@@ -40,7 +40,15 @@ data class Milestone(
     val title: String,
     val subtitle: String,
     val iconName: String,
-    val unlocked: Boolean
+    val unlocked: Boolean,
+    val unlockedAtMillis: Long? = null
+)
+
+data class WeightLogEntry(
+    val id: String,
+    val weightKg: Float,
+    val recordedAtMillis: Long,
+    val note: String = ""
 )
 
 data class WorkoutHistoryItem(
