@@ -18,10 +18,16 @@ class DashboardViewModel(
     val dailyTip: StateFlow<CoachingTip> = repository.dailyTip
     val showStreakBanner: StateFlow<Boolean> = repository.showStreakBanner
     val favorites: StateFlow<Set<String>> = repository.favorites
+    val history = repository.history
 
     fun tipCards(): List<CoachingTip> = repository.tipCards(count = 2)
 
+    fun todaysWorkoutCount(): Int = repository.todaysWorkoutCount()
+
     fun getRecommendedWorkout(): WorkoutDetail? = repository.getRecommendedWorkout()
+
+    fun getRecommendedWorkouts(count: Int = 5): List<WorkoutDetail> =
+        repository.getRecommendedWorkouts(count)
 
     fun dismissStreakBanner() = repository.dismissStreakBanner()
 

@@ -1,5 +1,7 @@
 package com.example.vigorly.ui.dashboard
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,15 +17,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -32,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vigorly.R
 import com.example.vigorly.core.testing.VigorlyTestTags
+import com.example.vigorly.data.model.WorkoutDetail
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.di.AppViewModelFactory
 import com.example.vigorly.presentation.feature.dashboard.DashboardViewModel
@@ -58,6 +69,8 @@ import com.example.vigorly.ui.theme.GlassLabel
 import com.example.vigorly.ui.theme.HeadlineLgMobile
 import com.example.vigorly.ui.theme.HeadlineMd
 import com.example.vigorly.ui.theme.OnSurface
+import com.example.vigorly.ui.theme.PrimaryAccent
+import kotlinx.coroutines.delay
 
 @Composable
 fun DashboardScreen(
@@ -74,8 +87,10 @@ fun DashboardScreen(
     val dailyTip by viewModel.dailyTip.collectAsState()
     val showStreakBanner by viewModel.showStreakBanner.collectAsState()
     val favorites by viewModel.favorites.collectAsState()
-    val recommended = viewModel.getRecommendedWorkout()
+    val history by viewModel.history.collectAsState()
+    val recommendedWorkouts = viewModel.getRecommendedWorkouts(5)
     val tipCards = remember(dailyTip) { viewModel.tipCards() }
+    val workoutsToday = remember(history) { viewModel.todaysWorkoutCount() }
 
     Box(
         modifier = modifier
@@ -115,8 +130,7 @@ fun DashboardScreen(
                 exerciseProgress = goals.exerciseProgress,
                 standProgress = goals.standProgress,
                 exerciseMinutes = goals.exerciseMinutes,
-                workoutsDone = profile.totalWorkouts,
-                onClick = onActivityDetailClick
+                workoutsToday = workoutsToday
             )
 
             Spacer(Modifier.height(Dimens.Lg))
@@ -129,12 +143,12 @@ fun DashboardScreen(
 
             Spacer(Modifier.height(Dimens.Sm))
 
-            recommended?.let { workout ->
-                RecommendedWorkoutCard(
-                    workout = workout,
-                    isFavorite = workout.id in favorites,
-                    onFavoriteToggle = { viewModel.toggleFavorite(workout.id) },
-                    onClick = { onRecommendedWorkoutClick(workout.id) },
+            if (recommendedWorkouts.isNotEmpty()) {
+                RecommendedWorkoutCarousel(
+                    workouts = recommendedWorkouts,
+                    favorites = favorites,
+                    onFavoriteToggle = { viewModel.toggleFavorite(it) },
+                    onWorkoutClick = onRecommendedWorkoutClick,
                     modifier = Modifier.padding(bottom = Dimens.Md)
                 )
             }
@@ -157,6 +171,7 @@ fun DashboardScreen(
                 DailyTipCard(
                     tip = tip,
                     coverIndex = index,
+                    showPersonalizedHint = tip.id.startsWith("personalized"),
                     modifier = Modifier.padding(bottom = Dimens.Md)
                 )
             }
@@ -167,11 +182,10 @@ fun DashboardScreen(
             )
 
             HomeSnapshotGrid(
-                kcal = goals.moveCalories,
-                standHours = goals.standHours,
-                dailyPercent = goals.dailyGoalPercent,
-                heartRate = goals.heartRateBpm,
-                onClick = onActivityDetailClick
+                streakDays = profile.activeStreakDays,
+                totalWorkouts = profile.totalWorkouts,
+                level = profile.level,
+                favoritesCount = favorites.size
             )
         }
 
@@ -236,11 +250,7 @@ private fun SectionTitleRow(
     actionLabel: String,
     onActionClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
             style = HeadlineMd.copy(
@@ -248,16 +258,21 @@ private fun SectionTitleRow(
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = (-0.2).sp
             ),
-            color = OnSurface
+            color = OnSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable(onClick = onActionClick)
+            modifier = Modifier
+                .padding(top = 6.dp)
+                .clickable(onClick = onActionClick)
         ) {
             Text(
                 text = actionLabel,
-                style = BodyMd.copy(fontSize = 15.sp),
-                color = GlassLabel.copy(alpha = 0.85f)
+                style = BodyMd.copy(fontSize = 14.sp, fontWeight = FontWeight.Medium),
+                color = GlassLabel.copy(alpha = 0.85f),
+                maxLines = 1
             )
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -270,63 +285,119 @@ private fun SectionTitleRow(
 }
 
 @Composable
+private fun RecommendedWorkoutCarousel(
+    workouts: List<WorkoutDetail>,
+    favorites: Set<String>,
+    onFavoriteToggle: (String) -> Unit,
+    onWorkoutClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (workouts.isEmpty()) return
+
+    val count = workouts.size
+    // Infinite pager: always advance +1 so wrap never reverse-scrolls (the jump).
+    val startPage = remember(count) {
+        val mid = Int.MAX_VALUE / 2
+        mid - (mid % count)
+    }
+    val pagerState = rememberPagerState(
+        initialPage = startPage,
+        pageCount = { if (count <= 1) 1 else Int.MAX_VALUE }
+    )
+
+    LaunchedEffect(count, workouts.map { it.id }) {
+        if (count <= 1) return@LaunchedEffect
+        while (true) {
+            delay(4800)
+            pagerState.animateScrollToPage(
+                page = pagerState.currentPage + 1,
+                animationSpec = tween(durationMillis = 520, easing = FastOutSlowInEasing)
+            )
+        }
+    }
+
+    HorizontalPager(
+        state = pagerState,
+        modifier = modifier.fillMaxWidth(),
+        beyondViewportPageCount = 1,
+        userScrollEnabled = count > 1
+    ) { page ->
+        val workout = workouts[page % count]
+        RecommendedWorkoutCard(
+            workout = workout,
+            isFavorite = workout.id in favorites,
+            onFavoriteToggle = { onFavoriteToggle(workout.id) },
+            onClick = { onWorkoutClick(workout.id) }
+        )
+    }
+}
+
+@Composable
 private fun HomeStatsGrid(
     moveProgress: Float,
     exerciseProgress: Float,
     standProgress: Float,
     exerciseMinutes: Int,
-    workoutsDone: Int,
-    onClick: () -> Unit
+    workoutsToday: Int
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(220.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        GlassSurface(
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.dashboard_today_label),
+            style = BodyMd.copy(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.0.sp
+            ),
+            color = PrimaryAccent,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
+        Row(
             modifier = Modifier
-                .weight(1.15f)
-                .fillMaxHeight(),
-            onClick = onClick
+                .fillMaxWidth()
+                .height(220.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            GlassSurface(
+                modifier = Modifier
+                    .weight(1.15f)
+                    .fillMaxHeight()
             ) {
-                TripleActivityRing(
-                    moveProgress = moveProgress,
-                    exerciseProgress = exerciseProgress,
-                    standProgress = standProgress,
-                    size = 158.dp,
-                    strokeWidth = 12.dp,
-                    gap = 7.dp
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    TripleActivityRing(
+                        moveProgress = moveProgress,
+                        exerciseProgress = exerciseProgress,
+                        standProgress = standProgress,
+                        size = 158.dp,
+                        strokeWidth = 12.dp,
+                        gap = 7.dp
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .weight(0.95f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                NumberStatCard(
+                    value = formatExerciseTime(exerciseMinutes),
+                    label = stringResource(R.string.dashboard_exercise_today),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                )
+                NumberStatCard(
+                    value = workoutsToday.toString(),
+                    label = stringResource(R.string.dashboard_workouts_today),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
                 )
             }
-        }
-
-        Column(
-            modifier = Modifier
-                .weight(0.95f)
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            NumberStatCard(
-                value = formatExerciseTime(exerciseMinutes),
-                label = stringResource(R.string.dashboard_total_time),
-                onClick = onClick,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            )
-            NumberStatCard(
-                value = workoutsDone.toString(),
-                label = stringResource(R.string.dashboard_workouts_done),
-                onClick = onClick,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            )
         }
     }
 }
@@ -335,13 +406,9 @@ private fun HomeStatsGrid(
 private fun NumberStatCard(
     value: String,
     label: String,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    GlassSurface(
-        modifier = modifier,
-        onClick = onClick
-    ) {
+    GlassSurface(modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -374,27 +441,36 @@ private fun NumberStatCard(
 
 @Composable
 private fun HomeSnapshotGrid(
-    kcal: Int,
-    standHours: Int,
-    dailyPercent: Int,
-    heartRate: Int,
-    onClick: () -> Unit
+    streakDays: Int,
+    totalWorkouts: Int,
+    level: Int,
+    favoritesCount: Int
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = stringResource(R.string.dashboard_progress_label),
+            style = BodyMd.copy(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.0.sp
+            ),
+            color = PrimaryAccent,
+            modifier = Modifier.padding(bottom = 2.dp)
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             SnapshotMiniCard(
-                value = formatGroupedNumber(kcal),
-                label = stringResource(R.string.dashboard_snap_kcal),
-                onClick = onClick,
+                value = stringResource(R.string.dashboard_snap_streak_value, streakDays),
+                label = stringResource(R.string.dashboard_snap_streak),
+                icon = Icons.Outlined.LocalFireDepartment,
                 modifier = Modifier.weight(1f)
             )
             SnapshotMiniCard(
-                value = standHours.toString(),
-                label = stringResource(R.string.dashboard_snap_stand),
-                onClick = onClick,
+                value = totalWorkouts.toString(),
+                label = stringResource(R.string.dashboard_snap_total),
+                icon = Icons.Outlined.Flag,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -403,15 +479,15 @@ private fun HomeSnapshotGrid(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             SnapshotMiniCard(
-                value = "$dailyPercent%",
-                label = stringResource(R.string.dashboard_snap_daily),
-                onClick = onClick,
+                value = level.toString(),
+                label = stringResource(R.string.dashboard_snap_level),
+                icon = Icons.Outlined.WorkspacePremium,
                 modifier = Modifier.weight(1f)
             )
             SnapshotMiniCard(
-                value = heartRate.toString(),
-                label = stringResource(R.string.dashboard_snap_bpm),
-                onClick = onClick,
+                value = favoritesCount.toString(),
+                label = stringResource(R.string.dashboard_snap_favorites),
+                icon = Icons.Outlined.FavoriteBorder,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -422,46 +498,50 @@ private fun HomeSnapshotGrid(
 private fun SnapshotMiniCard(
     value: String,
     label: String,
-    onClick: () -> Unit,
+    icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
     GlassSurface(
-        modifier = modifier.height(92.dp),
-        shape = RoundedCornerShape(18.dp),
-        onClick = onClick
+        modifier = modifier.height(96.dp),
+        shape = RoundedCornerShape(18.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 12.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = value,
-                style = DisplayStat.copy(fontSize = 24.sp, lineHeight = 26.sp),
-                color = OnSurface,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = OnSurface,
+                modifier = Modifier.size(18.dp)
             )
-            Text(
-                text = label,
-                style = BodyMd.copy(
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.1.sp
-                ),
-                color = GlassLabel.copy(alpha = 0.88f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 4.dp)
-            )
+            Column {
+                Text(
+                    text = value,
+                    style = DisplayStat.copy(fontSize = 22.sp, lineHeight = 24.sp),
+                    color = OnSurface,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = label,
+                    style = BodyMd.copy(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        letterSpacing = 0.1.sp
+                    ),
+                    color = GlassLabel.copy(alpha = 0.82f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 3.dp)
+                )
+            }
         }
     }
 }
-
-private fun formatGroupedNumber(value: Int): String =
-    "%,d".format(value).replace(',', ' ')
 
 private fun formatExerciseTime(minutes: Int): String {
     if (minutes >= 60) {
