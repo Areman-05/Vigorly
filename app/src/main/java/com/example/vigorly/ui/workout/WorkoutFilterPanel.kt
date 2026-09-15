@@ -45,12 +45,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.vigorly.R
 import com.example.vigorly.data.model.WorkoutType
 import com.example.vigorly.ui.theme.BodyMd
-import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.StatRingMove
+import com.example.vigorly.ui.theme.Surface
 import com.example.vigorly.util.DurationBucket
 import com.example.vigorly.util.WorkoutBrowseFilters
 import com.example.vigorly.util.WorkoutLabels
@@ -69,152 +71,160 @@ fun WorkoutFilterPanel(
     var expanded by remember(visible) { mutableStateOf<FilterSection?>(null) }
     val sheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.45f))
-            .clickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = onDismiss
-            )
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
+        )
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .fillMaxHeight(0.78f)
-                .clip(sheetShape)
-                .background(Color(0xEE121317))
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.78f))
                 .clickable(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
-                    onClick = {}
+                    onClick = onDismiss
                 )
-                .navigationBarsPadding()
-                .padding(horizontal = 22.dp)
-                .padding(top = 20.dp, bottom = 16.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.workout_filter_selected_count, draft.selectedCount),
-                    style = BodyMd.copy(fontSize = 14.sp),
-                    color = OnSurface.copy(alpha = 0.92f)
-                )
-                Text(
-                    text = stringResource(R.string.workout_filter_clear),
-                    style = BodyMd.copy(fontSize = 14.sp, fontWeight = FontWeight.Medium),
-                    color = OnSurface.copy(alpha = 0.92f),
-                    modifier = Modifier.clickable { draft = WorkoutBrowseFilters() }
-                )
-            }
-
             Column(
                 modifier = Modifier
-                    .weight(1f)
+                    .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
+                    .fillMaxHeight(0.78f)
+                    .clip(sheetShape)
+                    .background(Surface)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = {}
+                    )
+                    .navigationBarsPadding()
+                    .padding(horizontal = 22.dp)
+                    .padding(top = 20.dp, bottom = 16.dp)
             ) {
-                FilterAccordionSection(
-                    title = stringResource(R.string.workout_filter_zone),
-                    expanded = expanded == FilterSection.ZONE,
-                    onToggle = {
-                        expanded = if (expanded == FilterSection.ZONE) null else FilterSection.ZONE
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.workout_filter_selected_count, draft.selectedCount),
+                        style = BodyMd.copy(fontSize = 14.sp),
+                        color = OnSurface.copy(alpha = 0.92f)
+                    )
+                    Text(
+                        text = stringResource(R.string.workout_filter_clear),
+                        style = BodyMd.copy(fontSize = 14.sp, fontWeight = FontWeight.Medium),
+                        color = OnSurface.copy(alpha = 0.92f),
+                        modifier = Modifier.clickable { draft = WorkoutBrowseFilters() }
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    FilterAccordionSection(
+                        title = stringResource(R.string.workout_filter_zone),
+                        expanded = expanded == FilterSection.ZONE,
+                        onToggle = {
+                            expanded = if (expanded == FilterSection.ZONE) null else FilterSection.ZONE
+                        },
+                        showDividerAbove = false
+                    ) {
+                        WorkoutZone.entries.forEach { zone ->
+                            FilterCheckRow(
+                                label = zoneLabel(zone),
+                                checked = zone in draft.zones,
+                                onToggle = { draft = draft.copy(zones = draft.zones.toggle(zone)) }
+                            )
+                        }
+                    }
+
+                    FilterAccordionSection(
+                        title = stringResource(R.string.workout_filter_level),
+                        expanded = expanded == FilterSection.LEVEL,
+                        onToggle = {
+                            expanded = if (expanded == FilterSection.LEVEL) null else FilterSection.LEVEL
+                        }
+                    ) {
+                        listOf(
+                            "high" to stringResource(R.string.intensity_high),
+                            "moderate" to stringResource(R.string.intensity_moderate),
+                            "low" to stringResource(R.string.intensity_low)
+                        ).forEach { (key, label) ->
+                            FilterCheckRow(
+                                label = label,
+                                checked = key in draft.intensities,
+                                onToggle = {
+                                    draft = draft.copy(intensities = draft.intensities.toggle(key))
+                                }
+                            )
+                        }
+                    }
+
+                    FilterAccordionSection(
+                        title = stringResource(R.string.workout_filter_duration),
+                        expanded = expanded == FilterSection.DURATION,
+                        onToggle = {
+                            expanded = if (expanded == FilterSection.DURATION) null else FilterSection.DURATION
+                        }
+                    ) {
+                        DurationBucket.entries.forEach { bucket ->
+                            FilterCheckRow(
+                                label = durationLabel(bucket),
+                                checked = bucket in draft.durations,
+                                onToggle = {
+                                    draft = draft.copy(durations = draft.durations.toggle(bucket))
+                                }
+                            )
+                        }
+                    }
+
+                    FilterAccordionSection(
+                        title = stringResource(R.string.workout_filter_type),
+                        expanded = expanded == FilterSection.TYPE,
+                        onToggle = {
+                            expanded = if (expanded == FilterSection.TYPE) null else FilterSection.TYPE
+                        }
+                    ) {
+                        WorkoutType.entries.forEach { type ->
+                            FilterCheckRow(
+                                label = WorkoutLabels.typeLabel(type),
+                                checked = type in draft.types,
+                                onToggle = { draft = draft.copy(types = draft.types.toggle(type)) }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        onApply(draft)
+                        onDismiss()
                     },
-                    showDividerAbove = false
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp),
+                    shape = RoundedCornerShape(999.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = StatRingMove,
+                        contentColor = Color.White
+                    )
                 ) {
-                    WorkoutZone.entries.forEach { zone ->
-                        FilterCheckRow(
-                            label = zoneLabel(zone),
-                            checked = zone in draft.zones,
-                            onToggle = { draft = draft.copy(zones = draft.zones.toggle(zone)) }
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.workout_filter_apply),
+                        style = BodyMd.copy(fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    )
                 }
-
-                FilterAccordionSection(
-                    title = stringResource(R.string.workout_filter_level),
-                    expanded = expanded == FilterSection.LEVEL,
-                    onToggle = {
-                        expanded = if (expanded == FilterSection.LEVEL) null else FilterSection.LEVEL
-                    }
-                ) {
-                    listOf(
-                        "high" to stringResource(R.string.intensity_high),
-                        "moderate" to stringResource(R.string.intensity_moderate),
-                        "low" to stringResource(R.string.intensity_low)
-                    ).forEach { (key, label) ->
-                        FilterCheckRow(
-                            label = label,
-                            checked = key in draft.intensities,
-                            onToggle = {
-                                draft = draft.copy(intensities = draft.intensities.toggle(key))
-                            }
-                        )
-                    }
-                }
-
-                FilterAccordionSection(
-                    title = stringResource(R.string.workout_filter_duration),
-                    expanded = expanded == FilterSection.DURATION,
-                    onToggle = {
-                        expanded = if (expanded == FilterSection.DURATION) null else FilterSection.DURATION
-                    }
-                ) {
-                    DurationBucket.entries.forEach { bucket ->
-                        FilterCheckRow(
-                            label = durationLabel(bucket),
-                            checked = bucket in draft.durations,
-                            onToggle = {
-                                draft = draft.copy(durations = draft.durations.toggle(bucket))
-                            }
-                        )
-                    }
-                }
-
-                FilterAccordionSection(
-                    title = stringResource(R.string.workout_filter_type),
-                    expanded = expanded == FilterSection.TYPE,
-                    onToggle = {
-                        expanded = if (expanded == FilterSection.TYPE) null else FilterSection.TYPE
-                    }
-                ) {
-                    WorkoutType.entries.forEach { type ->
-                        FilterCheckRow(
-                            label = WorkoutLabels.typeLabel(type),
-                            checked = type in draft.types,
-                            onToggle = { draft = draft.copy(types = draft.types.toggle(type)) }
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            Button(
-                onClick = {
-                    onApply(draft)
-                    onDismiss()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp),
-                shape = RoundedCornerShape(999.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = StatRingMove,
-                    contentColor = Color.White
-                )
-            ) {
-                Text(
-                    text = stringResource(R.string.workout_filter_apply),
-                    style = BodyMd.copy(fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                )
             }
         }
     }
