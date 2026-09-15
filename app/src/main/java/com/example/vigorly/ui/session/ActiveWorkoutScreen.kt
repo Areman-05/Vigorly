@@ -92,8 +92,9 @@ fun ActiveWorkoutScreen(
     }
 
     val current = session ?: return
-    val exercises = workout?.let { repository.flatExercises(it) } ?: emptyList()
-    val exercise = exercises.getOrNull(current.currentExerciseIndex)
+    val steps = workout?.let { repository.sessionSteps(it) } ?: emptyList()
+    val step = steps.getOrNull(current.currentExerciseIndex)
+    val isWarmup = step?.isWarmup == true
     val isResting = current.restSecondsRemaining > 0
     val isPaused = current.isPaused && !isResting
 
@@ -127,7 +128,7 @@ fun ActiveWorkoutScreen(
             total = current.totalExercises,
             currentIndex = current.currentExerciseIndex,
             completedIds = current.completedExerciseIds,
-            exerciseIds = exercises.map { it.id }
+            exerciseIds = steps.map { it.id }
         )
 
         Spacer(Modifier.height(Dimens.Lg))
@@ -136,23 +137,31 @@ fun ActiveWorkoutScreen(
             RestPhase(
                 secondsLeft = current.restSecondsRemaining,
                 progress = phaseProgress,
-                nextName = exercise?.name.orEmpty(),
-                nextSets = exercise?.setsRepsLabel.orEmpty(),
+                nextName = step?.name.orEmpty(),
+                nextSets = step?.detailLabel.orEmpty(),
                 onSkip = repository::skipRest,
                 modifier = Modifier.weight(1f)
             )
         } else {
             ExercisePhase(
                 stepLabel = stringResource(
-                    R.string.session_exercise_progress,
+                    if (isWarmup) R.string.session_warmup_progress else R.string.session_exercise_progress,
                     current.currentExerciseIndex + 1,
                     current.totalExercises
                 ),
-                exerciseName = exercise?.name ?: "—",
-                setsLabel = exercise?.setsRepsLabel.orEmpty(),
+                exerciseName = step?.name ?: "—",
+                setsLabel = step?.detailLabel.orEmpty(),
+                coachingHint = stringResource(
+                    if (isWarmup) R.string.session_warmup_hint else R.string.session_exercise_hint
+                ),
                 secondsLeft = current.exerciseSecondsRemaining,
                 progress = phaseProgress,
                 paused = isPaused,
+                completeLabelRes = if (isWarmup) {
+                    R.string.mark_warmup_done
+                } else {
+                    R.string.mark_exercise_done
+                },
                 onPrevious = repository::previousExercise,
                 onTogglePause = repository::toggleSessionPause,
                 onNext = {
@@ -267,9 +276,11 @@ private fun ExercisePhase(
     stepLabel: String,
     exerciseName: String,
     setsLabel: String,
+    coachingHint: String,
     secondsLeft: Int,
     progress: Float,
     paused: Boolean,
+    completeLabelRes: Int,
     onPrevious: () -> Unit,
     onTogglePause: () -> Unit,
     onNext: () -> Unit,
@@ -312,6 +323,13 @@ private fun ExercisePhase(
                 modifier = Modifier.padding(top = 10.dp)
             )
         }
+
+        Text(
+            text = coachingHint,
+            style = BodyMd.copy(fontSize = 14.sp, lineHeight = 20.sp),
+            color = GlassLabel.copy(alpha = 0.78f),
+            modifier = Modifier.padding(top = 8.dp)
+        )
 
         Spacer(Modifier.weight(1f))
 
@@ -379,7 +397,7 @@ private fun ExercisePhase(
 
         WorkoutDetailStartCta(
             onClick = onComplete,
-            labelRes = R.string.mark_exercise_done,
+            labelRes = completeLabelRes,
             showPlayIcon = false,
             cornerRadius = 18.dp,
             modifier = Modifier
