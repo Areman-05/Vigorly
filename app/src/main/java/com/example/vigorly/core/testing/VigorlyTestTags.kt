@@ -8,6 +8,7 @@ object VigorlyTestTags {
     const val DASHBOARD = "screen_dashboard"
     const val WORKOUTS = "screen_workouts"
     const val HISTORY = "screen_history"
+    const val ANALYSIS = "screen_analysis"
     const val PROFILE = "screen_profile"
     const val SETTINGS = "screen_settings"
     const val INSIGHTS = "screen_insights"
@@ -17,6 +18,7 @@ object VigorlyTestTags {
     const val NAV_DASHBOARD = "nav_dashboard"
     const val NAV_WORKOUTS = "nav_workouts"
     const val NAV_HISTORY = "nav_history"
+    const val NAV_ANALYSIS = "nav_analysis"
     const val NAV_PROFILE = "nav_profile"
 
     const val TOPBAR_SETTINGS = "action_settings"

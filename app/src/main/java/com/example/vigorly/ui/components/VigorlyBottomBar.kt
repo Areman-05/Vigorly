@@ -58,7 +58,7 @@ fun VigorlyBottomBar(
     val items = listOf(
         BottomNavItem(VigorlyRoutes.Dashboard, R.string.nav_dashboard, Icons.Outlined.Home, VigorlyTestTags.NAV_DASHBOARD),
         BottomNavItem(VigorlyRoutes.Workouts, R.string.nav_workouts, Icons.Outlined.FitnessCenter, VigorlyTestTags.NAV_WORKOUTS),
-        BottomNavItem(VigorlyRoutes.History, R.string.nav_history, Icons.AutoMirrored.Outlined.ShowChart, VigorlyTestTags.NAV_HISTORY),
+        BottomNavItem(VigorlyRoutes.Analysis, R.string.nav_analysis, Icons.AutoMirrored.Outlined.ShowChart, VigorlyTestTags.NAV_ANALYSIS),
         BottomNavItem(VigorlyRoutes.Profile, R.string.nav_profile, Icons.Outlined.Person, VigorlyTestTags.NAV_PROFILE)
     )
     val pillShape = RoundedCornerShape(32.dp)

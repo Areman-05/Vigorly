@@ -24,7 +24,7 @@ typealias VigorlyComposeRule =
 private val navTagToScreenTag = mapOf(
     VigorlyTestTags.NAV_DASHBOARD to VigorlyTestTags.DASHBOARD,
     VigorlyTestTags.NAV_WORKOUTS to VigorlyTestTags.WORKOUTS,
-    VigorlyTestTags.NAV_HISTORY to VigorlyTestTags.HISTORY,
+    VigorlyTestTags.NAV_ANALYSIS to VigorlyTestTags.ANALYSIS,
     VigorlyTestTags.NAV_PROFILE to VigorlyTestTags.PROFILE
 )
 
@@ -120,7 +120,7 @@ fun VigorlyComposeRule.navigateToTab(navTag: String) {
 }
 
 fun VigorlyComposeRule.openSettingsFromMain() {
-    navigateToTab(VigorlyTestTags.NAV_HISTORY)
+    navigateToTab(VigorlyTestTags.NAV_ANALYSIS)
     waitUntilTagExists(VigorlyTestTags.TOPBAR_SETTINGS)
     onNodeWithTag(VigorlyTestTags.TOPBAR_SETTINGS).performClick()
     waitUntilTagExists(VigorlyTestTags.SETTINGS)

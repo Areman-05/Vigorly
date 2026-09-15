@@ -80,6 +80,7 @@ fun ActivityDetailTopBar(
     modifier: Modifier = Modifier
 ) {
     val calendarLabel = stringResource(R.string.activity_calendar_open)
+    val backLabel = stringResource(R.string.go_back)
 
     TopAppBar(
         modifier = modifier,
@@ -88,24 +89,31 @@ fun ActivityDetailTopBar(
             scrolledContainerColor = Color.Transparent
         ),
         navigationIcon = {
-            IconButton(
+            FrostedGlassCircleButton(
                 onClick = onBackClick,
-                modifier = Modifier.testTag(VigorlyTestTags.TOPBAR_BACK)
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .testTag(VigorlyTestTags.TOPBAR_BACK)
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = com.example.vigorly.ui.theme.OnSurfaceVariant
+                    contentDescription = backLabel,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         },
         title = {},
         actions = {
-            IconButton(onClick = onCalendarClick) {
+            FrostedGlassCircleButton(
+                onClick = onCalendarClick,
+                modifier = Modifier.padding(end = 8.dp)
+            ) {
                 Icon(
                     Icons.Default.CalendarMonth,
                     contentDescription = calendarLabel,
-                    tint = Primary
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }

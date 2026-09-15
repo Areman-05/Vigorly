@@ -16,10 +16,13 @@ import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.navigation.VigorlyRoutes
 import com.example.vigorly.presentation.app.AppViewModel
+import com.example.vigorly.ui.analysis.AnalysisScreen
 import com.example.vigorly.ui.auth.LoginScreen
 import com.example.vigorly.ui.auth.RegisterScreen
 import com.example.vigorly.ui.components.RouteFallbackScreen
+import com.example.vigorly.data.activity.ActivityMetric
 import com.example.vigorly.ui.dashboard.ActivityDetailScreen
+import com.example.vigorly.ui.dashboard.ActivityMetricDetailScreen
 import com.example.vigorly.ui.dashboard.DashboardScreen
 import com.example.vigorly.ui.history.HistoryDetailScreen
 import com.example.vigorly.ui.history.HistoryScreen
@@ -28,7 +31,6 @@ import com.example.vigorly.ui.milestones.MilestonesScreen
 import com.example.vigorly.ui.profile.ProfileScreen
 import com.example.vigorly.ui.session.ActiveWorkoutScreen
 import com.example.vigorly.ui.session.SessionSummaryScreen
-import com.example.vigorly.ui.settings.SettingsScreen
 import com.example.vigorly.ui.setup.SetupWizardScreen
 import com.example.vigorly.ui.splash.SplashScreen
 import com.example.vigorly.ui.workout.WorkoutDetailScreen
@@ -115,12 +117,51 @@ fun NavGraphBuilder.vigorlyNavGraph(
             }
         )
     }
+    composable(
+        route = VigorlyRoutes.ActivityMetricDetail,
+        arguments = listOf(navArgument("metric") { type = NavType.StringType })
+    ) { entry ->
+        val metric = ActivityMetric.fromRoute(entry.arguments?.getString("metric"))
+        ActivityMetricDetailScreen(
+            metric = metric,
+            repository = repository,
+            onBack = { navController.popBackStack() },
+            modifier = Modifier.fillMaxSize()
+        )
+    }
     composable(VigorlyRoutes.Workouts) {
         WorkoutsScreen(
             repository = repository,
             modifier = contentPaddingModifier,
             onWorkoutClick = { id -> navController.navigate(VigorlyRoutes.workoutDetail(id)) },
             onFilterOverlayChange = onWorkoutsFilterOverlayChange
+        )
+    }
+    composable(VigorlyRoutes.Analysis) {
+        AnalysisScreen(
+            repository = repository,
+            onOpenMetric = { metric ->
+                navController.navigate(VigorlyRoutes.activityMetric(metric.name.lowercase()))
+            },
+            modifier = contentPaddingModifier
+        )
+    }
+    composable(VigorlyRoutes.Profile) {
+        ProfileScreen(
+            repository = repository,
+            modifier = contentPaddingModifier,
+            onRestartOnboarding = {
+                navController.navigate(VigorlyRoutes.Setup) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = false
+                    }
+                    launchSingleTop = true
+                }
+            },
+            onLogout = {
+                repository.logout()
+                onNavigateToLogin()
+            }
         )
     }
     composable(VigorlyRoutes.History) {
@@ -132,16 +173,9 @@ fun NavGraphBuilder.vigorlyNavGraph(
             }
         )
     }
-    composable(VigorlyRoutes.Profile) {
-        ProfileScreen(
-            repository = repository,
-            modifier = contentPaddingModifier,
-            onViewAllMilestones = { navController.navigate(VigorlyRoutes.Milestones) },
-            onOpenInsights = { navController.navigate(VigorlyRoutes.Insights) }
-        )
-    }
     composable(VigorlyRoutes.Settings) {
-        SettingsScreen(
+        // Config vive en Perfil: redirigir
+        ProfileScreen(
             repository = repository,
             modifier = contentPaddingModifier,
             onRestartOnboarding = {

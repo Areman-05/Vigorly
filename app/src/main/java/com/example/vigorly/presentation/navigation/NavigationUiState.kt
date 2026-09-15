@@ -10,6 +10,7 @@ data class NavigationUiState(
     val isDetailOrSession: Boolean,
     val isSubScreen: Boolean,
     val isActivityDetail: Boolean,
+    val isActivityMetricDetail: Boolean,
     val isSummary: Boolean,
     val isHistoryDetail: Boolean,
     val showGradientBackground: Boolean
@@ -22,12 +23,14 @@ data class NavigationUiState(
                 route?.startsWith("session/") == true
             val isSubScreen = route in VigorlyDestinationGroups.SECONDARY
             val isActivityDetail = route == VigorlyRoutes.ActivityDetail
+            val isActivityMetricDetail = route?.startsWith("activity/metric/") == true
             val isSummary = route == VigorlyRoutes.SessionSummary
             val isHistoryDetail = route?.startsWith("history/") == true &&
                 route != VigorlyRoutes.History
             val showGradientBackground = showBottomBar ||
                 isSubScreen ||
                 isActivityDetail ||
+                isActivityMetricDetail ||
                 (isDetailOrSession && route?.startsWith("session/") == true) ||
                 isSummary ||
                 isHistoryDetail
@@ -39,6 +42,7 @@ data class NavigationUiState(
                 isDetailOrSession = isDetailOrSession,
                 isSubScreen = isSubScreen,
                 isActivityDetail = isActivityDetail,
+                isActivityMetricDetail = isActivityMetricDetail,
                 isSummary = isSummary,
                 isHistoryDetail = isHistoryDetail,
                 showGradientBackground = showGradientBackground

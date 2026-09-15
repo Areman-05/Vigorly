@@ -87,8 +87,8 @@ fun VigorlyApp(
         }
     }
 
-    LaunchedEffect(navState.isActivityDetail) {
-        if (!navState.isActivityDetail) {
+    LaunchedEffect(navState.isActivityDetail, navState.isActivityMetricDetail) {
+        if (!navState.isActivityDetail && !navState.isActivityMetricDetail) {
             showActivityCalendar = false
             repository.resetSelectedActivityDateToToday()
         }
@@ -124,38 +124,58 @@ fun VigorlyApp(
                     onBackClick = { navController.popBackStack() },
                     onCalendarClick = { showActivityCalendar = true }
                 )
+                navState.isActivityMetricDetail -> {}
                 navState.isDetailOrSession && currentRoute?.startsWith("workout/") == true -> {}
                 navState.isDetailOrSession &&
                     currentRoute?.startsWith("session/") == true &&
                     !navState.isSummary -> {}
                 navState.isDetailOrSession || navState.isHistoryDetail -> VigorlyDetailTopBar(
                     onBackClick = { navController.popBackStack() },
-                    onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) },
+                    onSettingsClick = {
+                        navController.navigate(VigorlyRoutes.Profile) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     showBrandTitle = !navState.isDetailOrSession && !navState.isHistoryDetail,
                     showSettingsAction = !navState.isDetailOrSession && !navState.isHistoryDetail
                 )
                 navState.isSubScreen -> VigorlyDetailTopBar(
                     onBackClick = { navController.popBackStack() },
                     onSettingsClick = {
-                        if (navState.currentRoute != VigorlyRoutes.Milestones &&
-                            navState.currentRoute != VigorlyRoutes.Insights &&
-                            navState.currentRoute != VigorlyRoutes.Settings
-                        ) {
-                            navController.navigate(VigorlyRoutes.Settings)
+                        navController.navigate(VigorlyRoutes.Profile) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
                     },
                     showBrandTitle = navState.currentRoute != VigorlyRoutes.Milestones &&
                         navState.currentRoute != VigorlyRoutes.Insights &&
-                        navState.currentRoute != VigorlyRoutes.Settings,
+                        navState.currentRoute != VigorlyRoutes.History,
                     showSettingsAction = navState.currentRoute != VigorlyRoutes.Milestones &&
                         navState.currentRoute != VigorlyRoutes.Insights &&
-                        navState.currentRoute != VigorlyRoutes.Settings
+                        navState.currentRoute != VigorlyRoutes.History
                 )
                 navState.showBottomBar &&
                     navState.currentRoute != VigorlyRoutes.Dashboard &&
-                    navState.currentRoute != VigorlyRoutes.Workouts ->
+                    navState.currentRoute != VigorlyRoutes.Workouts &&
+                    navState.currentRoute != VigorlyRoutes.Analysis &&
+                    navState.currentRoute != VigorlyRoutes.Profile ->
                     VigorlyMainTopBar(
-                        onSettingsClick = { navController.navigate(VigorlyRoutes.Settings) }
+                        onSettingsClick = {
+                            navController.navigate(VigorlyRoutes.Profile) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     )
             }
         }

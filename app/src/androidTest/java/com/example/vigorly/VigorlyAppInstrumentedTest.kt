@@ -41,8 +41,8 @@ class VigorlyAppInstrumentedTest {
         composeRule.navigateToTab(VigorlyTestTags.NAV_WORKOUTS)
         composeRule.onNodeWithTag(VigorlyTestTags.WORKOUTS).assertIsDisplayed()
 
-        composeRule.navigateToTab(VigorlyTestTags.NAV_HISTORY)
-        composeRule.onNodeWithTag(VigorlyTestTags.HISTORY).assertIsDisplayed()
+        composeRule.navigateToTab(VigorlyTestTags.NAV_ANALYSIS)
+        composeRule.onNodeWithTag(VigorlyTestTags.ANALYSIS).assertIsDisplayed()
 
         composeRule.navigateToTab(VigorlyTestTags.NAV_PROFILE)
         composeRule.onNodeWithTag(VigorlyTestTags.PROFILE).assertIsDisplayed()
