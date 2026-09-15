@@ -25,10 +25,11 @@ object WeeklyActivityRingsBuilder {
     fun build(
         history: Map<String, DailyActivityDaySummary>,
         liveTodayDetail: DailyActivityDetail,
+        reference: LocalDate = LocalDate.now(),
         today: LocalDate = LocalDate.now(),
         locale: Locale = Locale.getDefault()
     ): List<WeeklyActivityRingDay> {
-        return weekDatesFor(today, locale).map { date ->
+        return weekDatesFor(reference, locale).map { date ->
             toRingDay(date, today, history, liveTodayDetail, locale)
         }
     }
@@ -50,6 +51,8 @@ object WeeklyActivityRingsBuilder {
         val endLabel = end.format(formatter)
         return "$startLabel – $endLabel"
     }
+
+    fun shiftWeek(reference: LocalDate, weeks: Long): LocalDate = reference.plusWeeks(weeks)
 
     private fun toRingDay(
         date: LocalDate,

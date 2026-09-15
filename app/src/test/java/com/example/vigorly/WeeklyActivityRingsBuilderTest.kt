@@ -20,6 +20,7 @@ class WeeklyActivityRingsBuilderTest {
         val days = WeeklyActivityRingsBuilder.build(
             history = emptyMap(),
             liveTodayDetail = DailyActivityDetail(),
+            reference = wednesday,
             today = wednesday,
             locale = locale
         )
@@ -34,6 +35,7 @@ class WeeklyActivityRingsBuilderTest {
         val days = WeeklyActivityRingsBuilder.build(
             history = emptyMap(),
             liveTodayDetail = DailyActivityDetail(),
+            reference = wednesday,
             today = wednesday,
             locale = locale
         )
@@ -60,6 +62,7 @@ class WeeklyActivityRingsBuilderTest {
         val days = WeeklyActivityRingsBuilder.build(
             history = history,
             liveTodayDetail = live,
+            reference = wednesday,
             today = wednesday,
             locale = locale
         )

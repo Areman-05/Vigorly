@@ -11,16 +11,14 @@ class MilestoneUnlockerTest {
     @Test
     fun elite_requiresProAndMaxLevel() {
         val profile = VigorlyRepository.defaultProfile().copy(totalWorkouts = 45, isProMember = true)
-        val elite = MilestoneUnlocker.apply(profile, VigorlyRepository.defaultMilestones())
-            .first { it.id == "elite" }
-        assertTrue(elite.unlocked)
+        val (milestones, _) = MilestoneUnlocker.apply(profile, VigorlyRepository.defaultMilestones())
+        assertTrue(milestones.first { it.id == "elite" }.unlocked)
     }
 
     @Test
     fun elite_lockedWithoutPro() {
         val profile = VigorlyRepository.defaultProfile().copy(totalWorkouts = 100, isProMember = false)
-        val elite = MilestoneUnlocker.apply(profile, VigorlyRepository.defaultMilestones())
-            .first { it.id == "elite" }
-        assertFalse(elite.unlocked)
+        val (milestones, _) = MilestoneUnlocker.apply(profile, VigorlyRepository.defaultMilestones())
+        assertFalse(milestones.first { it.id == "elite" }.unlocked)
     }
 }

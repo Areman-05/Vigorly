@@ -15,6 +15,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -192,13 +193,15 @@ class DailyActivityTracker(
         pendingDiskPersist = false
         stateMutex.withLock { persistState() }
         val previous = preferences.dailyGoalsState()
+        val activityLevel = preferences.activityLevel.first()
         val goals = DailyGoalsCalculator.build(
             steps = steps,
             workoutCalories = workoutCalories,
             exerciseMinutes = exerciseMinutes,
             standHours = standCount,
             heartRateBpm = if (preserveWellness) previous.heartRateBpm else 0,
-            sleepHours = if (preserveWellness) previous.sleepHours else 0f
+            sleepHours = if (preserveWellness) previous.sleepHours else 0f,
+            activityLevel = activityLevel
         )
         preferences.updateDailyGoals(goals)
         onMetricsUpdated(goals)

@@ -5,11 +5,25 @@ import com.example.vigorly.data.model.UserProfile
 import com.example.vigorly.util.LevelCalculator
 
 object MilestoneUnlocker {
-    fun apply(profile: UserProfile, milestones: List<Milestone>): List<Milestone> {
+    fun apply(
+        profile: UserProfile,
+        milestones: List<Milestone>,
+        unlockDates: Map<String, Long> = emptyMap(),
+        nowMillis: Long = System.currentTimeMillis()
+    ): Pair<List<Milestone>, Map<String, Long>> {
         val level = LevelCalculator.levelFromWorkouts(profile.totalWorkouts)
-        return milestones.map { milestone ->
-            milestone.copy(unlocked = isUnlocked(milestone.id, profile, level))
+        val updatedDates = unlockDates.toMutableMap()
+        val result = milestones.map { milestone ->
+            val unlocked = isUnlocked(milestone.id, profile, level)
+            if (unlocked && milestone.id !in updatedDates) {
+                updatedDates[milestone.id] = nowMillis
+            }
+            milestone.copy(
+                unlocked = unlocked,
+                unlockedAtMillis = if (unlocked) updatedDates[milestone.id] else null
+            )
         }
+        return result to updatedDates
     }
 
     private fun isUnlocked(id: String, profile: UserProfile, level: Int): Boolean {
