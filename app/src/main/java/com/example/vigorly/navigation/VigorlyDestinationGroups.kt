@@ -5,7 +5,7 @@ package com.example.vigorly.navigation
  *
  * Flujo de autenticación: Splash → Login | Register → Setup → pestañas principales.
  * Pestañas principales: Dashboard, Workouts, Analysis, Profile.
- * Pantallas secundarias: Settings, Milestones, Insights, ActivityDetail,
+ * Pantallas secundarias: History, Milestones, ActivityDetail,
  * WorkoutDetail, ActiveSession, SessionSummary, HistoryDetail.
  */
 object VigorlyDestinationGroups {
@@ -24,9 +24,7 @@ object VigorlyDestinationGroups {
     )
 
     val SECONDARY = setOf(
-        VigorlyRoutes.Settings,
         VigorlyRoutes.Milestones,
-        VigorlyRoutes.Insights,
         VigorlyRoutes.History
     )
 }

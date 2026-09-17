@@ -17,11 +17,34 @@ class NavigationUiStateTest {
     }
 
     @Test
-    fun settings_isSubScreenWithoutBottomBar() {
-        val state = NavigationUiState.fromRoute(VigorlyRoutes.Settings)
+    fun milestones_isSubScreenWithoutBottomBar() {
+        val state = NavigationUiState.fromRoute(VigorlyRoutes.Milestones)
         assertFalse(state.showBottomBar)
         assertTrue(state.isSubScreen)
         assertTrue(state.showGradientBackground)
+    }
+
+    @Test
+    fun workoutDetail_isDetailWithoutBottomBar() {
+        val state = NavigationUiState.fromRoute(VigorlyRoutes.workoutDetail("hiit_sprint"))
+        assertTrue(state.isDetailOrSession)
+        assertFalse(state.showBottomBar)
+    }
+
+    @Test
+    fun activeSession_usesOwnStageBackground() {
+        val state = NavigationUiState.fromRoute(VigorlyRoutes.activeSession("hiit_sprint"))
+        assertTrue(state.isDetailOrSession)
+        assertFalse(state.showGradientBackground)
+        assertFalse(state.showBottomBar)
+    }
+
+    @Test
+    fun sessionSummary_usesOwnStageBackground() {
+        val state = NavigationUiState.fromRoute(VigorlyRoutes.SessionSummary)
+        assertTrue(state.isSummary)
+        assertFalse(state.showGradientBackground)
+        assertFalse(state.showBottomBar)
     }
 
     @Test

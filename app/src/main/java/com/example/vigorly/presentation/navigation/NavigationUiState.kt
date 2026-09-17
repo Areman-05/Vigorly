@@ -31,8 +31,6 @@ data class NavigationUiState(
                 isSubScreen ||
                 isActivityDetail ||
                 isActivityMetricDetail ||
-                (isDetailOrSession && route?.startsWith("session/") == true) ||
-                isSummary ||
                 isHistoryDetail
 
             return NavigationUiState(

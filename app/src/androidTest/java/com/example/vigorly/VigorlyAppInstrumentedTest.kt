@@ -75,23 +75,19 @@ class VigorlyAppInstrumentedTest {
     }
 
     @Test
-    fun test06_profile_openMilestonesAndInsights() {
+    fun test06_profile_openHistory() {
         composeRule.ensureLoggedInWithMainTabs()
         composeRule.navigateToTab(VigorlyTestTags.NAV_PROFILE)
 
-        composeRule.onNodeWithTag(VigorlyTestTags.PROFILE_OPEN_INSIGHTS)
+        composeRule.onNodeWithTag(VigorlyTestTags.PROFILE_OPEN_HISTORY)
             .performScrollTo()
             .performClick()
-        composeRule.waitUntilTagExists(VigorlyTestTags.INSIGHTS)
-        composeRule.onNodeWithTag(VigorlyTestTags.INSIGHTS).assertIsDisplayed()
+        composeRule.waitUntilTagExists(VigorlyTestTags.HISTORY)
+        composeRule.onNodeWithTag(VigorlyTestTags.HISTORY).assertIsDisplayed()
 
         composeRule.pressTopBarBack()
         composeRule.waitUntilTagExists(VigorlyTestTags.PROFILE)
-        composeRule.onNodeWithTag(VigorlyTestTags.PROFILE_OPEN_MILESTONES)
-            .performScrollTo()
-            .performClick()
-        composeRule.waitUntilTagExists(VigorlyTestTags.MILESTONES)
-        composeRule.onNodeWithTag(VigorlyTestTags.MILESTONES).assertIsDisplayed()
+        composeRule.onNodeWithTag(VigorlyTestTags.PROFILE).assertIsDisplayed()
     }
 
     @Test

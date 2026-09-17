@@ -10,8 +10,6 @@ object VigorlyRoutes {
     const val Analysis = "analysis"
     const val History = "history"
     const val Profile = "profile"
-    const val Insights = "insights"
-    const val Settings = "settings"
     const val Milestones = "milestones"
     const val WorkoutDetail = "workout/{workoutId}"
     const val ActiveSession = "session/{workoutId}"

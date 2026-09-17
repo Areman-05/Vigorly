@@ -134,14 +134,17 @@ fun VigorlyDetailTopBar(
             scrolledContainerColor = Color.Transparent
         ),
         navigationIcon = {
-            IconButton(
+            FrostedGlassCircleButton(
                 onClick = onBackClick,
-                modifier = Modifier.testTag(VigorlyTestTags.TOPBAR_BACK)
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .testTag(VigorlyTestTags.TOPBAR_BACK)
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = com.example.vigorly.ui.theme.OnSurfaceVariant
+                    contentDescription = stringResource(R.string.go_back),
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         },

@@ -1,5 +1,9 @@
 package com.example.vigorly
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -42,11 +47,44 @@ import com.example.vigorly.ui.components.MainShellBackground
 import com.example.vigorly.ui.components.VigorlyBottomBar
 import com.example.vigorly.ui.components.VigorlyDetailTopBar
 import com.example.vigorly.ui.components.VigorlyMainTopBar
+import com.example.vigorly.ui.splash.SplashScreen
 import com.example.vigorly.ui.theme.Background
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun VigorlyApp(
+    repository: VigorlyRepository,
+    appViewModel: AppViewModel
+) {
+    var startDestination by remember { mutableStateOf<String?>(null) }
+
+    if (startDestination == null) {
+        BackHandler { }
+        SplashScreen(
+            repository = repository,
+            onFinished = { destination ->
+                startDestination = when (destination) {
+                    AppDestination.Setup -> VigorlyRoutes.Setup
+                    AppDestination.Main -> VigorlyRoutes.Dashboard
+                    AppDestination.Register -> VigorlyRoutes.Register
+                    AppDestination.Login, AppDestination.Splash -> VigorlyRoutes.Login
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+        return
+    }
+
+    VigorlyMainNavigation(
+        startDestination = startDestination!!,
+        repository = repository,
+        appViewModel = appViewModel
+    )
+}
+
+@Composable
+private fun VigorlyMainNavigation(
+    startDestination: String,
     repository: VigorlyRepository,
     appViewModel: AppViewModel
 ) {
@@ -60,17 +98,18 @@ fun VigorlyApp(
     var hideBottomBarOverlay by remember { mutableStateOf(false) }
     val isLoggedIn by repository.isLoggedIn.collectAsState()
     val layoutDirection = LocalLayoutDirection.current
+    val activity = LocalContext.current.findActivity()
+
+    BackHandler(enabled = isLoggedIn && navState.showBottomBar) {
+        activity?.moveTaskToBack(true)
+    }
 
     LaunchedEffect(isLoggedIn, currentRoute) {
         if (!UiTestEnvironment.isInstrumentedTest || !isLoggedIn) return@LaunchedEffect
-        when (currentRoute) {
-            VigorlyRoutes.Splash, VigorlyRoutes.Login -> {
-                navController.navigate(VigorlyRoutes.Dashboard) {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        inclusive = true
-                    }
-                    launchSingleTop = true
-                }
+        if (currentRoute == VigorlyRoutes.Login) {
+            navController.navigate(VigorlyRoutes.Dashboard) {
+                popUpTo(VigorlyRoutes.Login) { inclusive = false }
+                launchSingleTop = true
             }
         }
     }
@@ -94,22 +133,17 @@ fun VigorlyApp(
         }
     }
 
-    fun navigateFromSplash(destination: AppDestination) {
-        val route = when (destination) {
-            AppDestination.Login -> VigorlyRoutes.Login
-            AppDestination.Setup -> VigorlyRoutes.Setup
-            AppDestination.Main -> VigorlyRoutes.Dashboard
-            AppDestination.Splash -> return
-            AppDestination.Register -> VigorlyRoutes.Register
-        }
-        navController.navigate(route) {
-            popUpTo(VigorlyRoutes.Splash) { inclusive = true }
-        }
-    }
-
     fun navigateToLogin() {
-        navController.navigate(VigorlyRoutes.Login) {
-            popUpTo(0) { inclusive = true }
+        if (navController.currentDestination?.route == VigorlyRoutes.Login) return
+        if (startDestination == VigorlyRoutes.Login) {
+            runCatching { navController.popBackStack(VigorlyRoutes.Login, false) }
+            return
+        }
+        runCatching {
+            navController.navigate(VigorlyRoutes.Login) {
+                popUpTo(startDestination) { inclusive = true }
+                launchSingleTop = true
+            }
         }
     }
 
@@ -155,10 +189,8 @@ fun VigorlyApp(
                         }
                     },
                     showBrandTitle = navState.currentRoute != VigorlyRoutes.Milestones &&
-                        navState.currentRoute != VigorlyRoutes.Insights &&
                         navState.currentRoute != VigorlyRoutes.History,
                     showSettingsAction = navState.currentRoute != VigorlyRoutes.Milestones &&
-                        navState.currentRoute != VigorlyRoutes.Insights &&
                         navState.currentRoute != VigorlyRoutes.History
                 )
                 navState.showBottomBar &&
@@ -190,8 +222,8 @@ fun VigorlyApp(
             val contentPadding = if (navState.showBottomBar) {
                 PaddingValues(
                     start = padding.calculateStartPadding(layoutDirection),
-                    top = padding.calculateTopPadding(),
                     end = padding.calculateEndPadding(layoutDirection),
+                    top = padding.calculateTopPadding(),
                     bottom = 0.dp
                 )
             } else {
@@ -211,7 +243,7 @@ fun VigorlyApp(
 
             NavHost(
                 navController = navController,
-                startDestination = VigorlyRoutes.Splash,
+                startDestination = startDestination,
                 modifier = navHostModifier
             ) {
                 vigorlyNavGraph(
@@ -220,7 +252,6 @@ fun VigorlyApp(
                     appViewModel = appViewModel,
                     showActivityCalendar = showActivityCalendar,
                     onShowActivityCalendarChange = { showActivityCalendar = it },
-                    onNavigateFromSplash = ::navigateFromSplash,
                     onNavigateToLogin = ::navigateToLogin,
                     workoutCompletedMessage = workoutCompletedMessage,
                     contentPaddingModifier = screenPaddingModifier,
@@ -247,4 +278,13 @@ fun VigorlyApp(
             }
         }
     }
+}
+
+private fun Context.findActivity(): Activity? {
+    var ctx: Context? = this
+    while (ctx is ContextWrapper) {
+        if (ctx is Activity) return ctx
+        ctx = ctx.baseContext
+    }
+    return ctx as? Activity
 }

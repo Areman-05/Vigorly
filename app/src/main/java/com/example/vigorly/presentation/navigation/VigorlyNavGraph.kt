@@ -13,7 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.vigorly.R
 import com.example.vigorly.data.repository.VigorlyRepository
-import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.navigation.VigorlyRoutes
 import com.example.vigorly.presentation.app.AppViewModel
 import com.example.vigorly.ui.analysis.AnalysisScreen
@@ -26,13 +25,11 @@ import com.example.vigorly.ui.dashboard.ActivityMetricDetailScreen
 import com.example.vigorly.ui.dashboard.DashboardScreen
 import com.example.vigorly.ui.history.HistoryDetailScreen
 import com.example.vigorly.ui.history.HistoryScreen
-import com.example.vigorly.ui.insights.InsightsScreen
 import com.example.vigorly.ui.milestones.MilestonesScreen
 import com.example.vigorly.ui.profile.ProfileScreen
 import com.example.vigorly.ui.session.ActiveWorkoutScreen
 import com.example.vigorly.ui.session.SessionSummaryScreen
 import com.example.vigorly.ui.setup.SetupWizardScreen
-import com.example.vigorly.ui.splash.SplashScreen
 import com.example.vigorly.ui.workout.WorkoutDetailScreen
 import com.example.vigorly.ui.workout.WorkoutsScreen
 
@@ -42,25 +39,24 @@ fun NavGraphBuilder.vigorlyNavGraph(
     appViewModel: AppViewModel,
     showActivityCalendar: Boolean,
     onShowActivityCalendarChange: (Boolean) -> Unit,
-    onNavigateFromSplash: (AppDestination) -> Unit,
     onNavigateToLogin: () -> Unit,
     workoutCompletedMessage: String,
     contentPaddingModifier: Modifier,
     onWorkoutsFilterOverlayChange: (Boolean) -> Unit = {}
 ) {
-    composable(VigorlyRoutes.Splash) {
-        SplashScreen(
-            repository = repository,
-            onFinished = onNavigateFromSplash
-        )
-    }
+    @Suppress("UNUSED_PARAMETER")
+    val unusedAppViewModel = appViewModel
+    @Suppress("UNUSED_PARAMETER")
+    val unusedWorkoutCompletedMessage = workoutCompletedMessage
+
     composable(VigorlyRoutes.Login) {
         LoginScreen(
             repository = repository,
             onLoginSuccess = { needsSetup ->
                 val target = if (needsSetup) VigorlyRoutes.Setup else VigorlyRoutes.Dashboard
                 navController.navigate(target) {
-                    popUpTo(VigorlyRoutes.Login) { inclusive = true }
+                    popUpTo(VigorlyRoutes.Login) { inclusive = false }
+                    launchSingleTop = true
                 }
             },
             onNavigateRegister = { navController.navigate(VigorlyRoutes.Register) }
@@ -71,7 +67,8 @@ fun NavGraphBuilder.vigorlyNavGraph(
             repository = repository,
             onRegisterSuccess = {
                 navController.navigate(VigorlyRoutes.Setup) {
-                    popUpTo(VigorlyRoutes.Login) { inclusive = true }
+                    popUpTo(VigorlyRoutes.Login) { inclusive = false }
+                    launchSingleTop = true
                 }
             },
             onNavigateLogin = { navController.popBackStack() }
@@ -82,7 +79,8 @@ fun NavGraphBuilder.vigorlyNavGraph(
             repository = repository,
             onComplete = {
                 navController.navigate(VigorlyRoutes.Dashboard) {
-                    popUpTo(VigorlyRoutes.Setup) { inclusive = true }
+                    popUpTo(VigorlyRoutes.Login) { inclusive = false }
+                    launchSingleTop = true
                 }
             }
         )
@@ -114,6 +112,9 @@ fun NavGraphBuilder.vigorlyNavGraph(
             onDateSelected = {
                 repository.selectActivityDate(it)
                 onShowActivityCalendarChange(false)
+            },
+            onOpenMetric = { metric ->
+                navController.navigate(VigorlyRoutes.activityMetric(metric.name.lowercase()))
             }
         )
     }
@@ -140,9 +141,6 @@ fun NavGraphBuilder.vigorlyNavGraph(
     composable(VigorlyRoutes.Analysis) {
         AnalysisScreen(
             repository = repository,
-            onOpenMetric = { metric ->
-                navController.navigate(VigorlyRoutes.activityMetric(metric.name.lowercase()))
-            },
             modifier = contentPaddingModifier
         )
     }
@@ -150,6 +148,8 @@ fun NavGraphBuilder.vigorlyNavGraph(
         ProfileScreen(
             repository = repository,
             modifier = contentPaddingModifier,
+            onOpenHistory = { navController.navigate(VigorlyRoutes.History) },
+            onOpenHistoryItem = { id -> navController.navigate(VigorlyRoutes.historyDetail(id)) },
             onRestartOnboarding = {
                 navController.navigate(VigorlyRoutes.Setup) {
                     popUpTo(navController.graph.findStartDestination().id) {
@@ -173,30 +173,8 @@ fun NavGraphBuilder.vigorlyNavGraph(
             }
         )
     }
-    composable(VigorlyRoutes.Settings) {
-        // Config vive en Perfil: redirigir
-        ProfileScreen(
-            repository = repository,
-            modifier = contentPaddingModifier,
-            onRestartOnboarding = {
-                navController.navigate(VigorlyRoutes.Setup) {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        saveState = false
-                    }
-                    launchSingleTop = true
-                }
-            },
-            onLogout = {
-                repository.logout()
-                onNavigateToLogin()
-            }
-        )
-    }
     composable(VigorlyRoutes.Milestones) {
         MilestonesScreen(repository = repository, modifier = contentPaddingModifier)
-    }
-    composable(VigorlyRoutes.Insights) {
-        InsightsScreen(repository = repository, modifier = contentPaddingModifier)
     }
     composable(
         route = VigorlyRoutes.WorkoutDetail,
@@ -216,9 +194,6 @@ fun NavGraphBuilder.vigorlyNavGraph(
                 repository = repository,
                 modifier = Modifier.fillMaxSize(),
                 onBackClick = { navController.popBackStack() },
-                onRelatedWorkoutClick = { relatedId ->
-                    navController.navigate(VigorlyRoutes.workoutDetail(relatedId))
-                },
                 onStartWorkout = { navController.navigate(VigorlyRoutes.activeSession(id)) }
             )
         }
