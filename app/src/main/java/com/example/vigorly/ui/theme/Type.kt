@@ -2,75 +2,87 @@ package com.example.vigorly.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 
+/**
+ * Jerarquía tipográfica premium / clean:
+ * - Display (Bebas) para números hero
+ * - Sans para UI: tracking cerrado en títulos, body respirable, labels caps discretos
+ *
+ * letterSpacing siempre en sp: Material3 interpola bodyLarge/bodySmall en OutlinedTextField
+ * y crashea si mezcla em y sp.
+ */
 val DisplayHero = TextStyle(
-    fontFamily = VigorlyFontFamily,
-    fontWeight = FontWeight.Black,
-    fontSize = 80.sp,
-    lineHeight = 80.sp,
-    letterSpacing = (-0.04).em
+    fontFamily = VigorlyDisplayFamily,
+    fontWeight = FontWeight.Normal,
+    fontSize = 72.sp,
+    lineHeight = 72.sp,
+    letterSpacing = 1.4.sp
 )
 
 val DisplayStat = TextStyle(
-    fontFamily = VigorlyFontFamily,
-    fontWeight = FontWeight.ExtraBold,
-    fontSize = 48.sp,
-    lineHeight = 48.sp,
-    letterSpacing = (-0.02).em
+    fontFamily = VigorlyDisplayFamily,
+    fontWeight = FontWeight.Normal,
+    fontSize = 44.sp,
+    lineHeight = 44.sp,
+    letterSpacing = 0.4.sp
 )
 
 val HeadlineLg = TextStyle(
     fontFamily = VigorlyFontFamily,
     fontWeight = FontWeight.Bold,
     fontSize = 32.sp,
-    lineHeight = 40.sp
+    lineHeight = 38.sp,
+    letterSpacing = (-1).sp
 )
 
 val HeadlineLgMobile = TextStyle(
     fontFamily = VigorlyFontFamily,
     fontWeight = FontWeight.Bold,
-    fontSize = 28.sp,
-    lineHeight = 34.sp
+    fontSize = 30.sp,
+    lineHeight = 36.sp,
+    letterSpacing = (-1).sp
 )
 
 val HeadlineMd = TextStyle(
     fontFamily = VigorlyFontFamily,
     fontWeight = FontWeight.SemiBold,
-    fontSize = 24.sp,
-    lineHeight = 30.sp
+    fontSize = 22.sp,
+    lineHeight = 28.sp,
+    letterSpacing = (-0.5).sp
 )
 
 val BodyLg = TextStyle(
     fontFamily = VigorlyFontFamily,
     fontWeight = FontWeight.Normal,
-    fontSize = 19.sp,
-    lineHeight = 28.sp
+    fontSize = 17.sp,
+    lineHeight = 26.sp,
+    letterSpacing = (-0.2).sp
 )
 
 val BodyMd = TextStyle(
     fontFamily = VigorlyFontFamily,
     fontWeight = FontWeight.Normal,
-    fontSize = 17.sp,
-    lineHeight = 25.sp
+    fontSize = 15.sp,
+    lineHeight = 22.sp,
+    letterSpacing = (-0.1).sp
 )
 
 val LabelCaps = TextStyle(
     fontFamily = VigorlyFontFamily,
-    fontWeight = FontWeight.Bold,
-    fontSize = 13.sp,
-    lineHeight = 17.sp,
-    letterSpacing = 0.1.em
+    fontWeight = FontWeight.SemiBold,
+    fontSize = 11.sp,
+    lineHeight = 14.sp,
+    letterSpacing = 1.5.sp
 )
 
 val ButtonText = TextStyle(
     fontFamily = VigorlyFontFamily,
     fontWeight = FontWeight.SemiBold,
-    fontSize = 17.sp,
-    lineHeight = 21.sp
+    fontSize = 16.sp,
+    lineHeight = 20.sp,
+    letterSpacing = (-0.2).sp
 )
 
 val Typography = Typography(
@@ -80,6 +92,12 @@ val Typography = Typography(
     headlineMedium = HeadlineMd,
     bodyLarge = BodyLg,
     bodyMedium = BodyMd,
+    bodySmall = BodyMd.copy(
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.4.sp
+    ),
     labelSmall = LabelCaps,
+    labelMedium = LabelCaps,
     labelLarge = ButtonText
 )
