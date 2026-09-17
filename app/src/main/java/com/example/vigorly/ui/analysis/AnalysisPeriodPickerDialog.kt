@@ -62,11 +62,16 @@ fun AnalysisPeriodPickerDialog(
     selectedDate: LocalDate,
     mode: AnalysisPeriodMode,
     onDismiss: () -> Unit,
-    onConfirm: (date: LocalDate, mode: AnalysisPeriodMode) -> Unit
+    onConfirm: (date: LocalDate, mode: AnalysisPeriodMode) -> Unit,
+    showModeToggle: Boolean = true,
+    titleRes: Int = R.string.analysis_period_picker_title,
+    subtitleRes: Int = R.string.analysis_period_picker_subtitle
 ) {
     val today = remember { LocalDate.now() }
     val locale = Locale.getDefault()
-    var draftMode by remember { mutableStateOf(mode) }
+    var draftMode by remember {
+        mutableStateOf(if (showModeToggle) mode else AnalysisPeriodMode.Day)
+    }
     var draftDate by remember { mutableStateOf(selectedDate.coerceAtMost(today)) }
     var visibleMonth by remember { mutableStateOf(YearMonth.from(draftDate)) }
     var calendarLevel by remember { mutableStateOf(CalendarLevel.Days) }
@@ -99,40 +104,41 @@ fun AnalysisPeriodPickerDialog(
                 .padding(20.dp)
         ) {
             Text(
-                text = stringResource(R.string.analysis_period_picker_title),
+                text = stringResource(titleRes),
                 style = HeadlineMd.copy(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
                 color = OnSurface
             )
             Text(
-                text = stringResource(R.string.analysis_period_picker_subtitle),
+                text = stringResource(subtitleRes),
                 style = BodyMd.copy(fontSize = 13.sp),
                 color = GlassLabel.copy(alpha = 0.8f),
                 modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
             )
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(Color.White.copy(alpha = 0.08f))
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                PeriodModeChip(
-                    label = stringResource(R.string.analysis_period_day),
-                    selected = draftMode == AnalysisPeriodMode.Day,
-                    onClick = { draftMode = AnalysisPeriodMode.Day },
-                    modifier = Modifier.weight(1f)
-                )
-                PeriodModeChip(
-                    label = stringResource(R.string.analysis_period_week),
-                    selected = draftMode == AnalysisPeriodMode.Week,
-                    onClick = { draftMode = AnalysisPeriodMode.Week },
-                    modifier = Modifier.weight(1f)
-                )
+            if (showModeToggle) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color.White.copy(alpha = 0.08f))
+                        .padding(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    PeriodModeChip(
+                        label = stringResource(R.string.analysis_period_day),
+                        selected = draftMode == AnalysisPeriodMode.Day,
+                        onClick = { draftMode = AnalysisPeriodMode.Day },
+                        modifier = Modifier.weight(1f)
+                    )
+                    PeriodModeChip(
+                        label = stringResource(R.string.analysis_period_week),
+                        selected = draftMode == AnalysisPeriodMode.Week,
+                        onClick = { draftMode = AnalysisPeriodMode.Week },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(Modifier.height(18.dp))
             }
-
-            Spacer(Modifier.height(18.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

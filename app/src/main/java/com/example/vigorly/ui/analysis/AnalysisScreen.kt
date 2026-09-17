@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -32,10 +34,10 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.DirectionsWalk
-import androidx.compose.material.icons.outlined.LocalFireDepartment
-import androidx.compose.material.icons.outlined.Straighten
-import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.EventNote
+import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.MonitorWeight
+import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -55,8 +57,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -65,6 +69,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -72,8 +77,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.vigorly.R
 import com.example.vigorly.core.testing.VigorlyTestTags
 import com.example.vigorly.data.MilestoneHints
-import com.example.vigorly.data.activity.ActivityMetric
 import com.example.vigorly.data.activity.WeeklyActivityRingsBuilder
+import com.example.vigorly.data.local.WeightLogCodec
 import com.example.vigorly.data.model.Milestone
 import com.example.vigorly.data.model.WeightLogEntry
 import com.example.vigorly.data.repository.VigorlyRepository
@@ -86,7 +91,6 @@ import com.example.vigorly.ui.theme.HeadlineLgMobile
 import com.example.vigorly.ui.theme.HeadlineMd
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.PrimaryAccent
-import com.example.vigorly.util.MetricFormatter
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -98,7 +102,6 @@ private enum class AnalysisTab { Progress, Achievements }
 @Composable
 fun AnalysisScreen(
     repository: VigorlyRepository,
-    onOpenMetric: (ActivityMetric) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var tab by remember { mutableStateOf(AnalysisTab.Progress) }
@@ -141,15 +144,11 @@ fun AnalysisScreen(
     }
 
     val indicatorSteps: Int
-    val indicatorCalories: Int
-    val indicatorDistance: Float
     val indicatorExercise: Int
     val previousSteps: Int
     val previousExercise: Int
     if (periodMode == AnalysisPeriodMode.Day) {
         indicatorSteps = detail.steps
-        indicatorCalories = detail.moveCalories
-        indicatorDistance = detail.distanceKm
         indicatorExercise = detail.exerciseMinutes
         val prevDate = selectedDate.minusDays(1)
         val prevDetail = if (prevDate == today) {
@@ -161,7 +160,6 @@ fun AnalysisScreen(
         previousExercise = prevDetail?.exerciseMinutes ?: 0
     } else {
         var stepsSum = 0
-        var calSum = 0
         var exerciseSum = 0
         weekDates.filter { !it.isAfter(today) }.forEach { date ->
             val d = if (date == today) {
@@ -171,14 +169,10 @@ fun AnalysisScreen(
             }
             if (d != null) {
                 stepsSum += d.steps
-                calSum += d.moveCalories
                 exerciseSum += d.exerciseMinutes
             }
         }
         indicatorSteps = stepsSum
-        indicatorCalories = calSum
-        indicatorDistance = com.example.vigorly.data.activity.DailyActivityDetail
-            .distanceKmFromSteps(stepsSum)
         indicatorExercise = exerciseSum
 
         val prevWeekAnchor = WeeklyActivityRingsBuilder.shiftWeek(selectedDate, -1)
@@ -222,12 +216,7 @@ fun AnalysisScreen(
     ) {
         Text(
             text = stringResource(R.string.analysis_title),
-            style = HeadlineLgMobile.copy(
-                fontSize = 34.sp,
-                lineHeight = 40.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.5).sp
-            ),
+            style = HeadlineLgMobile,
             color = OnSurface,
             modifier = Modifier.padding(top = Dimens.Sm, bottom = Dimens.Md)
         )
@@ -246,8 +235,6 @@ fun AnalysisScreen(
                 weightGoalKg = weightGoal,
                 unitsMetric = unitsMetric,
                 steps = indicatorSteps,
-                calories = indicatorCalories,
-                distanceKm = indicatorDistance,
                 exerciseMinutes = indicatorExercise,
                 previousSteps = previousSteps,
                 previousExercise = previousExercise,
@@ -275,13 +262,11 @@ fun AnalysisScreen(
                     if (!next.isAfter(today)) repository.selectActivityDate(next)
                 },
                 onOpenCalendar = { showPeriodPicker = true },
-                onAddOrEditWeight = { id, kg, goal ->
-                    if (id == null) repository.addWeightEntry(kg)
-                    else repository.updateWeightEntry(id, kg)
+                onAddOrEditWeight = { _, kg, goal ->
+                    repository.addWeightEntry(kg)
                     if (goal != null) repository.setWeightGoalKg(goal)
                 },
                 onDeleteWeight = { repository.deleteWeightEntry(it) },
-                onOpenMetric = onOpenMetric,
                 locale = locale,
                 modifier = Modifier.fillMaxSize()
             )
@@ -346,8 +331,6 @@ private fun ProgressTab(
     weightGoalKg: Float?,
     unitsMetric: Boolean,
     steps: Int,
-    calories: Int,
-    distanceKm: Float,
     exerciseMinutes: Int,
     previousSteps: Int,
     previousExercise: Int,
@@ -359,180 +342,69 @@ private fun ProgressTab(
     onOpenCalendar: () -> Unit,
     onAddOrEditWeight: (id: String?, kg: Float, goal: Float?) -> Unit,
     onDeleteWeight: (String) -> Unit,
-    onOpenMetric: (ActivityMetric) -> Unit,
     locale: Locale,
     modifier: Modifier = Modifier
 ) {
     var showWeightDialog by remember { mutableStateOf(false) }
-    var editingEntry by remember { mutableStateOf<WeightLogEntry?>(null) }
+    val today = LocalDate.now()
+    val zone = ZoneId.systemDefault()
+    val todayEntry = remember(weightLog, today) {
+        weightLog.lastOrNull { entry ->
+            Instant.ofEpochMilli(entry.recordedAtMillis).atZone(zone).toLocalDate() == today
+        }
+    }
+    val series = remember(weightLog) { WeightLogCodec.dailySeries(weightLog, today, zone) }
 
     if (showWeightDialog) {
         WeightEntryDialog(
-            initialKg = editingEntry?.weightKg,
+            initialKg = todayEntry?.weightKg ?: weightLog.lastOrNull()?.weightKg,
             initialGoalKg = weightGoalKg,
             unitsMetric = unitsMetric,
-            isEdit = editingEntry != null,
-            onDismiss = {
-                showWeightDialog = false
-                editingEntry = null
-            },
+            onDismiss = { showWeightDialog = false },
             onConfirm = { kg, goal ->
-                onAddOrEditWeight(editingEntry?.id, kg, goal)
+                onAddOrEditWeight(null, kg, goal)
                 showWeightDialog = false
-                editingEntry = null
             },
-            onDelete = editingEntry?.let { entry ->
+            onDelete = todayEntry?.let { entry ->
                 {
                     onDeleteWeight(entry.id)
                     showWeightDialog = false
-                    editingEntry = null
                 }
             }
         )
     }
 
     val currentKg = weightLog.lastOrNull()?.weightKg
+    val startKg = weightLog.firstOrNull()?.weightKg
 
     Column(
         modifier = modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        AnalysisPeriodCard(
+        ProgressOverviewCard(
             periodLabel = periodLabel,
             periodMode = periodMode,
             canGoNext = canGoNext,
             onPrev = onPrev,
             onNext = onNext,
-            onOpenCalendar = onOpenCalendar
+            onOpenCalendar = onOpenCalendar,
+            insightText = periodInsightText(
+                steps = steps,
+                previousSteps = previousSteps,
+                exerciseMinutes = exerciseMinutes,
+                previousExercise = previousExercise,
+                periodMode = periodMode
+            ),
+            startKg = startKg,
+            currentKg = currentKg,
+            weightGoalKg = weightGoalKg,
+            unitsMetric = unitsMetric,
+            locale = locale,
+            weightLog = weightLog,
+            series = series,
+            loggedToday = todayEntry != null,
+            onLogToday = { showWeightDialog = true }
         )
-
-        Text(
-            text = stringResource(R.string.analysis_role_subtitle),
-            style = BodyMd.copy(fontSize = 14.sp, lineHeight = 20.sp),
-            color = GlassLabel.copy(alpha = 0.88f)
-        )
-
-        PeriodInsightCard(
-            steps = steps,
-            previousSteps = previousSteps,
-            exerciseMinutes = exerciseMinutes,
-            previousExercise = previousExercise,
-            periodMode = periodMode
-        )
-
-        GlassSurface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.analysis_weight_title),
-                    style = BodyMd.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
-                    color = OnSurface
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.analysis_weight_current),
-                            style = BodyMd.copy(fontSize = 13.sp),
-                            color = GlassLabel.copy(alpha = 0.75f)
-                        )
-                        Text(
-                            text = currentKg?.let { formatWeight(it, unitsMetric, locale) }
-                                ?: stringResource(R.string.analysis_weight_empty),
-                            style = DisplayStat.copy(fontSize = 22.sp, lineHeight = 24.sp),
-                            color = OnSurface,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = stringResource(R.string.analysis_weight_goal),
-                            style = BodyMd.copy(fontSize = 13.sp),
-                            color = GlassLabel.copy(alpha = 0.75f)
-                        )
-                        Text(
-                            text = weightGoalKg?.let { formatWeight(it, unitsMetric, locale) }
-                                ?: "—",
-                            style = DisplayStat.copy(fontSize = 22.sp, lineHeight = 24.sp),
-                            color = OnSurface,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                if (weightLog.size >= 2) {
-                    WeightTrendChart(
-                        entries = weightLog,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp)
-                    )
-                } else {
-                    Text(
-                        text = stringResource(R.string.analysis_weight_chart_hint),
-                        style = BodyMd.copy(fontSize = 13.sp, lineHeight = 18.sp),
-                        color = GlassLabel.copy(alpha = 0.8f),
-                        modifier = Modifier.padding(vertical = 18.dp)
-                    )
-                }
-
-                if (weightLog.isNotEmpty()) {
-                    val latest = weightLog.last()
-                    val dateLabel = formatUnlockDate(latest.recordedAtMillis, locale)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable {
-                                editingEntry = latest
-                                showWeightDialog = true
-                            }
-                            .padding(vertical = 6.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.analysis_weight_last_entry, dateLabel),
-                            style = BodyMd.copy(fontSize = 13.sp),
-                            color = GlassLabel.copy(alpha = 0.8f)
-                        )
-                        Text(
-                            text = stringResource(R.string.analysis_weight_edit),
-                            style = BodyMd.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
-                            color = PrimaryAccent
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(PrimaryAccent)
-                        .clickable {
-                            editingEntry = null
-                            showWeightDialog = true
-                        }
-                        .padding(vertical = 14.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.analysis_weight_add),
-                        style = BodyMd.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-                        color = OnSurface
-                    )
-                }
-            }
-        }
 
         Text(
             text = stringResource(R.string.analysis_indicators_title),
@@ -557,17 +429,20 @@ private fun ProgressTab(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 IndicatorCard(
-                    title = stringResource(R.string.analysis_indicator_steps),
-                    value = "%,d".format(locale, steps),
-                    icon = Icons.Outlined.DirectionsWalk,
-                    onClick = { onOpenMetric(ActivityMetric.STEPS) },
+                    title = stringResource(R.string.analysis_indicator_weight_now),
+                    value = currentKg?.let { formatWeight(it, unitsMetric, locale) }
+                        ?: stringResource(R.string.analysis_indicator_empty),
+                    icon = Icons.Outlined.MonitorWeight,
                     modifier = Modifier.weight(1f)
                 )
                 IndicatorCard(
-                    title = stringResource(R.string.analysis_indicator_calories),
-                    value = "$calories kcal",
-                    icon = Icons.Outlined.LocalFireDepartment,
-                    onClick = { onOpenMetric(ActivityMetric.MOVE) },
+                    title = stringResource(R.string.analysis_indicator_weight_change),
+                    value = if (currentKg != null && startKg != null) {
+                        formatSignedWeight(currentKg - startKg, unitsMetric, locale)
+                    } else {
+                        stringResource(R.string.analysis_indicator_empty)
+                    },
+                    icon = Icons.Outlined.SwapVert,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -575,39 +450,42 @@ private fun ProgressTab(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                val remaining = if (currentKg != null && weightGoalKg != null) {
+                    kotlin.math.abs(currentKg - weightGoalKg)
+                } else {
+                    null
+                }
                 IndicatorCard(
-                    title = stringResource(R.string.analysis_indicator_distance),
-                    value = MetricFormatter.formatDistanceKm(distanceKm, unitsMetric),
-                    icon = Icons.Outlined.Straighten,
-                    onClick = { onOpenMetric(ActivityMetric.STEPS) },
+                    title = stringResource(R.string.analysis_indicator_weight_to_goal),
+                    value = when {
+                        remaining == null -> stringResource(R.string.analysis_indicator_empty)
+                        remaining < 0.05f -> stringResource(R.string.analysis_indicator_weight_at_goal)
+                        else -> formatWeight(remaining, unitsMetric, locale)
+                    },
+                    icon = Icons.Outlined.Flag,
                     modifier = Modifier.weight(1f)
                 )
                 IndicatorCard(
-                    title = stringResource(R.string.analysis_indicator_exercise),
-                    value = stringResource(
-                        R.string.analysis_indicator_exercise_value,
-                        exerciseMinutes
-                    ),
-                    icon = Icons.Outlined.Timer,
-                    onClick = { onOpenMetric(ActivityMetric.EXERCISE) },
+                    title = stringResource(R.string.analysis_indicator_weight_logs),
+                    value = weightLog.size.toString(),
+                    icon = Icons.Outlined.EventNote,
                     modifier = Modifier.weight(1f)
                 )
             }
         }
 
-        // Deja que las cards pasen detrás de la nav flotante
         Spacer(Modifier.height(Dimens.FloatingNavClearance + 24.dp))
     }
 }
 
 @Composable
-private fun PeriodInsightCard(
+private fun periodInsightText(
     steps: Int,
     previousSteps: Int,
     exerciseMinutes: Int,
     previousExercise: Int,
     periodMode: AnalysisPeriodMode
-) {
+): String {
     val stepsDelta = steps - previousSteps
     val exerciseDelta = exerciseMinutes - previousExercise
     val compareLabel = if (periodMode == AnalysisPeriodMode.Day) {
@@ -615,7 +493,7 @@ private fun PeriodInsightCard(
     } else {
         stringResource(R.string.analysis_insight_vs_week)
     }
-    val insightText = when {
+    return when {
         previousSteps == 0 && previousExercise == 0 && steps == 0 && exerciseMinutes == 0 ->
             stringResource(R.string.analysis_insight_empty)
         stepsDelta > 0 && exerciseDelta >= 0 ->
@@ -641,24 +519,239 @@ private fun PeriodInsightCard(
             )
         else -> stringResource(R.string.analysis_insight_stable, compareLabel)
     }
+}
 
+@Composable
+private fun ProgressOverviewCard(
+    periodLabel: String,
+    periodMode: AnalysisPeriodMode,
+    canGoNext: Boolean,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
+    onOpenCalendar: () -> Unit,
+    insightText: String,
+    startKg: Float?,
+    currentKg: Float?,
+    weightGoalKg: Float?,
+    unitsMetric: Boolean,
+    locale: Locale,
+    weightLog: List<WeightLogEntry>,
+    series: List<WeightLogCodec.TrendPoint>,
+    loggedToday: Boolean,
+    onLogToday: () -> Unit
+) {
     GlassSurface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp)
+        shape = RoundedCornerShape(24.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(R.string.analysis_insight_title),
-                style = BodyMd.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp),
-                color = PrimaryAccent
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.08f))
+                        .clickable(onClick = onPrev),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = stringResource(R.string.analysis_week_prev),
+                        tint = OnSurface,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = if (periodMode == AnalysisPeriodMode.Day) {
+                            stringResource(R.string.analysis_period_day)
+                        } else {
+                            stringResource(R.string.analysis_period_week)
+                        },
+                        style = BodyMd.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium),
+                        color = GlassLabel.copy(alpha = 0.7f)
+                    )
+                    Text(
+                        text = periodLabel.substringAfter("· ").ifBlank { periodLabel },
+                        style = BodyMd.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
+                        color = OnSurface,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (canGoNext) Color.White.copy(alpha = 0.08f)
+                            else Color.White.copy(alpha = 0.04f)
+                        )
+                        .then(if (canGoNext) Modifier.clickable(onClick = onNext) else Modifier),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = stringResource(R.string.analysis_week_next),
+                        tint = if (canGoNext) OnSurface else GlassLabel.copy(alpha = 0.35f),
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.08f))
+                        .clickable(onClick = onOpenCalendar),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.CalendarMonth,
+                        contentDescription = stringResource(R.string.analysis_week_calendar),
+                        tint = OnSurface,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
             Text(
                 text = insightText,
-                style = BodyMd.copy(fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.Medium),
-                color = OnSurface,
-                modifier = Modifier.padding(top = 8.dp)
+                style = BodyMd.copy(fontSize = 14.sp, lineHeight = 20.sp),
+                color = GlassLabel.copy(alpha = 0.85f)
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                WeightStatColumn(
+                    label = stringResource(R.string.analysis_weight_start),
+                    value = startKg?.let { formatWeight(it, unitsMetric, locale) }
+                        ?: stringResource(R.string.analysis_weight_empty),
+                    modifier = Modifier.weight(1f)
+                )
+                WeightStatColumn(
+                    label = stringResource(R.string.analysis_weight_current),
+                    value = currentKg?.let { formatWeight(it, unitsMetric, locale) }
+                        ?: stringResource(R.string.analysis_weight_empty),
+                    modifier = Modifier.weight(1f),
+                    centered = true
+                )
+                WeightStatColumn(
+                    label = stringResource(R.string.analysis_weight_goal),
+                    value = weightGoalKg?.let { formatWeight(it, unitsMetric, locale) } ?: "—",
+                    modifier = Modifier.weight(1f),
+                    end = true
+                )
+            }
+
+            if (series.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.analysis_weight_chart_hint),
+                    style = BodyMd.copy(fontSize = 13.sp, lineHeight = 18.sp),
+                    color = GlassLabel.copy(alpha = 0.75f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 22.dp)
+                )
+            } else {
+                WeightTrendChart(
+                    series = series,
+                    goalKg = weightGoalKg,
+                    unitsMetric = unitsMetric,
+                    locale = locale,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(228.dp)
+                )
+            }
+
+            if (weightLog.isNotEmpty()) {
+                val latest = weightLog.last()
+                val status = if (loggedToday) {
+                    stringResource(
+                        R.string.analysis_weight_today_logged,
+                        formatWeight(latest.weightKg, unitsMetric, locale)
+                    )
+                } else {
+                    stringResource(
+                        R.string.analysis_weight_held,
+                        formatWeight(latest.weightKg, unitsMetric, locale),
+                        formatUnlockDate(latest.recordedAtMillis, locale)
+                    )
+                }
+                Text(
+                    text = status,
+                    style = BodyMd.copy(fontSize = 13.sp, lineHeight = 18.sp),
+                    color = GlassLabel.copy(alpha = 0.8f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onLogToday)
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(PrimaryAccent)
+                    .clickable(onClick = onLogToday)
+                    .padding(vertical = 14.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.analysis_weight_add),
+                    style = BodyMd.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                    color = OnSurface
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun WeightStatColumn(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    centered: Boolean = false,
+    end: Boolean = false
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = when {
+            centered -> Alignment.CenterHorizontally
+            end -> Alignment.End
+            else -> Alignment.Start
+        }
+    ) {
+        Text(
+            text = label,
+            style = BodyMd.copy(fontSize = 12.sp),
+            color = GlassLabel.copy(alpha = 0.7f)
+        )
+        Text(
+            text = value,
+            style = DisplayStat.copy(fontSize = 22.sp, lineHeight = 24.sp),
+            color = OnSurface,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 4.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -828,7 +921,6 @@ private fun WeightEntryDialog(
     initialKg: Float?,
     initialGoalKg: Float?,
     unitsMetric: Boolean,
-    isEdit: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (kg: Float, goalKg: Float?) -> Unit,
     onDelete: (() -> Unit)?
@@ -885,11 +977,7 @@ private fun WeightEntryDialog(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = if (isEdit) {
-                            stringResource(R.string.analysis_weight_edit_title)
-                        } else {
-                            stringResource(R.string.analysis_weight_add)
-                        },
+                        text = stringResource(R.string.analysis_weight_add),
                         style = HeadlineMd.copy(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -1016,134 +1104,15 @@ private fun WeightGlassField(
 }
 
 @Composable
-private fun AnalysisPeriodCard(
-    periodLabel: String,
-    periodMode: AnalysisPeriodMode,
-    canGoNext: Boolean,
-    onPrev: () -> Unit,
-    onNext: () -> Unit,
-    onOpenCalendar: () -> Unit
-) {
-    GlassSurface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.analysis_week_title),
-                        style = BodyMd.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
-                        color = OnSurface
-                    )
-                    Text(
-                        text = stringResource(R.string.analysis_week_subtitle),
-                        style = BodyMd.copy(fontSize = 13.sp),
-                        color = GlassLabel.copy(alpha = 0.75f),
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.08f))
-                        .clickable(onClick = onOpenCalendar),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.CalendarMonth,
-                        contentDescription = stringResource(R.string.analysis_week_calendar),
-                        tint = OnSurface,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.08f))
-                        .clickable(onClick = onPrev),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = stringResource(R.string.analysis_week_prev),
-                        tint = OnSurface,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = if (periodMode == AnalysisPeriodMode.Day) {
-                            stringResource(R.string.analysis_period_day)
-                        } else {
-                            stringResource(R.string.analysis_period_week)
-                        },
-                        style = BodyMd.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium),
-                        color = GlassLabel.copy(alpha = 0.75f)
-                    )
-                    Text(
-                        text = periodLabel.substringAfter("· ").ifBlank { periodLabel },
-                        style = BodyMd.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-                        color = OnSurface,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (canGoNext) Color.White.copy(alpha = 0.08f)
-                            else Color.White.copy(alpha = 0.04f)
-                        )
-                        .then(
-                            if (canGoNext) Modifier.clickable(onClick = onNext)
-                            else Modifier
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = stringResource(R.string.analysis_week_next),
-                        tint = if (canGoNext) OnSurface else GlassLabel.copy(alpha = 0.35f),
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun IndicatorCard(
     title: String,
     value: String,
     icon: ImageVector,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     GlassSurface(
         modifier = modifier.height(92.dp),
-        shape = RoundedCornerShape(16.dp),
-        onClick = onClick
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column(
             modifier = Modifier
@@ -1184,56 +1153,229 @@ private fun IndicatorCard(
 
 @Composable
 private fun WeightTrendChart(
-    entries: List<WeightLogEntry>,
+    series: List<WeightLogCodec.TrendPoint>,
+    goalKg: Float?,
+    unitsMetric: Boolean,
+    locale: Locale,
     modifier: Modifier = Modifier
 ) {
-    val points = entries.takeLast(12)
-    val min = points.minOf { it.weightKg }
-    val max = points.maxOf { it.weightKg }
-    val range = (max - min).coerceAtLeast(0.5f)
-    val latest = points.last()
+    val latest = series.last()
+    val dataMin = series.minOf { it.weightKg }
+    val dataMax = series.maxOf { it.weightKg }
+    val rawMin = minOf(dataMin, goalKg ?: dataMin)
+    val rawMax = maxOf(dataMax, goalKg ?: dataMax)
+    val span = (rawMax - rawMin).coerceAtLeast(1.2f)
+    val pad = span * 0.22f
+    val min = rawMin - pad
+    val max = rawMax + pad
+    val range = (max - min).coerceAtLeast(1.2f)
+    val ticks = listOf(0, 1, 2, 3).map { i -> max - range * (i / 3f) }
+    val axisFormatter = remember(locale) { DateTimeFormatter.ofPattern("d MMM", locale) }
+    val startLabel = series.first().date.format(axisFormatter)
+    val endLabel = series.last().date.format(axisFormatter)
+    val midLabel = if (series.size >= 6) {
+        series[series.size / 2].date.format(axisFormatter)
+    } else {
+        null
+    }
+    val lastFrac = ((max - latest.weightKg) / range).coerceIn(0f, 1f)
+    val goalFrac = goalKg?.let { ((max - it) / range).coerceIn(0f, 1f) }
+    val currentBelow = goalFrac != null && kotlin.math.abs(lastFrac - goalFrac) < 0.16f
+    val lastXFrac = if (series.size == 1) 0.5f else 1f
+    val goalLabel = stringResource(R.string.analysis_weight_goal)
 
-    Box(modifier = modifier) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val padX = 8.dp.toPx()
-            val padY = 12.dp.toPx()
-            val w = size.width - padX * 2
-            val h = size.height - padY * 2
-            // grid
+    BoxWithConstraints(modifier = modifier) {
+        val yGutter = 46.dp
+        val xGutter = 22.dp
+        val topPad = 10.dp
+        val plotHeight = (maxHeight - xGutter - topPad).coerceAtLeast(1.dp)
+        val plotWidth = (maxWidth - yGutter - 8.dp).coerceAtLeast(1.dp)
+
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = yGutter, top = topPad, bottom = xGutter, end = 8.dp)
+        ) {
+            val w = size.width.coerceAtLeast(1f)
+            val h = size.height.coerceAtLeast(1f)
+            val lastIndex = (series.size - 1).coerceAtLeast(1)
+
+            fun xOf(index: Int): Float {
+                if (series.size == 1) return w / 2f
+                return w * (index / lastIndex.toFloat())
+            }
+
+            fun yOf(kg: Float): Float = h * (1f - ((kg - min) / range).coerceIn(0f, 1f))
+
             repeat(4) { i ->
-                val y = padY + h * (i / 3f)
+                val y = h * (i / 3f)
                 drawLine(
-                    color = Color.White.copy(alpha = 0.08f),
-                    start = Offset(padX, y),
-                    end = Offset(size.width - padX, y),
-                    strokeWidth = 1.5f
+                    color = Color.White.copy(alpha = if (i == 3) 0.22f else 0.08f),
+                    start = Offset(0f, y),
+                    end = Offset(w, y),
+                    strokeWidth = 1.2f
                 )
             }
-            if (points.size < 2) return@Canvas
-            val path = Path()
-            points.forEachIndexed { index, entry ->
-                val x = padX + w * (index / (points.size - 1).toFloat())
-                val y = padY + h * (1f - ((entry.weightKg - min) / range))
-                if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+
+            if (goalKg != null) {
+                val gy = yOf(goalKg)
+                drawLine(
+                    color = Color.White.copy(alpha = 0.42f),
+                    start = Offset(0f, gy),
+                    end = Offset(w, gy),
+                    strokeWidth = 1.8.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))
+                )
             }
-            drawPath(
-                path = path,
-                color = PrimaryAccent,
-                style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
-            )
-            val lastX = padX + w
-            val lastY = padY + h * (1f - ((latest.weightKg - min) / range))
-            drawCircle(color = PrimaryAccent, radius = 6.dp.toPx(), center = Offset(lastX, lastY))
+
+            val coords = series.mapIndexed { index, point ->
+                Offset(xOf(index), yOf(point.weightKg))
+            }
+            if (coords.size >= 2) {
+                val line = monotonicChartPath(coords)
+                val fill = Path().apply {
+                    addPath(line)
+                    lineTo(coords.last().x, h)
+                    lineTo(coords.first().x, h)
+                    close()
+                }
+                drawPath(
+                    path = fill,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            PrimaryAccent.copy(alpha = 0.28f),
+                            PrimaryAccent.copy(alpha = 0.02f)
+                        ),
+                        startY = coords.minOf { it.y },
+                        endY = h
+                    )
+                )
+                drawPath(
+                    path = line,
+                    color = PrimaryAccent.copy(alpha = 0.28f),
+                    style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                )
+                drawPath(
+                    path = line,
+                    color = PrimaryAccent,
+                    style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                )
+            }
+
+            series.forEachIndexed { index, point ->
+                if (!point.logged && index != series.lastIndex) return@forEachIndexed
+                val center = coords[index]
+                val isLatest = index == series.lastIndex
+                if (isLatest) {
+                    drawCircle(
+                        color = PrimaryAccent.copy(alpha = 0.22f),
+                        radius = 11.dp.toPx(),
+                        center = center
+                    )
+                }
+                if (point.logged || isLatest) {
+                    drawCircle(color = Color.White, radius = 5.5.dp.toPx(), center = center)
+                    drawCircle(color = PrimaryAccent, radius = 3.4.dp.toPx(), center = center)
+                }
+            }
         }
+
+        ticks.forEachIndexed { i, kg ->
+            val frac = i / 3f
+            Text(
+                text = compactWeight(kg, unitsMetric, locale),
+                style = BodyMd.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.1.sp),
+                color = GlassLabel.copy(alpha = 0.55f),
+                textAlign = TextAlign.End,
+                modifier = Modifier
+                    .width(yGutter)
+                    .padding(end = 8.dp, top = topPad)
+                    .offset {
+                        IntOffset(0, (plotHeight.toPx() * frac - 7.dp.toPx()).toInt())
+                    }
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .padding(start = yGutter, end = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = startLabel,
+                style = BodyMd.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
+                color = GlassLabel.copy(alpha = 0.5f)
+            )
+            if (midLabel != null) {
+                Text(
+                    text = midLabel,
+                    style = BodyMd.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
+                    color = GlassLabel.copy(alpha = 0.5f)
+                )
+            }
+            Text(
+                text = endLabel,
+                style = BodyMd.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
+                color = GlassLabel.copy(alpha = 0.5f)
+            )
+        }
+
+        if (goalKg != null && goalFrac != null) {
+            Text(
+                text = "$goalLabel ${compactWeight(goalKg, unitsMetric, locale)}",
+                style = BodyMd.copy(fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.2.sp),
+                color = OnSurface.copy(alpha = 0.82f),
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = topPad, end = 8.dp)
+                    .offset {
+                        IntOffset(0, (plotHeight.toPx() * goalFrac - 16.dp.toPx()).toInt())
+                    }
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.White.copy(alpha = 0.10f))
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            )
+        }
+
         Text(
-            text = "%.1f kg".format(latest.weightKg),
-            style = BodyMd.copy(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
+            text = formatWeight(latest.weightKg, unitsMetric, locale),
+            style = BodyMd.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold),
             color = OnSurface,
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(4.dp)
+                .align(Alignment.TopStart)
+                .padding(start = yGutter, top = topPad)
+                .offset {
+                    val x = (plotWidth.toPx() * lastXFrac - 86.dp.toPx()).toInt().coerceAtLeast(4)
+                    val yBump = if (currentBelow) 10.dp.toPx() else -22.dp.toPx()
+                    val y = (plotHeight.toPx() * lastFrac + yBump).toInt()
+                    IntOffset(x, y)
+                }
+                .clip(RoundedCornerShape(8.dp))
+                .background(PrimaryAccent.copy(alpha = 0.22f))
+                .padding(horizontal = 8.dp, vertical = 3.dp)
         )
     }
+}
+
+private fun monotonicChartPath(coords: List<Offset>): Path {
+    val path = Path()
+    if (coords.isEmpty()) return path
+    path.moveTo(coords.first().x, coords.first().y)
+    if (coords.size == 1) return path
+    for (i in 0 until coords.lastIndex) {
+        val from = coords[i]
+        val to = coords[i + 1]
+        val midX = (from.x + to.x) / 2f
+        path.cubicTo(midX, from.y, midX, to.y, to.x, to.y)
+    }
+    return path
+}
+
+private fun compactWeight(kg: Float, unitsMetric: Boolean, locale: Locale): String {
+    val value = if (unitsMetric) kg else kg * 2.20462f
+    return "%.1f".format(locale, value)
 }
 
 private fun formatWeight(kg: Float, unitsMetric: Boolean, locale: Locale): String {
@@ -1241,6 +1383,15 @@ private fun formatWeight(kg: Float, unitsMetric: Boolean, locale: Locale): Strin
         "%.1f kg".format(locale, kg)
     } else {
         "%.1f lb".format(locale, kg * 2.20462f)
+    }
+}
+
+private fun formatSignedWeight(deltaKg: Float, unitsMetric: Boolean, locale: Locale): String {
+    val formatted = formatWeight(kotlin.math.abs(deltaKg), unitsMetric, locale)
+    return when {
+        deltaKg > 0.04f -> "+$formatted"
+        deltaKg < -0.04f -> "−$formatted"
+        else -> formatted
     }
 }
 
