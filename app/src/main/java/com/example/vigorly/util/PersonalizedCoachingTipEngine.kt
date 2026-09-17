@@ -80,27 +80,41 @@ object PersonalizedCoachingTipEngine {
             tips += context.getString(R.string.coaching_tip_streak_keep, input.streakDays)
         }
 
-        when (input.fitnessGoal) {
-            "strength", "muscle" -> tips += context.getString(
+        val goalKeys = csvKeys(input.fitnessGoal)
+        val intensityKeys = csvKeys(input.activityLevel)
+        val durationKeys = csvKeys(input.workoutLocation)
+
+        if (goalKeys.any { it in setOf("strength", "muscle") }) {
+            tips += context.getString(
                 R.string.coaching_tip_goal_strength,
                 locationHint(context, input.workoutLocation)
             )
-            "cardio", "endurance" -> tips += context.getString(
+        }
+        if (goalKeys.any { it in setOf("cardio", "endurance", "hiit", "swim") }) {
+            tips += context.getString(
                 R.string.coaching_tip_goal_cardio,
                 timeHint(context, input.preferredTime)
             )
-            "weight" -> tips += context.getString(
+        }
+        if (goalKeys.contains("weight") || intensityKeys.contains("high")) {
+            tips += context.getString(
                 R.string.coaching_tip_goal_weight,
                 activityHint(context, input.activityLevel)
             )
-            "flexibility" -> tips += context.getString(R.string.coaching_tip_goal_flexibility)
-            "wellness" -> tips += context.getString(R.string.coaching_tip_goal_wellness)
+        }
+        if (goalKeys.any { it in setOf("flexibility", "mobility", "pilates") }) {
+            tips += context.getString(R.string.coaching_tip_goal_flexibility)
+        }
+        if (goalKeys.any { it in setOf("wellness", "recovery") }) {
+            tips += context.getString(R.string.coaching_tip_goal_wellness)
         }
 
-        when (input.workoutLocation) {
-            "home" -> tips += context.getString(R.string.coaching_tip_location_home)
-            "gym" -> tips += context.getString(R.string.coaching_tip_location_gym)
-            "outdoor" -> tips += context.getString(R.string.coaching_tip_location_outdoor)
+        when {
+            durationKeys.contains("home") -> tips += context.getString(R.string.coaching_tip_location_home)
+            durationKeys.contains("gym") -> tips += context.getString(R.string.coaching_tip_location_gym)
+            durationKeys.contains("outdoor") -> tips += context.getString(R.string.coaching_tip_location_outdoor)
+            durationKeys.contains("short") -> tips += context.getString(R.string.coaching_tip_location_home)
+            durationKeys.contains("long") -> tips += context.getString(R.string.coaching_tip_location_gym)
         }
 
         when (input.preferredTime) {
@@ -108,9 +122,11 @@ object PersonalizedCoachingTipEngine {
             "evening" -> tips += context.getString(R.string.coaching_tip_time_evening)
         }
 
-        when (input.activityLevel) {
-            "sedentary", "light" -> tips += context.getString(R.string.coaching_tip_activity_beginner)
-            "athlete", "active" -> tips += context.getString(R.string.coaching_tip_activity_advanced)
+        when {
+            intensityKeys.any { it in setOf("sedentary", "light", "low") } ->
+                tips += context.getString(R.string.coaching_tip_activity_beginner)
+            intensityKeys.any { it in setOf("athlete", "active", "high") } ->
+                tips += context.getString(R.string.coaching_tip_activity_advanced)
         }
 
         if (input.recentWorkoutTitles.isEmpty()) {
@@ -127,10 +143,13 @@ object PersonalizedCoachingTipEngine {
         return tips.distinct()
     }
 
-    private fun locationHint(context: Context, location: String): String = when (location) {
-        "gym" -> context.getString(R.string.coaching_hint_gym)
-        "outdoor" -> context.getString(R.string.coaching_hint_outdoor)
-        else -> context.getString(R.string.coaching_hint_home)
+    private fun locationHint(context: Context, location: String): String {
+        val keys = csvKeys(location)
+        return when {
+            keys.any { it in setOf("gym", "long") } -> context.getString(R.string.coaching_hint_gym)
+            keys.any { it in setOf("outdoor", "medium") } -> context.getString(R.string.coaching_hint_outdoor)
+            else -> context.getString(R.string.coaching_hint_home)
+        }
     }
 
     private fun timeHint(context: Context, time: String): String = when (time) {
@@ -139,9 +158,17 @@ object PersonalizedCoachingTipEngine {
         else -> context.getString(R.string.coaching_hint_flexible)
     }
 
-    private fun activityHint(context: Context, level: String): String = when (level) {
-        "sedentary", "light" -> context.getString(R.string.coaching_hint_gradual)
-        "athlete", "active" -> context.getString(R.string.coaching_hint_intensity)
-        else -> context.getString(R.string.coaching_hint_steady)
+    private fun activityHint(context: Context, level: String): String {
+        val keys = csvKeys(level)
+        return when {
+            keys.any { it in setOf("sedentary", "light", "low") } ->
+                context.getString(R.string.coaching_hint_gradual)
+            keys.any { it in setOf("athlete", "active", "high") } ->
+                context.getString(R.string.coaching_hint_intensity)
+            else -> context.getString(R.string.coaching_hint_steady)
+        }
     }
+
+    private fun csvKeys(raw: String): Set<String> =
+        raw.split(',').map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()
 }

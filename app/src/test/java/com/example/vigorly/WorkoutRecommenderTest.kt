@@ -34,4 +34,29 @@ class WorkoutRecommenderTest {
             assertTrue(result?.name != first.name || workouts.all { it.name == first.name })
         }
     }
+
+    @Test
+    fun recommend_prefersSelectedCategory() {
+        val result = WorkoutRecommender.recommend(
+            workouts = workouts,
+            history = emptyList(),
+            favorites = emptySet(),
+            fitnessGoal = "swim"
+        )
+        assertEquals(com.example.vigorly.data.model.WorkoutType.SWIM, result?.type)
+    }
+
+    @Test
+    fun preferredTypes_mapsCatalogKeys() {
+        val types = WorkoutRecommender.preferredTypes("strength,hiit,pilates")
+        assertTrue(types.contains(com.example.vigorly.data.model.WorkoutType.STRENGTH))
+        assertTrue(types.contains(com.example.vigorly.data.model.WorkoutType.HIIT))
+        assertTrue(types.contains(com.example.vigorly.data.model.WorkoutType.PILATES))
+    }
+
+    @Test
+    fun preferredDurations_matchesCatalogBuckets() {
+        val shortOnly = WorkoutRecommender.preferredDurations("short")
+        assertEquals(setOf(com.example.vigorly.util.DurationBucket.SHORT), shortOnly)
+    }
 }

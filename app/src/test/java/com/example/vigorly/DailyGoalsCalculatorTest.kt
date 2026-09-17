@@ -25,4 +25,11 @@ class DailyGoalsCalculatorTest {
         val goals = DailyGoalsCalculator.build(0, 0, 0, 0)
         assertEquals(0, goals.dailyGoalPercent)
     }
+
+    @Test
+    fun goalScale_usesIntensityKeys() {
+        assertEquals(0.85f, DailyGoalsCalculator.goalScale("low"), 0.001f)
+        assertEquals(1.2f, DailyGoalsCalculator.goalScale("high"), 0.001f)
+        assertEquals(1.2f, DailyGoalsCalculator.goalScale("low,high"), 0.001f)
+    }
 }

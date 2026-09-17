@@ -10,9 +10,10 @@ object WorkoutRecommender {
         history: List<WorkoutHistoryItem>,
         favorites: Set<String>,
         fitnessGoal: String = "",
+        activityLevel: String = "",
         workoutLocation: String = ""
     ): WorkoutDetail? = recommendMany(
-        workouts, history, favorites, count = 1, fitnessGoal, workoutLocation
+        workouts, history, favorites, count = 1, fitnessGoal, activityLevel, workoutLocation
     ).firstOrNull()
 
     fun recommendMany(
@@ -21,69 +22,81 @@ object WorkoutRecommender {
         favorites: Set<String>,
         count: Int = 5,
         fitnessGoal: String = "",
+        activityLevel: String = "",
         workoutLocation: String = ""
     ): List<WorkoutDetail> {
         if (workouts.isEmpty() || count <= 0) return emptyList()
         val recentTitles = history.take(5).map { it.title }.toSet()
-        val goals = fitnessGoal.split(',').map { it.trim() }.filter { it.isNotEmpty() }.toSet()
-        val location = workoutLocation.split(',').map { it.trim() }.firstOrNull().orEmpty()
+        val types = preferredTypes(fitnessGoal)
+        val intensities = preferredIntensities(activityLevel)
+        val durations = preferredDurations(workoutLocation)
 
         return workouts
             .sortedWith(
                 compareByDescending<WorkoutDetail> { it.id in favorites }
-                    .thenByDescending { preferenceScore(it, goals, location) }
+                    .thenByDescending { preferenceScore(it, types, intensities, durations) }
                     .thenByDescending { it.name !in recentTitles }
             )
             .distinctBy { it.id }
             .take(count)
     }
 
+    internal fun preferredTypes(raw: String): Set<WorkoutType> {
+        val out = linkedSetOf<WorkoutType>()
+        parseKeys(raw).forEach { key ->
+            when (key) {
+                "strength", "muscle" -> out += WorkoutType.STRENGTH
+                "hiit" -> out += WorkoutType.HIIT
+                "cardio", "endurance", "weight" -> out += WorkoutType.CARDIO
+                "recovery", "wellness", "yoga" -> out += WorkoutType.RECOVERY
+                "pilates" -> out += WorkoutType.PILATES
+                "mobility", "flexibility" -> out += WorkoutType.MOBILITY
+                "swim" -> out += WorkoutType.SWIM
+            }
+            WorkoutType.entries.find { it.name.equals(key, ignoreCase = true) }?.let { out += it }
+        }
+        return out
+    }
+
+    internal fun preferredIntensities(raw: String): Set<String> =
+        parseKeys(raw).mapNotNull { key ->
+            when (key) {
+                "low", "sedentary", "light" -> "low"
+                "moderate" -> "moderate"
+                "high", "active", "athlete" -> "high"
+                else -> null
+            }
+        }.toSet()
+
+    internal fun preferredDurations(raw: String): Set<DurationBucket> =
+        parseKeys(raw).mapNotNull { key ->
+            when (key) {
+                "short", "home" -> DurationBucket.SHORT
+                "medium", "outdoor", "mixed" -> DurationBucket.MEDIUM
+                "long", "gym" -> DurationBucket.LONG
+                else -> null
+            }
+        }.toSet()
+
     private fun preferenceScore(
         workout: WorkoutDetail,
-        goals: Set<String>,
-        location: String
+        types: Set<WorkoutType>,
+        intensities: Set<String>,
+        durations: Set<DurationBucket>
     ): Int {
         var score = 0
-        goals.forEach { goal ->
-            score += when (goal) {
-                "strength", "muscle" -> if (workout.type == WorkoutType.STRENGTH) 4 else 0
-                "cardio", "endurance" -> when (workout.type) {
-                    WorkoutType.CARDIO, WorkoutType.HIIT, WorkoutType.SWIM -> 4
-                    else -> 0
-                }
-                "weight" -> when (workout.type) {
-                    WorkoutType.HIIT, WorkoutType.CARDIO -> 3
-                    else -> 0
-                }
-                "flexibility" -> when (workout.type) {
-                    WorkoutType.MOBILITY, WorkoutType.PILATES -> 4
-                    else -> 0
-                }
-                "wellness" -> when (workout.type) {
-                    WorkoutType.RECOVERY, WorkoutType.PILATES, WorkoutType.MOBILITY -> 3
-                    else -> 0
-                }
-                else -> 0
-            }
+        if (types.isNotEmpty() && workout.type in types) score += 5
+        if (intensities.isNotEmpty() &&
+            WorkoutBrowseFilters.intensityKey(workout.intensity) in intensities
+        ) {
+            score += 3
         }
-        score += when (location) {
-            "gym" -> when (workout.type) {
-                WorkoutType.STRENGTH, WorkoutType.HIIT -> 3
-                else -> 0
-            }
-            "home" -> when (workout.type) {
-                WorkoutType.PILATES, WorkoutType.MOBILITY, WorkoutType.RECOVERY, WorkoutType.HIIT -> 3
-                else -> 0
-            }
-            "outdoor" -> when (workout.type) {
-                WorkoutType.CARDIO, WorkoutType.HIIT -> 3
-                else -> 0
-            }
-            else -> 0
+        if (durations.isNotEmpty() && durations.any { it.matches(workout.durationMinutes) }) {
+            score += 2
         }
-        // Prefer moderate durations for home; longer for gym/outdoor athlete sessions
-        if (location == "home" && workout.durationMinutes <= 30) score += 1
-        if (location == "gym" && workout.durationMinutes >= 35) score += 1
         return score
     }
+
+    private fun parseKeys(raw: String): Set<String> =
+        raw.split(',').map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()
 }

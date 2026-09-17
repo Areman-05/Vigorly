@@ -14,15 +14,19 @@ object DailyGoalsCalculator {
 
     private const val CALORIES_PER_STEP = 0.04f
 
-    fun goalScale(activityLevel: String): Float = when (
-        activityLevel.split(',').map { it.trim() }.firstOrNull().orEmpty()
-    ) {
-        "sedentary" -> 0.7f
-        "light" -> 0.85f
-        "moderate" -> 1f
-        "active" -> 1.2f
-        "athlete" -> 1.4f
-        else -> 1f
+    fun goalScale(activityLevel: String): Float {
+        val keys = activityLevel.split(',').map { it.trim().lowercase() }.filter { it.isNotEmpty() }
+        if (keys.isEmpty()) return 1f
+        return keys.maxOf { key ->
+            when (key) {
+                "sedentary" -> 0.7f
+                "light", "low" -> 0.85f
+                "moderate" -> 1f
+                "active", "high" -> 1.2f
+                "athlete" -> 1.4f
+                else -> 1f
+            }
+        }
     }
 
     fun moveCaloriesGoal(activityLevel: String = "moderate"): Int =

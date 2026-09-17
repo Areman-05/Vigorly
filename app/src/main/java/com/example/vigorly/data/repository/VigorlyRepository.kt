@@ -12,6 +12,8 @@ import com.example.vigorly.data.MilestoneUnlocker
 import com.example.vigorly.data.catalog.WorkoutCatalog
 import com.example.vigorly.data.local.CoachingTipLoader
 import com.example.vigorly.data.local.VigorlyPreferencesDataStore
+import com.example.vigorly.data.local.WeightLogCodec
+import com.example.vigorly.data.local.WorkoutPlaylistCodec
 import com.example.vigorly.data.model.CoachingTip
 import com.example.vigorly.data.model.SessionSummary
 import com.example.vigorly.data.model.WorkoutType
@@ -26,7 +28,6 @@ import com.example.vigorly.util.LocaleManager
 import com.example.vigorly.util.PasswordHasher
 import com.example.vigorly.util.PersonalizedCoachingTipEngine
 import com.example.vigorly.util.PersonalizedTipContext
-import com.example.vigorly.util.AthleticStatKeys
 import com.example.vigorly.util.WorkoutRecommender
 import com.example.vigorly.data.MilestoneCatalog
 import com.example.vigorly.data.local.MilestoneShowcaseCodec
@@ -68,6 +69,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -215,7 +217,26 @@ class VigorlyRepository(context: Context) {
         userId?.let { id -> accounts.find { it.id == id } }
     }.stateIn(scope, SharingStarted.Eagerly, null)
 
+    /** Contraseña en claro de la sesión (login) o recuperada del almacenamiento revelable. */
+    private val _sessionPlainPassword = MutableStateFlow<String?>(null)
+
+    val revealableAccountPassword: StateFlow<String?> = combine(
+        currentAccount,
+        _sessionPlainPassword
+    ) { account, session ->
+        when {
+            account == null -> null
+            account.authProvider == "google" &&
+                account.password.isBlank() &&
+                account.passwordHash.isBlank() -> null
+            account.password.isNotBlank() -> account.password
+            !session.isNullOrEmpty() -> session
+            else -> PasswordHasher.reveal(account.passwordHash)
+        }
+    }.stateIn(scope, SharingStarted.Eagerly, null)
+
     private var appDataPreloaded = false
+    private var forcedPasswordReauth = false
 
     @Volatile
     private var lastRecordedWorkoutId: String? = null
@@ -226,21 +247,47 @@ class VigorlyRepository(context: Context) {
     init {
         preferences.isLoggedIn.onEach { _isLoggedIn.value = it }.launchIn(scope)
         preferences.appLocale.onEach { _appLocale.value = it }.launchIn(scope)
-        preferences.registeredAccounts.onEach { _accounts.value = it }.launchIn(scope)
-        combine(history, profile) { hist, prof ->
-            AthleticProfileCalculator.compute(hist, prof.activeStreakDays)
-        }
-            .distinctUntilChanged()
-            .debounce(500)
-            .onEach { computed ->
-                if (computed != _athleticStats.value) {
-                    _athleticStats.value = computed
-                    preferences.saveAthleticStats(computed)
+        preferences.registeredAccounts.onEach { accounts ->
+            val normalized = accounts.map { normalizeStoredPassword(it) }
+            _accounts.value = normalized
+            if (normalized != accounts) {
+                scope.launch { preferences.saveRegisteredAccounts(normalized) }
+            }
+        }.launchIn(scope)
+        // Mantener la contraseña lista para el ojo; si es hash viejo irreversible, pedir login 1 vez.
+        currentAccount.onEach { account ->
+            if (account == null) {
+                if (!_isLoggedIn.value) _sessionPlainPassword.value = null
+                return@onEach
+            }
+            val plain = account.password.ifBlank {
+                PasswordHasher.reveal(account.passwordHash).orEmpty()
+            }
+            if (plain.isNotBlank()) {
+                if (_sessionPlainPassword.value != plain) {
+                    _sessionPlainPassword.value = plain
+                }
+                return@onEach
+            }
+            if (!forcedPasswordReauth &&
+                _isLoggedIn.value &&
+                account.authProvider != "google" &&
+                PasswordHasher.needsRevealUpgrade(account.passwordHash)
+            ) {
+                forcedPasswordReauth = true
+                scope.launch {
+                    preferences.setLoggedIn(loggedIn = false, userId = null)
+                    _isLoggedIn.value = false
+                    _sessionPlainPassword.value = null
                 }
             }
-            .launchIn(scope)
+        }.launchIn(scope)
         preferences.milestoneShowcase.onEach { _milestoneShowcase.value = it }.launchIn(scope)
-        preferences.weightLog.onEach { _weightLog.value = it }.launchIn(scope)
+        preferences.weightLog.onEach { persisted ->
+            _weightLog.update { local ->
+                if (WeightLogCodec.shouldApplyPersisted(local, persisted)) persisted else local
+            }
+        }.launchIn(scope)
         preferences.weightGoalKg.onEach { _weightGoalKg.value = it }.launchIn(scope)
         preferences.milestoneUnlockDates.onEach { dates ->
             _milestoneUnlockDates.value = dates
@@ -250,8 +297,11 @@ class VigorlyRepository(context: Context) {
             _favorites.value = ids
         }.launchIn(scope)
         preferences.workoutPlaylists.onEach { stored ->
-            // Solo listas creadas por el usuario (mezcla libre de categorías)
-            _playlists.value = stored.filterNot { it.isAuto }
+            val cleaned = WorkoutPlaylistCodec.sanitizeUserLists(stored)
+            _playlists.value = cleaned
+            if (cleaned != stored) {
+                scope.launch { persistPlaylists(cleaned) }
+            }
         }.launchIn(scope)
         preferences.onboardingCompleted.onEach { _onboardingCompleted.value = it }.launchIn(scope)
         combine(
@@ -460,21 +510,14 @@ class VigorlyRepository(context: Context) {
     fun getMilestone(id: String): Milestone? = _milestones.value.find { it.id == id }
 
     fun addWeightEntry(weightKg: Float, recordedAtMillis: Long = System.currentTimeMillis()) {
-        val kg = weightKg.coerceIn(30f, 300f)
-        val entry = WeightLogEntry(
-            id = "w-${recordedAtMillis}",
-            weightKg = kg,
-            recordedAtMillis = recordedAtMillis
-        )
-        _weightLog.update { current ->
-            (current + entry).sortedBy { it.recordedAtMillis }
+        persistWeightLog { current ->
+            WeightLogCodec.upsertDay(current, weightKg, recordedAtMillis)
         }
-        scope.launch { preferences.saveWeightLog(_weightLog.value) }
     }
 
     fun updateWeightEntry(id: String, weightKg: Float, recordedAtMillis: Long? = null) {
         val kg = weightKg.coerceIn(30f, 300f)
-        _weightLog.update { current ->
+        persistWeightLog { current ->
             current.map { entry ->
                 if (entry.id == id) {
                     entry.copy(
@@ -486,12 +529,18 @@ class VigorlyRepository(context: Context) {
                 }
             }.sortedBy { it.recordedAtMillis }
         }
-        scope.launch { preferences.saveWeightLog(_weightLog.value) }
     }
 
     fun deleteWeightEntry(id: String) {
-        _weightLog.update { current -> current.filterNot { it.id == id } }
-        scope.launch { preferences.saveWeightLog(_weightLog.value) }
+        persistWeightLog { current -> current.filterNot { it.id == id } }
+    }
+
+    private fun persistWeightLog(transform: (List<WeightLogEntry>) -> List<WeightLogEntry>) {
+        var snapshot: List<WeightLogEntry> = emptyList()
+        _weightLog.update { current ->
+            transform(current).also { snapshot = it }
+        }
+        scope.launch { preferences.saveWeightLog(snapshot) }
     }
 
     fun setWeightGoalKg(goalKg: Float?) {
@@ -688,10 +737,21 @@ class VigorlyRepository(context: Context) {
         val nextIndex = withDone.currentExerciseIndex + 1
         val nextIsWarmup = steps.getOrNull(nextIndex)?.isWarmup == true
         val currentWasWarmup = steps.getOrNull(session.currentExerciseIndex)?.isWarmup == true
-        // Entre calentamientos o al saltar a trabajo: descanso corto; entre ejercicios: normal
         val restSecs = when {
-            nextIsWarmup || currentWasWarmup -> REST_SECONDS_AFTER_WARMUP
+            nextIsWarmup -> 0
+            currentWasWarmup -> REST_SECONDS_AFTER_WARMUP
             else -> REST_SECONDS_BETWEEN_EXERCISES
+        }
+        val nextSecs = steps.getOrNull(nextIndex)?.durationSeconds ?: EXERCISE_SECONDS_DEFAULT
+        if (restSecs <= 0) {
+            _activeSession.value = withDone.copy(
+                currentExerciseIndex = nextIndex,
+                restSecondsRemaining = 0,
+                restDurationSeconds = 0,
+                exerciseSecondsRemaining = nextSecs,
+                exerciseDurationSeconds = nextSecs
+            )
+            return false
         }
 
         _activeSession.value = withDone.copy(
@@ -746,6 +806,7 @@ class VigorlyRepository(context: Context) {
             history = _history.value,
             favorites = _favorites.value,
             fitnessGoal = fitnessGoal.value,
+            activityLevel = activityLevel.value,
             workoutLocation = workoutLocation.value
         )
 
@@ -756,6 +817,7 @@ class VigorlyRepository(context: Context) {
             favorites = _favorites.value,
             count = count,
             fitnessGoal = fitnessGoal.value,
+            activityLevel = activityLevel.value,
             workoutLocation = workoutLocation.value
         )
 
@@ -772,21 +834,24 @@ class VigorlyRepository(context: Context) {
     fun isFavorite(workoutId: String): Boolean = workoutId in _favorites.value
 
     fun createPlaylist(name: String, workoutIds: List<String> = emptyList()) {
-        val cleanName = name.trim().ifBlank { return }
+        val existing = _playlists.value
+        val cleanName = WorkoutPlaylistCodec.uniqueName(name, existing)
         val list = com.example.vigorly.data.model.WorkoutPlaylist(
             id = "custom_${System.currentTimeMillis()}",
             name = cleanName,
             workoutIds = workoutIds.distinct(),
             isAuto = false
         )
-        val next = _playlists.value + list
+        val next = existing + list
         _playlists.value = next
         scope.launch { persistPlaylists(next) }
     }
 
     fun renamePlaylist(playlistId: String, name: String) {
-        val cleanName = name.trim().ifBlank { return }
-        val next = _playlists.value.map {
+        val existing = _playlists.value
+        val cleanName = WorkoutPlaylistCodec.uniqueName(name, existing, excludeId = playlistId)
+        if (cleanName.isBlank()) return
+        val next = existing.map {
             if (it.id == playlistId) it.copy(name = cleanName) else it
         }
         _playlists.value = next
@@ -830,11 +895,45 @@ class VigorlyRepository(context: Context) {
         else -> AppDestination.Login
     }
 
-    suspend fun preloadAppData() {
-        if (appDataPreloaded) return
-        listWorkouts()
+    suspend fun preloadAppData(onProgress: (Float) -> Unit = {}) {
+        if (appDataPreloaded) {
+            onProgress(1f)
+            return
+        }
+        onProgress(0.06f)
+        val workouts = listWorkouts()
+        onProgress(0.16f)
         coachingTips.size
+        onProgress(0.22f)
         _accounts.value = preferences.registeredAccounts.first()
+        onProgress(0.30f)
+
+        if (!UiTestEnvironment.isInstrumentedTest) {
+            val urls = buildList {
+                addAll(getRecommendedWorkouts(8).map { it.heroImageUrl })
+                addAll(workouts.take(28).map { it.heroImageUrl })
+            }.distinct().filter { it.isNotBlank() }
+
+            if (urls.isNotEmpty()) {
+                val loader = coil.ImageLoader(appContext)
+                val chunks = urls.chunked(4)
+                chunks.forEachIndexed { chunkIndex, chunk ->
+                    withContext(Dispatchers.IO) {
+                        chunk.forEach { url ->
+                            val request = coil.request.ImageRequest.Builder(appContext)
+                                .data(url)
+                                .size(coil.size.Size(720, 960))
+                                .build()
+                            runCatching { loader.execute(request) }
+                        }
+                    }
+                    val fraction = (chunkIndex + 1).toFloat() / chunks.size
+                    onProgress(0.30f + 0.68f * fraction)
+                }
+            }
+        }
+
+        onProgress(1f)
         appDataPreloaded = true
     }
 
@@ -875,7 +974,8 @@ class VigorlyRepository(context: Context) {
             return AuthResult.Error(AuthError.INVALID_CREDENTIALS)
         }
         persistCurrentUserSessionIfNeeded()
-        val upgradedAccount = upgradeLegacyPasswordIfNeeded(account, password)
+        val upgradedAccount = ensureRevealablePassword(account, password)
+        _sessionPlainPassword.value = password
         return completeLogin(upgradedAccount)
     }
 
@@ -905,9 +1005,10 @@ class VigorlyRepository(context: Context) {
         val account = UserAccount(
             id = UUID.randomUUID().toString(),
             email = normalizedEmail,
+            password = "",
             passwordHash = "",
             passwordSalt = "",
-            username = usernameFromGoogle(info.displayName, normalizedEmail),
+            username = uniqueUsername(usernameFromGoogle(info.displayName, normalizedEmail)),
             birthDate = "",
             createdAtMillis = System.currentTimeMillis(),
             authProvider = "google",
@@ -917,6 +1018,34 @@ class VigorlyRepository(context: Context) {
         _accounts.value = updated
         preferences.saveRegisteredAccounts(updated)
         return completeLogin(account, isNewUser = true)
+    }
+
+    private fun isEmailTaken(email: String, exceptId: String? = null): Boolean {
+        return _accounts.value.any { account ->
+            (exceptId == null || account.id != exceptId) &&
+                account.email.equals(email, ignoreCase = true)
+        }
+    }
+
+    private fun isUsernameTaken(username: String, exceptId: String? = null): Boolean {
+        val needle = username.trim()
+        if (needle.isEmpty()) return false
+        return _accounts.value.any { account ->
+            (exceptId == null || account.id != exceptId) &&
+                account.username.equals(needle, ignoreCase = true)
+        }
+    }
+
+    private fun uniqueUsername(base: String): String {
+        val seed = base.trim().ifBlank { "user" }.take(28)
+        if (!isUsernameTaken(seed)) return seed
+        var index = 2
+        while (index < 100) {
+            val candidate = "${seed.take(28)}$index"
+            if (!isUsernameTaken(candidate)) return candidate
+            index++
+        }
+        return "${seed.take(20)}${System.currentTimeMillis().toString().takeLast(6)}"
     }
 
     private fun usernameFromGoogle(displayName: String?, email: String): String {
@@ -939,14 +1068,18 @@ class VigorlyRepository(context: Context) {
 
         val normalizedEmail = email.trim().lowercase()
         val cleanUsername = username.trim()
-        if (_accounts.value.any { it.email.equals(normalizedEmail, ignoreCase = true) }) {
+        if (isEmailTaken(normalizedEmail)) {
             return AuthResult.Error(AuthError.EMAIL_ALREADY_EXISTS)
+        }
+        if (isUsernameTaken(cleanUsername)) {
+            return AuthResult.Error(AuthError.USERNAME_ALREADY_EXISTS)
         }
         persistCurrentUserSessionIfNeeded()
         val (salt, hash) = PasswordHasher.hash(password)
         val account = UserAccount(
             id = UUID.randomUUID().toString(),
             email = normalizedEmail,
+            password = password,
             passwordHash = hash,
             passwordSalt = salt,
             username = cleanUsername,
@@ -956,14 +1089,16 @@ class VigorlyRepository(context: Context) {
         val updated = _accounts.value + account
         _accounts.value = updated
         preferences.saveRegisteredAccounts(updated)
+        _sessionPlainPassword.value = password
         return completeLogin(account, isNewUser = true)
     }
 
     fun logout() {
         scope.launch {
             persistCurrentUserSessionIfNeeded()
-            preferences.setLoggedIn(loggedIn = false, userId = null)
+            _sessionPlainPassword.value = null
             _isLoggedIn.value = false
+            preferences.setLoggedIn(loggedIn = false, userId = null)
         }
     }
 
@@ -1005,11 +1140,7 @@ class VigorlyRepository(context: Context) {
         preferences.setUnitsMetric(snapshot.unitsMetric)
         val sessionHistory = HistorySanitizer.clean(snapshot.workoutHistory)
         preferences.saveWorkoutHistory(sessionHistory)
-        val computedAthletic = AthleticProfileCalculator.compute(
-            sessionHistory,
-            snapshot.profile.activeStreakDays
-        )
-        preferences.saveAthleticStats(computedAthletic)
+        preferences.saveAthleticStats(snapshot.athleticStats)
         preferences.setFavoriteWorkoutIds(snapshot.favoriteWorkoutIds)
         preferences.setDailyTipIndex(snapshot.dailyTipIndex)
         _history.value = sessionHistory
@@ -1026,16 +1157,36 @@ class VigorlyRepository(context: Context) {
             sessionHistory,
             HistorySanitizer.removedCount(snapshot.workoutHistory, sessionHistory)
         )
-        _athleticStats.value = computedAthletic
+        _athleticStats.value = snapshot.athleticStats
         _favorites.value = snapshot.favoriteWorkoutIds
         _onboardingCompleted.value = snapshot.onboardingCompleted
         refreshMilestones()
     }
 
-    private suspend fun upgradeLegacyPasswordIfNeeded(account: UserAccount, password: String): UserAccount {
-        if (!PasswordHasher.isLegacy(account.passwordHash)) return account
+    private fun normalizeStoredPassword(account: UserAccount): UserAccount {
+        val plain = account.password.ifBlank {
+            PasswordHasher.reveal(account.passwordHash).orEmpty()
+        }
+        if (plain.isBlank()) return account
+        if (account.password == plain &&
+            PasswordHasher.isRevealable(account.passwordHash) &&
+            !PasswordHasher.isLegacy(account.passwordHash)
+        ) {
+            return account
+        }
+        val (salt, hash) = PasswordHasher.hash(plain)
+        return account.copy(password = plain, passwordSalt = salt, passwordHash = hash)
+    }
+
+    private suspend fun ensureRevealablePassword(account: UserAccount, password: String): UserAccount {
+        if (account.password == password &&
+            PasswordHasher.isRevealable(account.passwordHash) &&
+            !PasswordHasher.isLegacy(account.passwordHash)
+        ) {
+            return account
+        }
         val (salt, hash) = PasswordHasher.hash(password)
-        val upgraded = account.copy(passwordSalt = salt, passwordHash = hash)
+        val upgraded = account.copy(password = password, passwordSalt = salt, passwordHash = hash)
         val updated = _accounts.value.map { if (it.id == account.id) upgraded else it }
         _accounts.value = updated
         preferences.saveRegisteredAccounts(updated)
@@ -1192,7 +1343,10 @@ class VigorlyRepository(context: Context) {
             val clean = name.trim()
             preferences.updateProfile(profile.value.copy(displayName = clean))
             val account = currentAccount.value ?: return@launch
-            if (AuthValidator.validateUsername(clean) == null && account.username != clean) {
+            if (AuthValidator.validateUsername(clean) == null &&
+                !account.username.equals(clean, ignoreCase = true) &&
+                !isUsernameTaken(clean, exceptId = account.id)
+            ) {
                 persistAccount(account.copy(username = clean))
             }
         }
@@ -1221,13 +1375,23 @@ class VigorlyRepository(context: Context) {
         if (account.authProvider == "google" && account.passwordHash.isBlank()) {
             return AuthError.INVALID_CREDENTIALS
         }
-        if (!PasswordHasher.verify(currentPassword, account.passwordSalt, account.passwordHash)) {
+        // Ya autenticado en la app: basta la nueva. Si manda la actual, se valida.
+        if (currentPassword.isNotBlank() &&
+            !PasswordHasher.verify(currentPassword, account.passwordSalt, account.passwordHash)
+        ) {
             return AuthError.INVALID_CREDENTIALS
         }
         val strength = AuthValidator.validatePassword(newPassword)
         if (strength != null) return strength
         val (salt, hash) = PasswordHasher.hash(newPassword)
-        persistAccount(account.copy(passwordSalt = salt, passwordHash = hash))
+        persistAccount(
+            account.copy(
+                password = newPassword,
+                passwordSalt = salt,
+                passwordHash = hash
+            )
+        )
+        _sessionPlainPassword.value = newPassword
         return null
     }
 
