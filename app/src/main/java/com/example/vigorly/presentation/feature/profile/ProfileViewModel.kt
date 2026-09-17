@@ -16,7 +16,9 @@ class ProfileViewModel(
 ) : ViewModel() {
     val profile: StateFlow<UserProfile> = repository.profile
     val currentAccount: StateFlow<UserAccount?> = repository.currentAccount
+    val revealablePassword: StateFlow<String?> = repository.revealableAccountPassword
     val weeklyGoal: StateFlow<WeeklyGoal> = repository.weeklyGoal
+    val history = repository.history
     val notificationsEnabled: StateFlow<Boolean> = repository.notificationsEnabled
     val unitsMetric: StateFlow<Boolean> = repository.unitsMetric
     val appLocale: StateFlow<String> = repository.appLocale

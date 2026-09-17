@@ -44,6 +44,7 @@ import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.ButtonText
 import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.DisplayStat
+import com.example.vigorly.ui.theme.GlassLabel
 import com.example.vigorly.ui.theme.HeadlineLgMobile
 import com.example.vigorly.ui.theme.HeadlineMd
 import com.example.vigorly.ui.theme.LabelCaps
@@ -338,32 +339,31 @@ fun ProfileRecentSessionRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    @Suppress("UNUSED_PARAMETER")
+    val ignoredAccent = accent
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(
-                Brush.horizontalGradient(
-                    colors = listOf(
-                        accent.copy(alpha = 0.1f),
-                        Primary.copy(alpha = 0.04f)
-                    )
-                )
-            )
+            .background(Color.White.copy(alpha = 0.06f))
             .clickable(onClick = onClick)
-            .padding(horizontal = Dimens.Md, vertical = 12.dp),
+            .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            iconForName(item.iconName),
-            contentDescription = null,
-            tint = accent,
+        Box(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(accent.copy(alpha = 0.14f))
-                .padding(9.dp)
-        )
+                .background(Color.White.copy(alpha = 0.08f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                iconForName(item.iconName),
+                contentDescription = null,
+                tint = OnSurface.copy(alpha = 0.9f),
+                modifier = Modifier.size(20.dp)
+            )
+        }
         Column(
             Modifier
                 .weight(1f)
@@ -379,27 +379,27 @@ fun ProfileRecentSessionRow(
             Text(
                 HistoryLabels.displayTimestamp(item),
                 style = BodyMd.copy(fontSize = 12.sp),
-                color = OnSurfaceVariant.copy(alpha = 0.75f),
+                color = GlassLabel.copy(alpha = 0.65f),
                 modifier = Modifier.padding(top = 2.dp)
             )
         }
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                stringResource(R.string.history_duration_chip, item.durationMinutes).uppercase(),
-                style = LabelCaps.copy(fontSize = 9.sp),
-                color = accent
+                stringResource(R.string.history_duration_chip, item.durationMinutes),
+                style = BodyMd.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium),
+                color = OnSurface.copy(alpha = 0.88f)
             )
             Text(
-                stringResource(R.string.history_calories_chip, item.calories).uppercase(),
-                style = LabelCaps.copy(fontSize = 8.sp),
-                color = OnSurfaceVariant.copy(alpha = 0.6f),
+                stringResource(R.string.history_calories_chip, item.calories),
+                style = BodyMd.copy(fontSize = 11.sp),
+                color = GlassLabel.copy(alpha = 0.55f),
                 modifier = Modifier.padding(top = 3.dp)
             )
         }
         Icon(
             Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = OnSurfaceVariant.copy(alpha = 0.35f),
+            tint = GlassLabel.copy(alpha = 0.4f),
             modifier = Modifier
                 .padding(start = Dimens.Xs)
                 .size(18.dp)

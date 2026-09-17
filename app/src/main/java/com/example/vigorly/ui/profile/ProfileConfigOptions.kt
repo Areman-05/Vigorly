@@ -43,6 +43,28 @@ object ProfileConfigOptions {
         Choice("flexible", R.string.setup_time_flexible, R.string.setup_time_flexible_desc)
     )
 
+    val workoutCategories = listOf(
+        Choice("strength", R.string.workout_type_strength, R.string.profile_pref_type_strength_desc),
+        Choice("hiit", R.string.workout_type_hiit, R.string.profile_pref_type_hiit_desc),
+        Choice("cardio", R.string.workout_type_cardio, R.string.profile_pref_type_cardio_desc),
+        Choice("recovery", R.string.workout_type_yoga, R.string.profile_pref_type_recovery_desc),
+        Choice("pilates", R.string.workout_type_pilates, R.string.profile_pref_type_pilates_desc),
+        Choice("mobility", R.string.workout_type_mobility, R.string.profile_pref_type_mobility_desc),
+        Choice("swim", R.string.workout_type_swim, R.string.profile_pref_type_swim_desc)
+    )
+
+    val intensities = listOf(
+        Choice("low", R.string.intensity_low, R.string.profile_pref_intensity_low_desc),
+        Choice("moderate", R.string.intensity_moderate, R.string.profile_pref_intensity_moderate_desc),
+        Choice("high", R.string.intensity_high, R.string.profile_pref_intensity_high_desc)
+    )
+
+    val durations = listOf(
+        Choice("short", R.string.workout_duration_short, R.string.profile_pref_duration_short_desc),
+        Choice("medium", R.string.workout_duration_medium, R.string.profile_pref_duration_medium_desc),
+        Choice("long", R.string.workout_duration_long, R.string.profile_pref_duration_long_desc)
+    )
+
     data class Language(
         val code: String,
         @StringRes val labelRes: Int,
