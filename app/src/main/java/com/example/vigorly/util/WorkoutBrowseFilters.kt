@@ -39,7 +39,7 @@ data class WorkoutBrowseFilters(
             val key = intensityKey(workout.intensity)
             if (key !in intensities) return false
         }
-        if (durations.isNotEmpty() && durations.none { it.contains(workout.durationMinutes) }) {
+        if (durations.isNotEmpty() && durations.none { it.matches(workout.durationMinutes) }) {
             return false
         }
         if (zones.isNotEmpty() && zones.none { it.matches(workout) }) {
@@ -61,7 +61,7 @@ data class WorkoutBrowseFilters(
     }
 }
 
-private fun DurationBucket.contains(minutes: Int): Boolean = when (this) {
+fun DurationBucket.matches(minutes: Int): Boolean = when (this) {
     DurationBucket.SHORT -> minutes <= 20
     DurationBucket.MEDIUM -> minutes in 21..40
     DurationBucket.LONG -> minutes >= 41

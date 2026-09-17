@@ -42,7 +42,7 @@ class WorkoutsViewModel(
 
     val favoriteWorkouts: StateFlow<List<WorkoutDetail>> = repository.favorites
         .map { ids -> allWorkouts.filter { it.id in ids } }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val filteredWorkouts: StateFlow<List<WorkoutDetail>> = combine(
         combine(
@@ -67,7 +67,7 @@ class WorkoutsViewModel(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.Eagerly,
+        started = SharingStarted.WhileSubscribed(5_000),
         initialValue = allWorkouts
     )
 

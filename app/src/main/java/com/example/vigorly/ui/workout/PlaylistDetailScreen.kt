@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -51,7 +53,9 @@ fun PlaylistDetailScreen(
     onFavoriteToggle: (String) -> Unit,
     modifier: Modifier = Modifier,
     canEdit: Boolean = false,
-    onEdit: (() -> Unit)? = null
+    onEdit: (() -> Unit)? = null,
+    onDeleteList: (() -> Unit)? = null,
+    onRemoveWorkout: ((String) -> Unit)? = null
 ) {
     Column(
         modifier = modifier
@@ -90,20 +94,39 @@ fun PlaylistDetailScreen(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .padding(horizontal = 56.dp)
+                    .padding(horizontal = 96.dp)
             )
-            if (canEdit && onEdit != null) {
-                FrostedGlassCircleButton(
-                    onClick = onEdit,
-                    size = 40.dp,
-                    modifier = Modifier.align(Alignment.CenterEnd)
+            if (canEdit && (onEdit != null || onDeleteList != null)) {
+                Row(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = stringResource(R.string.workout_lists_edit),
-                        tint = OnSurface,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    if (onDeleteList != null) {
+                        FrostedGlassCircleButton(
+                            onClick = onDeleteList,
+                            size = 40.dp
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.DeleteOutline,
+                                contentDescription = stringResource(R.string.workout_lists_delete),
+                                tint = OnSurface,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                    if (onEdit != null) {
+                        FrostedGlassCircleButton(
+                            onClick = onEdit,
+                            size = 40.dp
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = stringResource(R.string.workout_lists_edit),
+                                tint = OnSurface,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -149,7 +172,8 @@ fun PlaylistDetailScreen(
                         workout = workout,
                         isFavorite = workout.id in favorites,
                         onFavoriteToggle = { onFavoriteToggle(workout.id) },
-                        onClick = { onWorkoutClick(workout.id) }
+                        onClick = { onWorkoutClick(workout.id) },
+                        onRemove = onRemoveWorkout?.let { remove -> { remove(workout.id) } }
                     )
                 }
             }

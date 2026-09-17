@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Timer
@@ -44,7 +45,8 @@ fun WorkoutBrowseRow(
     isFavorite: Boolean,
     onFavoriteToggle: () -> Unit,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRemove: (() -> Unit)? = null
 ) {
     Row(
         modifier = modifier
@@ -133,12 +135,23 @@ fun WorkoutBrowseRow(
                     .size(22.dp)
                     .clickable(onClick = onFavoriteToggle)
             )
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = OnSurface.copy(alpha = 0.55f),
-                modifier = Modifier.size(22.dp)
-            )
+            if (onRemove != null) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = stringResource(R.string.workout_lists_remove_workout),
+                    tint = OnSurface.copy(alpha = 0.7f),
+                    modifier = Modifier
+                        .size(22.dp)
+                        .clickable(onClick = onRemove)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = OnSurface.copy(alpha = 0.55f),
+                    modifier = Modifier.size(22.dp)
+                )
+            }
         }
     }
 }

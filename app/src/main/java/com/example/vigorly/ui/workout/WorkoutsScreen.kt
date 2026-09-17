@@ -141,6 +141,18 @@ fun WorkoutsScreen(
                 onFavoriteToggle = repository::toggleFavorite,
                 canEdit = playlist != null,
                 onEdit = { showEditPlaylist = true },
+                onDeleteList = {
+                    playlist?.id?.let { repository.deletePlaylist(it) }
+                    workoutsViewModel.clearSelectedPlaylist()
+                },
+                onRemoveWorkout = { workoutId ->
+                    playlist?.let {
+                        repository.updatePlaylistWorkouts(
+                            it.id,
+                            it.workoutIds.filterNot { id -> id == workoutId }
+                        )
+                    }
+                },
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -152,6 +164,8 @@ fun WorkoutsScreen(
                 candidates = favoriteWorkouts,
                 showNameField = true,
                 confirmLabel = stringResource(R.string.workout_lists_update),
+                takenNames = playlists.map { it.name }.toSet(),
+                currentName = playlist.name,
                 onDismiss = { showEditPlaylist = false },
                 onConfirm = { name, ids ->
                     repository.renamePlaylist(playlist.id, name)
@@ -177,6 +191,7 @@ fun WorkoutsScreen(
                     repository.createPlaylist(name, ids)
                 },
                 onOpenPlaylist = { playlist -> workoutsViewModel.openPlaylist(playlist.id) },
+                onDeletePlaylist = { playlist -> repository.deletePlaylist(playlist.id) },
                 onFilterClick = { filterVisible = true },
                 filterActive = !browseFilters.isEmpty,
                 pickerCandidates = favoriteWorkouts,
@@ -236,12 +251,7 @@ fun WorkoutsScreen(
             item(key = "title") {
                 Text(
                     text = stringResource(R.string.workouts_title),
-                    style = HeadlineLgMobile.copy(
-                        fontSize = 34.sp,
-                        lineHeight = 40.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp
-                    ),
+                    style = HeadlineLgMobile,
                     color = OnSurface
                 )
             }

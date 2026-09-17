@@ -8,14 +8,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -26,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,8 +48,8 @@ import com.example.vigorly.data.model.WorkoutDetail
 import com.example.vigorly.data.model.WorkoutPlaylist
 import com.example.vigorly.ui.components.FrostedGlassCircleButton
 import com.example.vigorly.ui.components.GlassSurface
+import com.example.vigorly.ui.components.RecommendedWorkoutCard
 import com.example.vigorly.ui.components.RemoteCoverImage
-import com.example.vigorly.ui.components.WorkoutBrowseRow
 import com.example.vigorly.ui.components.WorkoutSearchBar
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.Dimens
@@ -63,8 +61,6 @@ import com.example.vigorly.ui.theme.GlassLabel
 import com.example.vigorly.ui.theme.HeadlineLgMobile
 import com.example.vigorly.ui.theme.HeadlineMd
 import com.example.vigorly.ui.theme.OnSurface
-import com.example.vigorly.ui.theme.PrimaryAccent
-import com.example.vigorly.util.WorkoutLabels
 
 @Composable
 fun FavoritesBrowseScreen(
@@ -77,6 +73,7 @@ fun FavoritesBrowseScreen(
     onFavoriteToggle: (String) -> Unit,
     onCreatePlaylist: (name: String, workoutIds: List<String>) -> Unit,
     onOpenPlaylist: (WorkoutPlaylist) -> Unit,
+    onDeletePlaylist: (WorkoutPlaylist) -> Unit,
     onFilterClick: () -> Unit,
     filterActive: Boolean,
     pickerCandidates: List<WorkoutDetail> = favorites,
@@ -93,12 +90,6 @@ fun FavoritesBrowseScreen(
                 it.targetMuscles.lowercase().contains(query) ||
                 it.type.name.lowercase().contains(query)
         }
-    }
-    val grouped = remember(filteredFavorites) {
-        filteredFavorites
-            .groupBy { it.type }
-            .entries
-            .sortedBy { it.key.ordinal }
     }
     val customLists = remember(playlists, query) {
         playlists.filterNot { it.isAuto }.filter {
@@ -204,30 +195,11 @@ fun FavoritesBrowseScreen(
 
             if (customLists.isEmpty()) {
                 item(key = "lists_empty") {
-                    GlassSurface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
-                                contentDescription = null,
-                                tint = PrimaryAccent,
-                                modifier = Modifier.size(22.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.workout_lists_empty_hint),
-                                style = BodyMd.copy(fontSize = 14.sp, letterSpacing = 0.1.sp),
-                                color = GlassLabel,
-                                modifier = Modifier.padding(start = 10.dp)
-                            )
-                        }
-                    }
+                    Text(
+                        text = stringResource(R.string.workout_lists_empty_hint),
+                        style = BodyMd.copy(fontSize = 14.sp, letterSpacing = 0.1.sp),
+                        color = GlassLabel.copy(alpha = 0.75f)
+                    )
                 }
             } else {
                 items(customLists, key = { it.id }) { playlist ->
@@ -236,46 +208,41 @@ fun FavoritesBrowseScreen(
                         name = playlist.name,
                         count = playlist.workoutIds.size,
                         coverUrl = cover,
-                        onClick = { onOpenPlaylist(playlist) }
+                        onClick = { onOpenPlaylist(playlist) },
+                        onDelete = { onDeletePlaylist(playlist) }
                     )
                 }
             }
 
-            item(key = "fav_gap") {
-                Spacer(Modifier.height(6.dp))
+            item(key = "fav_header") {
+                Text(
+                    text = stringResource(R.string.workouts_favorites_section),
+                    style = HeadlineMd.copy(
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = (-0.2).sp
+                    ),
+                    color = OnSurface,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
 
-            if (grouped.isEmpty()) {
+            if (filteredFavorites.isEmpty()) {
                 item(key = "fav_empty") {
                     Text(
                         text = stringResource(R.string.workouts_favorites_empty),
                         style = BodyMd.copy(fontSize = 15.sp, letterSpacing = 0.1.sp),
-                        color = GlassLabel.copy(alpha = 0.85f),
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        color = GlassLabel.copy(alpha = 0.8f)
                     )
                 }
             } else {
-                grouped.forEach { (type, items) ->
-                    item(key = "cat_${type.name}") {
-                        Text(
-                            text = WorkoutLabels.typeLabel(type),
-                            style = HeadlineMd.copy(
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                letterSpacing = (-0.15).sp
-                            ),
-                            color = OnSurface,
-                            modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
-                        )
-                    }
-                    items(items, key = { it.id }) { workout ->
-                        WorkoutBrowseRow(
-                            workout = workout,
-                            isFavorite = true,
-                            onFavoriteToggle = { onFavoriteToggle(workout.id) },
-                            onClick = { onWorkoutClick(workout.id) }
-                        )
-                    }
+                items(filteredFavorites, key = { it.id }) { workout ->
+                    RecommendedWorkoutCard(
+                        workout = workout,
+                        isFavorite = true,
+                        onFavoriteToggle = { onFavoriteToggle(workout.id) },
+                        onClick = { onWorkoutClick(workout.id) }
+                    )
                 }
             }
         }
@@ -289,6 +256,7 @@ fun FavoritesBrowseScreen(
             candidates = pickerCandidates,
             showNameField = true,
             confirmLabel = stringResource(R.string.workout_lists_save),
+            takenNames = playlists.map { it.name }.toSet(),
             onDismiss = { showCreateDialog = false },
             onConfirm = { name, ids ->
                 onCreatePlaylist(name, ids)
@@ -344,11 +312,12 @@ private fun PlaylistRow(
     name: String,
     count: Int,
     coverUrl: String?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
     GlassSurface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(22.dp),
         onClick = onClick
     ) {
         Row(
@@ -359,8 +328,8 @@ private fun PlaylistRow(
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(14.dp))
+                    .size(76.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(Color.White.copy(alpha = 0.06f))
             ) {
                 if (coverUrl != null) {
@@ -372,21 +341,22 @@ private fun PlaylistRow(
                         tint = GlassLabel.copy(alpha = 0.7f),
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .size(22.dp)
+                            .size(26.dp)
                     )
                 }
             }
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 14.dp)
             ) {
                 Text(
                     text = name,
                     style = HeadlineMd.copy(
-                        fontSize = 16.sp,
+                        fontSize = 18.sp,
+                        lineHeight = 23.sp,
                         fontWeight = FontWeight.SemiBold,
-                        letterSpacing = (-0.15).sp
+                        letterSpacing = (-0.2).sp
                     ),
                     color = OnSurface,
                     maxLines = 1,
@@ -394,16 +364,30 @@ private fun PlaylistRow(
                 )
                 Text(
                     text = stringResource(R.string.workout_lists_count, count),
-                    style = BodyMd.copy(fontSize = 14.sp, letterSpacing = 0.1.sp),
-                    color = GlassLabel.copy(alpha = 0.8f),
-                    modifier = Modifier.padding(top = 3.dp)
+                    style = BodyMd.copy(
+                        fontSize = 14.sp,
+                        lineHeight = 19.sp,
+                        letterSpacing = 0.1.sp
+                    ),
+                    color = GlassLabel.copy(alpha = 0.88f),
+                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
             Icon(
+                imageVector = Icons.Outlined.DeleteOutline,
+                contentDescription = stringResource(R.string.workout_lists_delete),
+                tint = GlassLabel.copy(alpha = 0.85f),
+                modifier = Modifier
+                    .size(22.dp)
+                    .clickable(onClick = onDelete)
+            )
+            Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = OnSurface.copy(alpha = 0.45f),
-                modifier = Modifier.size(22.dp)
+                tint = GlassLabel.copy(alpha = 0.85f),
+                modifier = Modifier
+                    .padding(start = 10.dp)
+                    .size(20.dp)
             )
         }
     }

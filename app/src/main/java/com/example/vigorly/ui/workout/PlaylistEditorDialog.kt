@@ -71,6 +71,8 @@ fun PlaylistEditorDialog(
     candidates: List<WorkoutDetail>,
     showNameField: Boolean,
     confirmLabel: String,
+    takenNames: Set<String> = emptySet(),
+    currentName: String? = null,
     onDismiss: () -> Unit,
     onConfirm: (name: String, workoutIds: List<String>) -> Unit
 ) {
@@ -78,6 +80,15 @@ fun PlaylistEditorDialog(
     var selected by remember(initialSelectedIds) { mutableStateOf(initialSelectedIds) }
     val shape = RoundedCornerShape(24.dp)
     val sheetInteraction = remember { MutableInteractionSource() }
+    val nameTaken = remember(name, takenNames, currentName) {
+        val normalized = name.trim()
+        if (normalized.isEmpty()) return@remember false
+        val reserved = currentName?.trim()
+        takenNames.any { existing ->
+            existing.trim().equals(normalized, ignoreCase = true) &&
+                (reserved == null || !existing.trim().equals(reserved, ignoreCase = true))
+        }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -128,6 +139,14 @@ fun PlaylistEditorDialog(
                             onValueChange = { name = it },
                             placeholder = stringResource(R.string.workout_lists_name_hint)
                         )
+                        if (nameTaken) {
+                            Text(
+                                text = stringResource(R.string.workout_lists_name_taken),
+                                style = BodyMd.copy(fontSize = 12.sp),
+                                color = PrimaryAccent,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
                     }
 
                     Spacer(Modifier.height(14.dp))
@@ -187,13 +206,13 @@ fun PlaylistEditorDialog(
                                 .background(
                                     Brush.verticalGradient(
                                         listOf(
-                                            PrimaryAccent.copy(alpha = 0.95f),
-                                            PrimaryAccent.copy(alpha = 0.75f)
+                                            PrimaryAccent.copy(alpha = if (nameTaken) 0.35f else 0.95f),
+                                            PrimaryAccent.copy(alpha = if (nameTaken) 0.28f else 0.75f)
                                         )
                                     )
                                 )
-                                .clickable {
-                                    onConfirm(name, selected.toList())
+                                .clickable(enabled = !nameTaken) {
+                                    if (!nameTaken) onConfirm(name, selected.toList())
                                 }
                                 .padding(horizontal = 18.dp, vertical = 10.dp)
                         ) {
