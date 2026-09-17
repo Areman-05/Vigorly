@@ -60,6 +60,29 @@ object SetupStepIcons {
         else -> Icons.Rounded.Schedule
     }
 
+    fun category(key: String): ImageVector = when (key) {
+        "strength" -> Icons.Rounded.FitnessCenter
+        "hiit" -> Icons.Rounded.Bolt
+        "cardio" -> Icons.Rounded.DirectionsRun
+        "recovery" -> Icons.Rounded.Spa
+        "pilates" -> Icons.Rounded.SelfImprovement
+        "mobility" -> Icons.Rounded.AccessibilityNew
+        "swim" -> Icons.Rounded.DirectionsBike
+        else -> Icons.Rounded.Layers
+    }
+
+    fun intensity(key: String): ImageVector = when (key) {
+        "low" -> Icons.Rounded.DirectionsWalk
+        "high" -> Icons.Rounded.Bolt
+        else -> Icons.Rounded.Speed
+    }
+
+    fun durationPref(key: String): ImageVector = when (key) {
+        "short" -> Icons.Rounded.Bolt
+        "long" -> Icons.Rounded.Schedule
+        else -> Icons.Rounded.Layers
+    }
+
     fun weeklySessions(count: Int): ImageVector = when (count) {
         2 -> Icons.Rounded.Spa
         3 -> Icons.Rounded.DirectionsWalk

@@ -30,7 +30,7 @@ class GoogleSignInHelper(
     private val activity: Activity
 ) {
 
-    private val credentialManager = CredentialManager.create(activity)
+    private val credentialManager by lazy { CredentialManager.create(activity) }
 
     suspend fun signIn(webClientId: String): Result<GoogleUserInfo> {
         if (webClientId.isBlank() || webClientId == PLACEHOLDER_CLIENT_ID) {
