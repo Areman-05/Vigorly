@@ -45,4 +45,44 @@ object WorkoutPlaylistCodec {
             }
         }.getOrDefault(emptyList())
     }
+
+    fun sanitizeUserLists(lists: List<WorkoutPlaylist>): List<WorkoutPlaylist> {
+        return lists.filterNot { list ->
+            list.isAuto || list.id.startsWith("auto_")
+        }
+    }
+
+    fun uniqueName(
+        desired: String,
+        existing: List<WorkoutPlaylist>,
+        excludeId: String? = null
+    ): String {
+        val used = existing
+            .filter { it.id != excludeId }
+            .map { it.name.trim().lowercase() }
+            .toSet()
+        val base = desired.trim().ifBlank { nextUntitled(used) }
+        if (base.lowercase() !in used) return base
+        var n = 2
+        while ("$base $n".lowercase() in used) n++
+        return "$base $n"
+    }
+
+    fun isNameTaken(
+        desired: String,
+        existing: List<WorkoutPlaylist>,
+        excludeId: String? = null
+    ): Boolean {
+        val name = desired.trim()
+        if (name.isEmpty()) return false
+        return existing.any {
+            it.id != excludeId && it.name.trim().equals(name, ignoreCase = true)
+        }
+    }
+
+    private fun nextUntitled(used: Set<String>): String {
+        var n = 1
+        while ("lista $n" in used || "list $n" in used) n++
+        return "Lista $n"
+    }
 }

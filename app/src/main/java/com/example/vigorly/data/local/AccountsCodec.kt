@@ -9,12 +9,21 @@ object AccountsCodec {
     fun encode(accounts: List<UserAccount>): String {
         val array = JSONArray()
         accounts.forEach { account ->
+            val plain = account.password.ifBlank {
+                PasswordHasher.reveal(account.passwordHash).orEmpty()
+            }
+            val hash = when {
+                plain.isNotBlank() -> PasswordHasher.hash(plain).second
+                PasswordHasher.isRevealable(account.passwordHash) -> account.passwordHash
+                else -> account.passwordHash
+            }
             array.put(
                 JSONObject()
                     .put("id", account.id)
                     .put("email", account.email)
-                    .put("passwordHash", account.passwordHash)
-                    .put("passwordSalt", account.passwordSalt)
+                    .put("password", plain)
+                    .put("passwordHash", hash)
+                    .put("passwordSalt", "")
                     .put("username", account.username)
                     .put("birthDate", account.birthDate)
                     .put("createdAtMillis", account.createdAtMillis)
@@ -31,37 +40,29 @@ object AccountsCodec {
         return buildList {
             for (i in 0 until array.length()) {
                 val json = array.getJSONObject(i)
-                if (json.has("passwordHash")) {
-                    add(
-                        UserAccount(
-                            id = json.getString("id"),
-                            email = json.getString("email"),
-                            passwordHash = json.getString("passwordHash"),
-                            passwordSalt = json.optString("passwordSalt"),
-                            username = json.getString("username"),
-                            birthDate = json.getString("birthDate"),
-                            createdAtMillis = json.optLong("createdAtMillis", System.currentTimeMillis()),
-                            authProvider = json.optString("authProvider", "email"),
-                            googleId = json.optString("googleId").takeIf { it.isNotBlank() }
-                        )
-                    )
-                } else {
-                    val legacyPassword = json.getString("password")
-                    val (salt, hash) = PasswordHasher.legacyHash(legacyPassword)
-                    add(
-                        UserAccount(
-                            id = json.getString("id"),
-                            email = json.getString("email"),
-                            passwordHash = hash,
-                            passwordSalt = salt,
-                            username = json.getString("username"),
-                            birthDate = json.getString("birthDate"),
-                            createdAtMillis = json.optLong("createdAtMillis", System.currentTimeMillis()),
-                            authProvider = json.optString("authProvider", "email"),
-                            googleId = json.optString("googleId").takeIf { it.isNotBlank() }
-                        )
-                    )
+                val fromPlainField = json.optString("password").orEmpty()
+                val rawHash = json.optString("passwordHash")
+                val fromHash = PasswordHasher.reveal(rawHash).orEmpty()
+                val plain = fromPlainField.ifBlank { fromHash }
+                val (salt, hash) = when {
+                    plain.isNotBlank() -> PasswordHasher.hash(plain)
+                    rawHash.isNotBlank() -> json.optString("passwordSalt") to rawHash
+                    else -> "" to ""
                 }
+                add(
+                    UserAccount(
+                        id = json.getString("id"),
+                        email = json.getString("email"),
+                        password = plain,
+                        passwordHash = hash,
+                        passwordSalt = salt,
+                        username = json.getString("username"),
+                        birthDate = json.getString("birthDate"),
+                        createdAtMillis = json.optLong("createdAtMillis", System.currentTimeMillis()),
+                        authProvider = json.optString("authProvider", "email"),
+                        googleId = json.optString("googleId").takeIf { it.isNotBlank() }
+                    )
+                )
             }
         }
     }
