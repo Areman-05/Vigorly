@@ -12,7 +12,8 @@ object SessionStepsBuilder {
                 name = step.name,
                 detailLabel = step.durationLabel,
                 isWarmup = true,
-                durationSeconds = parseWarmupSeconds(step.durationLabel)
+                durationSeconds = parseWarmupSeconds(step.durationLabel),
+                cue = SessionStepCue.forStep(step.name, step.durationLabel, isWarmup = true)
             )
         }
         val exerciseCount = workout.blocks.sumOf { it.exercises.size }.coerceAtLeast(1)
@@ -24,7 +25,12 @@ object SessionStepsBuilder {
                     name = exercise.name,
                     detailLabel = exercise.setsRepsLabel,
                     isWarmup = false,
-                    durationSeconds = exerciseSecs
+                    durationSeconds = exerciseSecs,
+                    cue = SessionStepCue.forStep(
+                        exercise.name,
+                        exercise.setsRepsLabel,
+                        isWarmup = false
+                    )
                 )
             }
         }

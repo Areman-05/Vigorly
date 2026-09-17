@@ -8,5 +8,6 @@ data class SessionStep(
     val name: String,
     val detailLabel: String,
     val isWarmup: Boolean,
-    val durationSeconds: Int
+    val durationSeconds: Int,
+    val cue: String = ""
 )

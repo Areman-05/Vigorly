@@ -1,13 +1,11 @@
 package com.example.vigorly.ui.session
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,10 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,7 +36,6 @@ import com.example.vigorly.ui.theme.DisplayStat
 import com.example.vigorly.ui.theme.GlassLabel
 import com.example.vigorly.ui.theme.HeadlineMd
 import com.example.vigorly.ui.theme.OnSurface
-import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.SurfaceContainer
 import com.example.vigorly.ui.theme.SurfaceContainerLowest
 import com.example.vigorly.ui.workout.WorkoutDetailStartCta
@@ -59,77 +54,19 @@ fun SessionSummaryScreen(
     val typeLabel = WorkoutLabels.typeLabel(summary.workoutType)
     val detailShape = RoundedCornerShape(22.dp)
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(SurfaceContainerLowest)
-    ) {
-        // Soft celebration glow + confetti shapes (like reference)
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val w = size.width
-            val h = size.height
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        PrimaryAccent.copy(alpha = 0.28f),
-                        Color.Transparent
-                    ),
-                    center = Offset(w * 0.15f, h * 0.08f),
-                    radius = w * 0.55f
-                ),
-                center = Offset(w * 0.15f, h * 0.08f),
-                radius = w * 0.55f
-            )
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        Color(0xFF6B1A2A).copy(alpha = 0.35f),
-                        Color.Transparent
-                    ),
-                    center = Offset(w * 0.9f, h * 0.05f),
-                    radius = w * 0.5f
-                ),
-                center = Offset(w * 0.9f, h * 0.05f),
-                radius = w * 0.5f
-            )
-            val triColors = listOf(
-                Color(0xFFFF6B4A).copy(alpha = 0.45f),
-                Color(0xFFB48CFF).copy(alpha = 0.4f),
-                Color(0xFFB8E63A).copy(alpha = 0.35f),
-                Color(0xFFFF2D55).copy(alpha = 0.4f)
-            )
-            val positions = listOf(
-                Offset(w * 0.12f, h * 0.18f) to 18f,
-                Offset(w * 0.78f, h * 0.14f) to 14f,
-                Offset(w * 0.88f, h * 0.28f) to 16f,
-                Offset(w * 0.22f, h * 0.32f) to 12f,
-                Offset(w * 0.65f, h * 0.22f) to 11f
-            )
-            positions.forEachIndexed { i, (origin, side) ->
-                val path = Path().apply {
-                    moveTo(origin.x, origin.y - side)
-                    lineTo(origin.x + side * 0.9f, origin.y + side * 0.55f)
-                    lineTo(origin.x - side * 0.9f, origin.y + side * 0.55f)
-                    close()
-                }
-                drawPath(path, color = triColors[i % triColors.size])
-            }
-        }
+    Box(modifier = modifier.fillMaxSize()) {
+        SessionStageBackground()
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .navigationBarsPadding()
                 .padding(horizontal = Dimens.ContainerMargin)
-                .padding(top = 48.dp, bottom = Dimens.Xl)
+                .padding(top = 48.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 120.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
                 // Hero glass card — larger + lower than detail list
                 GlassSurface(
                     modifier = Modifier.fillMaxWidth(),
@@ -195,6 +132,7 @@ fun SessionSummaryScreen(
                             shape = detailShape
                         )
                         .padding(horizontal = 18.dp, vertical = 6.dp)
+                        .padding(bottom = 8.dp)
                 ) {
                     SummaryDetailRow(
                         label = stringResource(R.string.summary_stat_type),
@@ -267,15 +205,31 @@ fun SessionSummaryScreen(
                         )
                     }
                 }
-            }
+        }
 
-            Spacer(Modifier.height(20.dp))
-
+        // CTA flotante: la card puede quedar detrás; fade transparente, sin barra negra.
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            SurfaceContainerLowest.copy(alpha = 0.55f),
+                            SurfaceContainerLowest.copy(alpha = 0.92f)
+                        )
+                    )
+                )
+                .navigationBarsPadding()
+                .padding(horizontal = Dimens.ContainerMargin)
+                .padding(top = 28.dp, bottom = 16.dp)
+        ) {
             WorkoutDetailStartCta(
                 onClick = onDone,
                 labelRes = R.string.session_done,
                 showPlayIcon = false,
-                cornerRadius = 18.dp,
+                cornerRadius = 999.dp,
                 modifier = Modifier.fillMaxWidth()
             )
         }
