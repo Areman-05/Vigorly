@@ -6,8 +6,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,8 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,8 +31,8 @@ import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.OnSurface
-import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
+import com.example.vigorly.ui.theme.SurfaceContainerHigh
 
 @Composable
 fun StreakBannerPopup(
@@ -40,6 +41,7 @@ fun StreakBannerPopup(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val shape = RoundedCornerShape(20.dp)
     AnimatedVisibility(
         visible = visible,
         modifier = modifier,
@@ -48,19 +50,13 @@ fun StreakBannerPopup(
     ) {
         Row(
             modifier = Modifier
-                .shadow(8.dp, RoundedCornerShape(20.dp))
-                .clip(RoundedCornerShape(20.dp))
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            PrimaryAccent.copy(alpha = 0.22f),
-                            Primary.copy(alpha = 0.14f)
-                        )
-                    )
-                )
+                .fillMaxWidth()
+                .clip(shape)
+                .background(SurfaceContainerHigh)
+                .border(1.dp, Color.White.copy(alpha = 0.14f), shape)
                 .padding(start = 14.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Icon(
                 Icons.Default.LocalFireDepartment,
@@ -72,14 +68,14 @@ fun StreakBannerPopup(
                 text = stringResource(R.string.streak_banner_message, streakDays),
                 style = BodyMd.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
                 color = OnSurface,
-                modifier = Modifier.weight(1f, fill = false)
+                modifier = Modifier.weight(1f)
             )
-            IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+            IconButton(onClick = onDismiss, modifier = Modifier.size(40.dp)) {
                 Icon(
                     Icons.Default.Close,
                     contentDescription = stringResource(R.string.streak_banner_dismiss),
-                    tint = OnSurface.copy(alpha = 0.65f),
-                    modifier = Modifier.size(18.dp)
+                    tint = OnSurface,
+                    modifier = Modifier.size(22.dp)
                 )
             }
         }

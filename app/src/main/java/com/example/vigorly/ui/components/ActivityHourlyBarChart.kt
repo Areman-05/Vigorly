@@ -87,22 +87,27 @@ fun ActivityHourlyBarChart(
                 .height(height)
         ) {
             val layout = computeHourlyBarLayout(size.width, HOUR_COUNT)
-            val topRadius = layout.barWidth / 2f.coerceAtMost(7f)
+            val topRadius = (layout.barWidth / 2f).coerceAtMost(7f)
+            val trackHeight = 5.dp.toPx()
 
-            // Guía horizontal suave
             drawLine(
-                color = Color.White.copy(alpha = 0.06f),
+                color = Color.White.copy(alpha = 0.08f),
                 start = Offset(0f, size.height),
                 end = Offset(size.width, size.height),
                 strokeWidth = 1.5f
             )
 
             normalizedValues.forEachIndexed { index, value ->
+                val x = layout.barStartX(index)
+                drawRoundRect(
+                    color = Color.White.copy(alpha = 0.08f),
+                    topLeft = Offset(x, size.height - trackHeight),
+                    size = Size(layout.barWidth, trackHeight),
+                    cornerRadius = CornerRadius(topRadius, topRadius)
+                )
                 if (value <= 0f) return@forEachIndexed
                 val fraction = (value / normalizedMax).coerceIn(0f, 1f)
-                val barHeight = size.height * fraction * barProgress
-                if (barHeight < 1f) return@forEachIndexed
-                val x = layout.barStartX(index)
+                val barHeight = (size.height * fraction * barProgress).coerceAtLeast(trackHeight)
                 val y = size.height - barHeight
                 val isPeak = index == peakIndex
                 val brush = Brush.verticalGradient(

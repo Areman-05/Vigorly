@@ -68,6 +68,7 @@ import com.example.vigorly.ui.theme.GlassBorder
 import com.example.vigorly.ui.theme.GlassLabel
 import com.example.vigorly.ui.theme.HeadlineLgMobile
 import com.example.vigorly.ui.theme.HeadlineMd
+import com.example.vigorly.ui.theme.LabelCaps
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.PrimaryAccent
 import kotlinx.coroutines.delay
@@ -114,12 +115,7 @@ fun DashboardScreen(
             ) {
                 Text(
                     text = stringResource(R.string.dashboard_title),
-                    style = HeadlineLgMobile.copy(
-                        fontSize = 34.sp,
-                        lineHeight = 40.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp
-                    ),
+                    style = HeadlineLgMobile,
                     color = OnSurface
                 )
                 ResumenChip(onClick = onActivityDetailClick)
@@ -253,11 +249,7 @@ private fun SectionTitleRow(
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
-            style = HeadlineMd.copy(
-                fontSize = 22.sp,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = (-0.2).sp
-            ),
+            style = HeadlineMd,
             color = OnSurface,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
@@ -342,12 +334,8 @@ private fun HomeStatsGrid(
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(R.string.dashboard_today_label),
-            style = BodyMd.copy(
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.0.sp
-            ),
+            text = stringResource(R.string.dashboard_today_label).uppercase(),
+            style = LabelCaps,
             color = PrimaryAccent,
             modifier = Modifier.padding(bottom = 10.dp)
         )

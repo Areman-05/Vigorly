@@ -1,157 +1,69 @@
 package com.example.vigorly.ui.components
 
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.vigorly.R
-import com.example.vigorly.core.testing.UiTestEnvironment
-import com.example.vigorly.ui.performance.UiPerformance
 import com.example.vigorly.data.activity.WeeklyActivityRingDay
+import com.example.vigorly.ui.performance.UiPerformance
 import com.example.vigorly.ui.theme.BodyMd
-import com.example.vigorly.ui.theme.Dimens
 import com.example.vigorly.ui.theme.GlassLabel
 import com.example.vigorly.ui.theme.OnSurface
-import com.example.vigorly.ui.theme.OnSurfaceVariant
-import com.example.vigorly.ui.theme.Primary
 import com.example.vigorly.ui.theme.PrimaryAccent
-import com.example.vigorly.ui.theme.PrimaryContainer
 import java.time.LocalDate
 
 @Composable
-fun WeeklyActivityRingsSection(
+fun WeeklyActivityDayRail(
     days: List<WeeklyActivityRingDay>,
-    weekRangeLabel: String,
+    selectedDate: LocalDate?,
+    onDayClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
-    selectedDate: LocalDate? = null,
-    onDayClick: (LocalDate) -> Unit = {},
     animate: Boolean = UiPerformance.decorativeMotionEnabled
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(R.string.activity_weekly_title),
-            style = BodyMd.copy(
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold
-            ),
-            color = OnSurface
-        )
-        if (weekRangeLabel.isNotBlank()) {
-            Spacer(Modifier.height(Dimens.Xs))
-            Text(
-                text = weekRangeLabel,
-                style = BodyMd.copy(fontSize = 13.sp),
-                color = GlassLabel.copy(alpha = 0.78f)
+    if (days.isEmpty()) return
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        days.forEach { day ->
+            WeekDayCell(
+                day = day,
+                isSelected = selectedDate == day.date,
+                animate = animate,
+                onClick = { if (!day.isFuture) onDayClick(day.date) },
+                modifier = Modifier.weight(1f)
             )
         }
-        Spacer(Modifier.height(Dimens.Md))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
-        ) {
-            days.forEach { day ->
-                WeeklyActivityRingDayCell(
-                    day = day,
-                    isSelected = selectedDate == day.date,
-                    animate = animate,
-                    onClick = { if (!day.isFuture) onDayClick(day.date) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
     }
 }
 
 @Composable
-private fun TodayNebulaAura(modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition(label = "todayNebula")
-    val pulse by transition.animateFloat(
-        initialValue = 0.92f,
-        targetValue = 1.08f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "nebulaPulse"
-    )
-
-    Canvas(modifier = modifier) {
-        val center = Offset(size.width / 2f, size.height / 2f)
-        val baseRadius = size.minDimension * 0.52f * pulse
-
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    PrimaryAccent.copy(alpha = 0.22f),
-                    PrimaryContainer.copy(alpha = 0.10f),
-                    Color.Transparent
-                ),
-                center = center,
-                radius = baseRadius
-            ),
-            radius = baseRadius,
-            center = center
-        )
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    Primary.copy(alpha = 0.16f),
-                    PrimaryAccent.copy(alpha = 0.06f),
-                    Color.Transparent
-                ),
-                center = center,
-                radius = baseRadius * 0.72f
-            ),
-            radius = baseRadius * 0.72f,
-            center = center
-        )
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    PrimaryContainer.copy(alpha = 0.14f),
-                    Color.Transparent
-                ),
-                center = center,
-                radius = baseRadius * 0.48f
-            ),
-            radius = baseRadius * 0.48f,
-            center = center
-        )
-    }
-}
-
-@Composable
-private fun WeeklyActivityRingDayCell(
+private fun WeekDayCell(
     day: WeeklyActivityRingDay,
     isSelected: Boolean,
     animate: Boolean,
@@ -163,69 +75,87 @@ private fun WeeklyActivityRingDayCell(
     val targetStand = if (day.isFuture) 0f else day.standProgress
 
     val move by animateFloatAsState(
-        targetValue = if (animate) targetMove else targetMove,
-        animationSpec = tween(650, easing = FastOutSlowInEasing),
+        targetValue = targetMove,
+        animationSpec = tween(if (animate) 480 else 0, easing = FastOutSlowInEasing),
         label = "weekMove_${day.date}"
     )
     val exercise by animateFloatAsState(
-        targetValue = if (animate) targetExercise else targetExercise,
-        animationSpec = tween(650, easing = FastOutSlowInEasing),
+        targetValue = targetExercise,
+        animationSpec = tween(if (animate) 520 else 0, easing = FastOutSlowInEasing),
         label = "weekExercise_${day.date}"
     )
     val stand by animateFloatAsState(
-        targetValue = if (animate) targetStand else targetStand,
-        animationSpec = tween(650, easing = FastOutSlowInEasing),
+        targetValue = targetStand,
+        animationSpec = tween(if (animate) 560 else 0, easing = FastOutSlowInEasing),
         label = "weekStand_${day.date}"
     )
 
+    val interaction = remember { MutableInteractionSource() }
+    val muted = day.isFuture
+    val labelColor = when {
+        muted -> GlassLabel.copy(alpha = 0.28f)
+        isSelected || day.isToday -> OnSurface
+        else -> GlassLabel.copy(alpha = 0.72f)
+    }
+    val numberColor = when {
+        muted -> GlassLabel.copy(alpha = 0.22f)
+        isSelected || day.isToday -> OnSurface
+        else -> GlassLabel.copy(alpha = 0.9f)
+    }
+
     Column(
         modifier = modifier
-            .padding(horizontal = 2.dp)
-            .clickable(enabled = !day.isFuture, onClick = onClick),
+            .clip(RoundedCornerShape(18.dp))
+            .clickable(
+                enabled = !day.isFuture,
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(vertical = 10.dp, horizontal = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(56.dp)
-        ) {
-            if (
-                UiPerformance.decorativeMotionEnabled &&
-                !UiTestEnvironment.disableContinuousUiMotion &&
-                (day.isToday || isSelected)
-            ) {
-                TodayNebulaAura(Modifier.fillMaxSize())
-            }
+        Text(
+            text = day.dayLabel.take(2),
+            style = BodyMd.copy(
+                fontSize = 11.sp,
+                fontWeight = if (isSelected || day.isToday) FontWeight.SemiBold else FontWeight.Medium,
+                letterSpacing = 0.6.sp
+            ),
+            color = labelColor,
+            maxLines = 1
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(44.dp)) {
             MiniActivityRings(
                 moveProgress = move,
                 exerciseProgress = exercise,
                 standProgress = stand,
-                size = 42.dp
+                size = 42.dp,
+                muted = muted
             )
+            if (day.isToday && !isSelected) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .size(4.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryAccent)
+                )
+            }
         }
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = day.dayLabel,
-            style = BodyMd.copy(
-                fontSize = 11.sp,
-                fontWeight = if (day.isToday || isSelected) FontWeight.Bold else FontWeight.Medium
-            ),
-            color = when {
-                day.isToday || isSelected -> PrimaryAccent
-                day.isFuture -> OnSurfaceVariant.copy(alpha = 0.35f)
-                day.hasActivity -> OnSurface
-                else -> OnSurfaceVariant.copy(alpha = 0.55f)
-            },
-            textAlign = TextAlign.Center,
-            maxLines = 1
-        )
+
+        Spacer(Modifier.height(8.dp))
+
         Text(
             text = day.date.dayOfMonth.toString(),
-            style = BodyMd.copy(fontSize = 10.sp),
-            color = when {
-                day.isToday || isSelected -> Primary
-                day.isFuture -> OnSurfaceVariant.copy(alpha = 0.28f)
-                else -> OnSurfaceVariant.copy(alpha = 0.45f)
-            }
+            style = BodyMd.copy(
+                fontSize = 14.sp,
+                fontWeight = if (isSelected || day.isToday) FontWeight.Bold else FontWeight.Medium
+            ),
+            color = numberColor
         )
     }
 }

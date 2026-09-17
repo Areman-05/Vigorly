@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -31,12 +32,14 @@ fun FrostedGlassCircleButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: Dp = 44.dp,
+    enabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
             .size(size)
+            .alpha(if (enabled) 1f else 0.38f)
             .clip(CircleShape)
             .background(
                 Brush.verticalGradient(
@@ -59,6 +62,7 @@ fun FrostedGlassCircleButton(
                 shape = CircleShape
             )
             .clickable(
+                enabled = enabled,
                 interactionSource = interactionSource,
                 indication = ripple(bounded = true, color = Color.White.copy(alpha = 0.2f)),
                 onClick = onClick
