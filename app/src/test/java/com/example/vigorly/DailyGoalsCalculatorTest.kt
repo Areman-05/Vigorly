@@ -27,6 +27,20 @@ class DailyGoalsCalculatorTest {
     }
 
     @Test
+    fun dailyGoalPercent_averagesRingProgress() {
+        val goals = DailyGoalsCalculator.build(
+            steps = 5000,
+            workoutCalories = 150,
+            exerciseMinutes = 15,
+            standHours = 6
+        )
+        assertEquals(
+            ((goals.moveProgress + goals.exerciseProgress + goals.standProgress) / 3f * 100).toInt(),
+            goals.dailyGoalPercent
+        )
+    }
+
+    @Test
     fun goalScale_usesIntensityKeys() {
         assertEquals(0.85f, DailyGoalsCalculator.goalScale("low"), 0.001f)
         assertEquals(1.2f, DailyGoalsCalculator.goalScale("high"), 0.001f)

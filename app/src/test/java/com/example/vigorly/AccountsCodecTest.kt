@@ -10,7 +10,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
+@Config(sdk = [28])
 class AccountsCodecTest {
     @Test
     fun encode_decode_roundTrip_keepsPlainPassword() {

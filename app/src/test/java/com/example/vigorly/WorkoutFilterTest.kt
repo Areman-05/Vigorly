@@ -98,4 +98,16 @@ class WorkoutFilterTest {
         assertTrue(filters.isEmpty)
         assertTrue(all.all { filters.matches(it) })
     }
+
+    @Test
+    fun browseFilters_intensityFiltersCatalog() {
+        val filters = WorkoutBrowseFilters(intensities = setOf("high"))
+        val matched = all.filter { filters.matches(it) }
+        assertTrue(matched.isNotEmpty())
+        assertTrue(
+            matched.all {
+                WorkoutBrowseFilters.intensityKey(it.intensity) == "high"
+            }
+        )
+    }
 }

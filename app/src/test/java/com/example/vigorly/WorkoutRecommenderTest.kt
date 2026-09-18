@@ -47,6 +47,19 @@ class WorkoutRecommenderTest {
     }
 
     @Test
+    fun recommendMany_returnsDistinctUpToCount() {
+        val result = WorkoutRecommender.recommendMany(
+            workouts = workouts,
+            history = emptyList(),
+            favorites = emptySet(),
+            count = 5
+        )
+        assertTrue(result.isNotEmpty())
+        assertTrue(result.size <= 5)
+        assertEquals(result.size, result.distinctBy { it.id }.size)
+    }
+
+    @Test
     fun preferredTypes_mapsCatalogKeys() {
         val types = WorkoutRecommender.preferredTypes("strength,hiit,pilates")
         assertTrue(types.contains(com.example.vigorly.data.model.WorkoutType.STRENGTH))

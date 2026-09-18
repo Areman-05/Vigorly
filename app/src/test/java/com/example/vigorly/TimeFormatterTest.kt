@@ -18,6 +18,6 @@ class TimeFormatterTest {
 
     @Test
     fun formatRestCountdown_formatsSeconds() {
-        assertEquals("45", TimeFormatter.formatRestCountdown(45))
+        assertEquals("00:45", TimeFormatter.formatRestCountdown(45))
     }
 }

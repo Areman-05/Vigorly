@@ -53,4 +53,51 @@ class NavigationUiStateTest {
         assertTrue(state.isAuthFlow)
         assertFalse(state.showGradientBackground)
     }
+
+    @Test
+    fun registerAndSetup_areAuthFlow() {
+        val register = NavigationUiState.fromRoute(VigorlyRoutes.Register)
+        val setup = NavigationUiState.fromRoute(VigorlyRoutes.Setup)
+        assertTrue(register.isAuthFlow)
+        assertTrue(setup.isAuthFlow)
+        assertFalse(register.showBottomBar)
+        assertFalse(setup.showBottomBar)
+    }
+
+    @Test
+    fun analysisAndProfile_areMainTabs() {
+        val analysis = NavigationUiState.fromRoute(VigorlyRoutes.Analysis)
+        val profile = NavigationUiState.fromRoute(VigorlyRoutes.Profile)
+        assertTrue(analysis.showBottomBar)
+        assertTrue(profile.showBottomBar)
+        assertTrue(analysis.showGradientBackground)
+        assertTrue(profile.showGradientBackground)
+    }
+
+    @Test
+    fun history_isSubScreenWithGradient() {
+        val state = NavigationUiState.fromRoute(VigorlyRoutes.History)
+        assertTrue(state.isSubScreen)
+        assertFalse(state.showBottomBar)
+        assertTrue(state.showGradientBackground)
+        assertFalse(state.isHistoryDetail)
+    }
+
+    @Test
+    fun historyDetail_isDetailWithGradient() {
+        val state = NavigationUiState.fromRoute(VigorlyRoutes.historyDetail("abc"))
+        assertTrue(state.isHistoryDetail)
+        assertFalse(state.showBottomBar)
+        assertTrue(state.showGradientBackground)
+    }
+
+    @Test
+    fun activityDetail_opensCalendarShell() {
+        val detail = NavigationUiState.fromRoute(VigorlyRoutes.ActivityDetail)
+        val metric = NavigationUiState.fromRoute(VigorlyRoutes.activityMetric("move"))
+        assertTrue(detail.isActivityDetail)
+        assertTrue(metric.isActivityMetricDetail)
+        assertTrue(detail.showGradientBackground)
+        assertTrue(metric.showGradientBackground)
+    }
 }
