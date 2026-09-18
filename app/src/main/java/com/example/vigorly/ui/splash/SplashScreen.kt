@@ -4,12 +4,13 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,13 +74,18 @@ fun SplashScreen(
         withContext(Dispatchers.Main.immediate) { onFinished(destination) }
     }
 
-    Box(modifier = modifier.fillMaxSize().testTag(VigorlyTestTags.SPLASH)) {
+    Box(
+        modifier = modifier.fillMaxSize().testTag(VigorlyTestTags.SPLASH)
+    ) {
         SplashGradientBackground()
         Column(
-            Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            Modifier
+                .fillMaxSize()
+                .navigationBarsPadding()
+                .padding(bottom = 56.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(Modifier.weight(0.88f))
             VigorlyBrandMark()
             Text(
                 stringResource(R.string.splash_tagline),
@@ -87,9 +93,9 @@ fun SplashScreen(
                 color = PrimaryAccent.copy(alpha = 0.85f),
                 modifier = Modifier.padding(top = 10.dp)
             )
+            Spacer(Modifier.weight(1.25f))
             Box(
                 Modifier
-                    .padding(top = 40.dp)
                     .fillMaxWidth(0.62f)
                     .height(6.dp)
             ) {

@@ -1,26 +1,38 @@
 package com.example.vigorly.ui.components
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
+import com.example.vigorly.ui.theme.AuroraCore
 import com.example.vigorly.ui.theme.OnSurface
 import com.example.vigorly.ui.theme.PrimaryAccent
 import com.example.vigorly.ui.theme.VigorlyDisplayFamily
 
-/**
- * Wordmark fitness: Bebas Neue, V en acento, resto blanco.
- */
+private val VAurora = Brush.verticalGradient(
+    colorStops = arrayOf(
+        0.00f to Color(0xFF83838E),
+        0.36f to Color(0xFF918A96),
+        0.58f to Color(0xFFE24A6C),
+        0.82f to PrimaryAccent,
+        1.00f to AuroraCore
+    )
+)
+
 @Composable
 fun VigorlyBrandMark(
     modifier: Modifier = Modifier,
@@ -30,17 +42,7 @@ fun VigorlyBrandMark(
     @Suppress("UNUSED_PARAMETER") progress: Float = 1f
 ) {
     val brand = stringResource(R.string.brand_name).uppercase()
-    val mark = buildAnnotatedString {
-        withStyle(
-            SpanStyle(
-                fontFamily = VigorlyDisplayFamily,
-                fontSize = if (compact) 52.sp else 84.sp,
-                letterSpacing = if (compact) 1.5.sp else 2.sp,
-                color = PrimaryAccent
-            )
-        ) {
-            append(brand.firstOrNull() ?: 'V')
-        }
+    val rest = buildAnnotatedString {
         if (brand.length > 1) {
             withStyle(
                 SpanStyle(
@@ -59,6 +61,19 @@ fun VigorlyBrandMark(
         modifier = modifier.semantics { contentDescription = brand },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = mark)
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = (brand.firstOrNull() ?: 'V').toString(),
+                style = TextStyle(
+                    fontFamily = VigorlyDisplayFamily,
+                    fontSize = if (compact) 52.sp else 84.sp,
+                    letterSpacing = if (compact) 1.5.sp else 2.sp,
+                    brush = VAurora
+                )
+            )
+            if (brand.length > 1) {
+                Text(text = rest)
+            }
+        }
     }
 }
