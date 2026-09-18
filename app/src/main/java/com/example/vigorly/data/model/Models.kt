@@ -63,14 +63,6 @@ data class WorkoutHistoryItem(
     val workoutType: String? = null
 )
 
-data class RecentActivity(
-    val id: String,
-    val title: String,
-    val timeLabel: String,
-    val durationMinutes: Int,
-    val iconName: String
-)
-
 data class Exercise(
     val id: String,
     val name: String,

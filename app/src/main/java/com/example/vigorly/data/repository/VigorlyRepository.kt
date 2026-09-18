@@ -16,7 +16,6 @@ import com.example.vigorly.data.local.WeightLogCodec
 import com.example.vigorly.data.local.WorkoutPlaylistCodec
 import com.example.vigorly.data.model.CoachingTip
 import com.example.vigorly.data.model.SessionSummary
-import com.example.vigorly.data.model.WorkoutType
 import com.example.vigorly.data.model.AccountUniqueness
 import com.example.vigorly.data.model.AuthError
 import com.example.vigorly.data.model.AuthResult
@@ -31,7 +30,6 @@ import com.example.vigorly.util.PersonalizedCoachingTipEngine
 import com.example.vigorly.util.PersonalizedTipContext
 import com.example.vigorly.util.WorkoutRecommender
 import com.example.vigorly.data.MilestoneCatalog
-import com.example.vigorly.data.local.MilestoneShowcaseCodec
 import com.example.vigorly.util.HistoryLabels
 import com.example.vigorly.util.LevelCalculator
 import com.example.vigorly.util.HistorySanitizer
@@ -44,9 +42,7 @@ import com.example.vigorly.core.testing.UiTestEnvironment
 import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.data.model.AthleticStat
 import com.example.vigorly.data.model.DailyGoals
-import com.example.vigorly.data.model.Exercise
 import com.example.vigorly.data.model.Milestone
-import com.example.vigorly.data.model.RecentActivity
 import com.example.vigorly.data.model.SessionStep
 import com.example.vigorly.data.model.UserProfile
 import com.example.vigorly.data.model.WeeklyGoal
@@ -64,7 +60,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -74,10 +69,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Date
 import java.util.Locale
 import java.util.UUID
 
@@ -165,9 +158,6 @@ class VigorlyRepository(context: Context) {
 
     private val _milestoneUnlockDates = MutableStateFlow<Map<String, Long>>(emptyMap())
 
-    private val _milestoneShowcase = MutableStateFlow(List(MilestoneShowcaseCodec.SLOT_COUNT) { null as String? })
-    val milestoneShowcase: StateFlow<List<String?>> = _milestoneShowcase.asStateFlow()
-
     private val _weightLog = MutableStateFlow<List<WeightLogEntry>>(emptyList())
     val weightLog: StateFlow<List<WeightLogEntry>> = _weightLog.asStateFlow()
 
@@ -177,16 +167,12 @@ class VigorlyRepository(context: Context) {
     private val _history = MutableStateFlow<List<WorkoutHistoryItem>>(emptyList())
     val history: StateFlow<List<WorkoutHistoryItem>> = _history.asStateFlow()
 
-    private val _recentActivity = MutableStateFlow(defaultRecentActivity())
-    val recentActivity: StateFlow<List<RecentActivity>> = _recentActivity.asStateFlow()
-
     private val _activeSession = MutableStateFlow<WorkoutSessionState?>(null)
     val activeSession: StateFlow<WorkoutSessionState?> = _activeSession.asStateFlow()
 
     private val _dailyTip = MutableStateFlow(coachingTips.firstOrNull() ?: CoachingTip("tip-001", ""))
     val dailyTip: StateFlow<CoachingTip> = _dailyTip.asStateFlow()
     private val _dailyTips = MutableStateFlow<List<CoachingTip>>(emptyList())
-    val dailyTips: StateFlow<List<CoachingTip>> = _dailyTips.asStateFlow()
 
     private val _showStreakBanner = MutableStateFlow(false)
     val showStreakBanner: StateFlow<Boolean> = _showStreakBanner.asStateFlow()
@@ -284,7 +270,6 @@ class VigorlyRepository(context: Context) {
                 }
             }
         }.launchIn(scope)
-        preferences.milestoneShowcase.onEach { _milestoneShowcase.value = it }.launchIn(scope)
         preferences.weightLog.onEach { persisted ->
             _weightLog.update { local ->
                 if (WeightLogCodec.shouldApplyPersisted(local, persisted)) persisted else local
@@ -357,15 +342,6 @@ class VigorlyRepository(context: Context) {
             } else {
                 scope.launch { reconcileProfileAfterHistoryChange(cleaned, 0) }
             }
-            _recentActivity.value = cleaned.take(5).map { item ->
-                RecentActivity(
-                    id = item.id,
-                    title = item.title,
-                    timeLabel = HistoryLabels.displayTimestamp(item).uppercase(Locale.getDefault()),
-                    durationMinutes = item.durationMinutes,
-                    iconName = item.iconName
-                )
-            }.ifEmpty { defaultRecentActivity() }
             scope.launch { syncActiveStreakDays() }
             refreshMilestones()
         }.launchIn(scope)
@@ -481,11 +457,6 @@ class VigorlyRepository(context: Context) {
         return activityDayHistory.value[key]
     }
 
-    fun currentWeekRangeLabel(locale: Locale = Locale.getDefault()): String {
-        val days = currentWeekActivityRings.value
-        return WeeklyActivityRingsBuilder.formatWeekRange(days, locale)
-    }
-
     fun startActivityTracking() {
         activityTracker.start()
     }
@@ -508,8 +479,6 @@ class VigorlyRepository(context: Context) {
     }
 
     fun getWorkout(id: String): WorkoutDetail? = workouts[id]
-
-    fun getMilestone(id: String): Milestone? = _milestones.value.find { it.id == id }
 
     fun addWeightEntry(weightKg: Float, recordedAtMillis: Long = System.currentTimeMillis()) {
         persistWeightLog { current ->
@@ -551,21 +520,6 @@ class VigorlyRepository(context: Context) {
         scope.launch { preferences.saveWeightGoalKg(normalized) }
     }
 
-    fun setMilestoneShowcaseSlot(slotIndex: Int, milestoneId: String?) {
-        if (slotIndex !in 0 until MilestoneShowcaseCodec.SLOT_COUNT) return
-        _milestoneShowcase.update { slots ->
-            val updated = slots.toMutableList()
-            if (milestoneId != null) {
-                for (i in updated.indices) {
-                    if (i != slotIndex && updated[i] == milestoneId) updated[i] = null
-                }
-            }
-            updated[slotIndex] = milestoneId
-            updated
-        }
-        scope.launch { preferences.saveMilestoneShowcase(_milestoneShowcase.value) }
-    }
-
     fun tipCards(count: Int = 2): List<CoachingTip> {
         val personalized = _dailyTips.value.filter { it.text.isNotBlank() }
         if (personalized.isNotEmpty()) {
@@ -576,9 +530,6 @@ class VigorlyRepository(context: Context) {
     }
 
     fun listWorkouts(): List<WorkoutDetail> = workoutList
-
-    fun flatExercises(workout: WorkoutDetail): List<Exercise> =
-        workout.blocks.flatMap { it.exercises }
 
     fun sessionSteps(workout: WorkoutDetail): List<SessionStep> =
         SessionStepsBuilder.build(workout)
@@ -801,16 +752,6 @@ class VigorlyRepository(context: Context) {
     fun clearSessionSummary() {
         _lastSessionSummary.value = null
     }
-
-    fun getRecommendedWorkout(): WorkoutDetail? =
-        WorkoutRecommender.recommend(
-            workouts = workouts.values.toList(),
-            history = _history.value,
-            favorites = _favorites.value,
-            fitnessGoal = fitnessGoal.value,
-            activityLevel = activityLevel.value,
-            workoutLocation = workoutLocation.value
-        )
 
     fun getRecommendedWorkouts(count: Int = 5): List<WorkoutDetail> =
         WorkoutRecommender.recommendMany(
@@ -1137,15 +1078,6 @@ class VigorlyRepository(context: Context) {
         preferences.setFavoriteWorkoutIds(snapshot.favoriteWorkoutIds)
         preferences.setDailyTipIndex(snapshot.dailyTipIndex)
         _history.value = sessionHistory
-        _recentActivity.value = sessionHistory.take(5).map { item ->
-            RecentActivity(
-                id = item.id,
-                title = item.title,
-                timeLabel = HistoryLabels.displayTimestamp(item).uppercase(Locale.getDefault()),
-                durationMinutes = item.durationMinutes,
-                iconName = item.iconName
-            )
-        }
         reconcileProfileAfterHistoryChange(
             sessionHistory,
             HistorySanitizer.removedCount(snapshot.workoutHistory, sessionHistory)
@@ -1210,7 +1142,6 @@ class VigorlyRepository(context: Context) {
             preferences.setFavoriteWorkoutIds(emptySet())
             _onboardingCompleted.value = false
             _history.value = emptyList()
-            _recentActivity.value = emptyList()
             _athleticStats.value = defaultAthleticStats()
             _favorites.value = emptySet()
             refreshMilestones()
@@ -1274,7 +1205,7 @@ class VigorlyRepository(context: Context) {
         _activeSession.value = null
     }
 
-    fun recordWorkoutCompletion(workoutId: String, durationMinutes: Int? = null, calories: Int? = null) {
+    private fun recordWorkoutCompletion(workoutId: String, durationMinutes: Int? = null, calories: Int? = null) {
         val workout = getWorkout(workoutId) ?: return
         val now = System.currentTimeMillis()
         if (workoutId == lastRecordedWorkoutId && now - lastRecordedCompletionAt < 5_000L) {
@@ -1314,15 +1245,6 @@ class VigorlyRepository(context: Context) {
             workoutType = workout.type.name
         )
         _history.value = listOf(historyItem) + _history.value
-
-        val recent = RecentActivity(
-            id = historyItem.id,
-            title = workout.name,
-            timeLabel = HistoryLabels.displayTimestamp(historyItem).uppercase(Locale.getDefault()),
-            durationMinutes = duration,
-            iconName = historyItem.iconName
-        )
-        _recentActivity.value = listOf(recent) + _recentActivity.value.take(4)
 
         scope.launch {
             preferences.saveWorkoutHistory(_history.value)
@@ -1468,7 +1390,6 @@ class VigorlyRepository(context: Context) {
         lastRecordedWorkoutId = null
         lastRecordedCompletionAt = 0L
         _history.value = emptyList()
-        _recentActivity.value = emptyList()
         scope.launch {
             preferences.saveWorkoutHistory(emptyList())
             val current = profile.value
@@ -1538,7 +1459,5 @@ class VigorlyRepository(context: Context) {
         fun defaultMilestones() = MilestoneCatalog.all()
 
         fun defaultHistory(): List<WorkoutHistoryItem> = emptyList()
-
-        fun defaultRecentActivity(): List<RecentActivity> = emptyList()
     }
 }

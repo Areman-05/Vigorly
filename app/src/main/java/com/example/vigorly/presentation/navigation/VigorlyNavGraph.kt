@@ -14,7 +14,6 @@ import androidx.navigation.navArgument
 import com.example.vigorly.R
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.navigation.VigorlyRoutes
-import com.example.vigorly.presentation.app.AppViewModel
 import com.example.vigorly.ui.analysis.AnalysisScreen
 import com.example.vigorly.ui.auth.LoginScreen
 import com.example.vigorly.ui.auth.RegisterScreen
@@ -36,19 +35,12 @@ import com.example.vigorly.ui.workout.WorkoutsScreen
 fun NavGraphBuilder.vigorlyNavGraph(
     navController: NavHostController,
     repository: VigorlyRepository,
-    appViewModel: AppViewModel,
     showActivityCalendar: Boolean,
     onShowActivityCalendarChange: (Boolean) -> Unit,
     onNavigateToLogin: () -> Unit,
-    workoutCompletedMessage: String,
     contentPaddingModifier: Modifier,
     onWorkoutsFilterOverlayChange: (Boolean) -> Unit = {}
 ) {
-    @Suppress("UNUSED_PARAMETER")
-    val unusedAppViewModel = appViewModel
-    @Suppress("UNUSED_PARAMETER")
-    val unusedWorkoutCompletedMessage = workoutCompletedMessage
-
     composable(VigorlyRoutes.Login) {
         LoginScreen(
             repository = repository,

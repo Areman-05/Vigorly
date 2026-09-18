@@ -7,11 +7,8 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.vigorly.core.testing.UiTestEnvironment
-import com.example.vigorly.di.AppViewModelFactory
-import com.example.vigorly.presentation.app.AppViewModel
 import com.example.vigorly.ui.theme.VigorlyTheme
 import com.example.vigorly.util.ActivityPermission
 import com.example.vigorly.util.LocaleUtils
@@ -19,8 +16,6 @@ import kotlinx.coroutines.runBlocking
 
 class MainActivity : AppCompatActivity() {
     private val repository by lazy { (application as VigorlyApplication).repository }
-    private val viewModelFactory by lazy { AppViewModelFactory(repository) }
-    private val appViewModel: AppViewModel by viewModels { viewModelFactory }
 
     private val activityRecognitionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -50,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         }
         setContent {
             VigorlyTheme {
-                VigorlyApp(repository = repository, appViewModel = appViewModel)
+                VigorlyApp(repository = repository)
             }
         }
     }

@@ -11,13 +11,11 @@ object VigorlyTestTags {
     const val ANALYSIS = "screen_analysis"
     const val PROFILE = "screen_profile"
     const val SETTINGS = "screen_settings"
-    const val INSIGHTS = "screen_insights"
     const val MILESTONES = "screen_milestones"
     const val ACTIVITY_DETAIL = "screen_activity_detail"
 
     const val NAV_DASHBOARD = "nav_dashboard"
     const val NAV_WORKOUTS = "nav_workouts"
-    const val NAV_HISTORY = "nav_history"
     const val NAV_ANALYSIS = "nav_analysis"
     const val NAV_PROFILE = "nav_profile"
 
@@ -30,7 +28,5 @@ object VigorlyTestTags {
     const val WEEKLY_TARGET_VALUE = "weekly_target_value"
     const val WEEKLY_TARGET_INCREASE = "weekly_target_increase"
     const val WEEKLY_TARGET_DECREASE = "weekly_target_decrease"
-    const val PROFILE_OPEN_MILESTONES = "profile_open_milestones"
     const val PROFILE_OPEN_HISTORY = "profile_open_history"
-    const val PROFILE_OPEN_INSIGHTS = "profile_open_insights"
 }

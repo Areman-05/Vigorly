@@ -24,8 +24,6 @@ class DashboardViewModel(
 
     fun todaysWorkoutCount(): Int = repository.todaysWorkoutCount()
 
-    fun getRecommendedWorkout(): WorkoutDetail? = repository.getRecommendedWorkout()
-
     fun getRecommendedWorkouts(count: Int = 5): List<WorkoutDetail> =
         repository.getRecommendedWorkouts(count)
 

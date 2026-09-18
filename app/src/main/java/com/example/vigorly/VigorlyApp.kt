@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,18 +25,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.vigorly.R
 import com.example.vigorly.core.testing.UiTestEnvironment
 import com.example.vigorly.data.repository.VigorlyRepository
 import com.example.vigorly.navigation.AppDestination
 import com.example.vigorly.navigation.VigorlyRoutes
-import com.example.vigorly.presentation.app.AppViewModel
 import com.example.vigorly.presentation.navigation.NavigationUiState
 import com.example.vigorly.presentation.navigation.vigorlyNavGraph
 import com.example.vigorly.ui.components.ActivityDetailTopBar
@@ -49,12 +44,10 @@ import com.example.vigorly.ui.components.VigorlyDetailTopBar
 import com.example.vigorly.ui.components.VigorlyMainTopBar
 import com.example.vigorly.ui.splash.SplashScreen
 import com.example.vigorly.ui.theme.Background
-import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun VigorlyApp(
-    repository: VigorlyRepository,
-    appViewModel: AppViewModel
+    repository: VigorlyRepository
 ) {
     var startDestination by remember { mutableStateOf<String?>(null) }
 
@@ -77,23 +70,19 @@ fun VigorlyApp(
 
     VigorlyMainNavigation(
         startDestination = startDestination!!,
-        repository = repository,
-        appViewModel = appViewModel
+        repository = repository
     )
 }
 
 @Composable
 private fun VigorlyMainNavigation(
     startDestination: String,
-    repository: VigorlyRepository,
-    appViewModel: AppViewModel
+    repository: VigorlyRepository
 ) {
-    val workoutCompletedMessage = stringResource(R.string.workout_completed)
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val navState = remember(currentRoute) { NavigationUiState.fromRoute(currentRoute) }
-    val snackbarHostState = remember { SnackbarHostState() }
     var showActivityCalendar by remember { mutableStateOf(false) }
     var hideBottomBarOverlay by remember { mutableStateOf(false) }
     val isLoggedIn by repository.isLoggedIn.collectAsState()
@@ -111,12 +100,6 @@ private fun VigorlyMainNavigation(
                 popUpTo(VigorlyRoutes.Login) { inclusive = false }
                 launchSingleTop = true
             }
-        }
-    }
-
-    LaunchedEffect(appViewModel) {
-        appViewModel.messages.collectLatest { message ->
-            snackbarHostState.showSnackbar(message)
         }
     }
 
@@ -150,7 +133,6 @@ private fun VigorlyMainNavigation(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = Color.Transparent,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             when {
                 navState.isAuthFlow || navState.isSummary -> {}
@@ -249,11 +231,9 @@ private fun VigorlyMainNavigation(
                 vigorlyNavGraph(
                     navController = navController,
                     repository = repository,
-                    appViewModel = appViewModel,
                     showActivityCalendar = showActivityCalendar,
                     onShowActivityCalendarChange = { showActivityCalendar = it },
                     onNavigateToLogin = ::navigateToLogin,
-                    workoutCompletedMessage = workoutCompletedMessage,
                     contentPaddingModifier = screenPaddingModifier,
                     onWorkoutsFilterOverlayChange = { hideBottomBarOverlay = it }
                 )
