@@ -202,8 +202,6 @@
     <string name="summary_meta_duration">%1$d min of training</string>
     <string name="summary_meta_calories">%1$d estimated kcal</string>
     <string name="summary_meta_exercises">%1$d of %2$d exercises done</string>
-    <string name="settings_pro_title">Vigorly Pro</string>
-    <string name="settings_pro_subtitle">All premium features unlocked</string>
     <string name="settings_profile">Profile</string>
     <string name="settings_display_name">Display name</string>
     <string name="settings_save_profile">Save profile</string>

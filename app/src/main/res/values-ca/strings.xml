@@ -62,8 +62,6 @@
     <string name="session_rest_hint">Descansa abans del següent exercici</string>
     <string name="session_skip_rest">Saltar descans</string>
     <string name="session_cancel">Cancel·lar sessió</string>
-    <string name="settings_pro_title">Vigorly Pro</string>
-    <string name="settings_pro_subtitle">Totes les funcions premium desbloquejades</string>
     <string name="settings_profile">Perfil</string>
     <string name="settings_display_name">Nom visible</string>
     <string name="settings_save_profile">Desar perfil</string>

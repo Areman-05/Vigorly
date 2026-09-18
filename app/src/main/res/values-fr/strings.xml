@@ -62,8 +62,6 @@
     <string name="session_rest_hint">Reposez-vous avant le prochain exercice</string>
     <string name="session_skip_rest">Passer le repos</string>
     <string name="session_cancel">Annuler la séance</string>
-    <string name="settings_pro_title">Vigorly Pro</string>
-    <string name="settings_pro_subtitle">Toutes les fonctionnalités premium débloquées</string>
     <string name="settings_profile">Profil</string>
     <string name="settings_display_name">Nom affiché</string>
     <string name="settings_save_profile">Enregistrer le profil</string>
