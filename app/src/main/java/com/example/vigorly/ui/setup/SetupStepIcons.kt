@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccessibilityNew
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.DirectionsBike
 import androidx.compose.material.icons.rounded.DirectionsRun
 import androidx.compose.material.icons.rounded.DirectionsWalk
@@ -17,6 +16,7 @@ import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.MonitorWeight
 import androidx.compose.material.icons.rounded.Nightlight
 import androidx.compose.material.icons.rounded.Park
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.SelfImprovement
@@ -92,8 +92,11 @@ object SetupStepIcons {
         else -> Icons.Rounded.EmojiEvents
     }
 
-    val introWelcome: ImageVector = Icons.Rounded.AccessibilityNew
     val introReady: ImageVector = Icons.Rounded.RocketLaunch
-    val introComplete: ImageVector = Icons.Rounded.CheckCircle
-    val introCalendar: ImageVector = Icons.Rounded.CalendarMonth
+    val featureHome: ImageVector = Icons.Rounded.Home
+    val featureWorkouts: ImageVector = Icons.Rounded.FitnessCenter
+    val featureAnalysis: ImageVector = Icons.Rounded.MonitorWeight
+    val featureHistory: ImageVector = Icons.Rounded.CalendarMonth
+    val featureSession: ImageVector = Icons.Rounded.Bolt
+    val featureProfile: ImageVector = Icons.Rounded.Person
 }
