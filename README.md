@@ -1,54 +1,46 @@
 # Vigorly
 
-Entrena, mide tu actividad y sigue tu progreso con un flujo claro de inicio a sesión, historial y perfil atlético.
+Entrena, mide tu actividad y sigue tu progreso con un flujo claro de inicio a sesión, historial y perfil.
 
-Vigorly es una app Android para quienes quieren un compañero de fitness sin ruido: ver el día en un panel con anillos de actividad, elegir entrenamientos del catálogo, completar sesiones guiadas y revisar historial, logros y análisis en pantallas separadas pero conectadas. No es un feed social ni un panel de métricas vacías: une onboarding, dashboard, entrenos activos, perfil identitario y análisis de rendimiento en un mismo viaje, con una interfaz moderna, legible y pensada para el uso diario.
+Vigorly es una app Android para quienes quieren un compañero de fitness sin ruido: ver el día en un panel con anillos de actividad, elegir entrenamientos del catálogo, completar sesiones guiadas y revisar historial y análisis en pantallas separadas pero conectadas. No es un feed social ni un panel de métricas vacías: une onboarding, dashboard, entrenos activos, cuenta y análisis de rendimiento en un mismo viaje, con una interfaz moderna, legible y pensada para el uso diario.
 
 ## La idea en una frase
 
-Llevar el pulso de tu cuerpo en un solo sitio: moverte hoy, entrenar con intención, entender tu evolución y celebrar constancia — sin mezclar apps de pasos, rutinas y estadísticas por separado.
+Llevar el pulso de tu cuerpo en un solo sitio: moverte hoy, entrenar con intención y entender tu evolución — sin mezclar apps de pasos, rutinas y estadísticas por separado.
 
 ## Para quién es
 
-- Quien quiere **claridad al abrir la app**: saludo, anillos de actividad, meta diaria y recomendación del día en el inicio.
-- Quien entrena con **rutinas reales**: catálogo filtrable, detalle con ejercicios y sesión activa con resumen al terminar.
-- Quien valora **honestidad en los datos**: perfil atlético y estadísticas derivadas del historial; cuenta nueva sin números inventados.
-- Quien separa **identidad y análisis**: Perfil para quién eres y qué has logrado; Análisis para cómo rindes esta semana.
+- Quien quiere **claridad al abrir la app**: anillos de actividad, meta del día y recomendación de entreno en el inicio.
+- Quien entrena con **rutinas reales**: catálogo filtrable, listas propias, detalle con ejercicios y sesión guiada con resumen al terminar.
+- Quien valora **honestidad en los datos**: estadísticas derivadas del historial; cuenta nueva sin números inventados.
+- Quien separa **cuenta y análisis**: Perfil para quién eres y cómo está configurada la app; Análisis para peso, tendencias y periodo.
 - Quien cuida **sus datos locales**: cuentas, historial y preferencias en el dispositivo (DataStore); idioma configurable (es, en, ca, de, fr).
 
 ## Qué hace la app (en lenguaje humano)
 
 ### Inicio (Dashboard)
 
-Saludo personalizado, anillos de actividad (mover, ejercicio, estar activo) y porcentaje de meta diaria. Debajo, métricas en mosaico: calorías de movimiento, pasos, minutos de ejercicio y horas activas. Incluye consejo del día, entrenamiento recomendado según tu perfil y progreso de la meta semanal. Un toque en los anillos abre el detalle de actividad con calendario para revisar otros días.
+Anillos de actividad (movimiento, ejercicio, pie) y porcentaje de meta diaria. Debajo, consejo del día, entrenamientos recomendados según tu perfil y progreso de la meta semanal. Un toque en los anillos abre el detalle de actividad con calendario para revisar otros días.
 
-### Entrenamientos
+### Entrenar
 
-Lista con búsqueda, filtros por tipo y ordenación. Cada rutina muestra imagen, duración estimada y nivel. El detalle explica objetivo, ejercicios y permite iniciar la sesión. Durante el entrenamiento activo avanzas por ejercicios; al completar, ves un resumen con duración, calorías y mensaje de cierre antes de volver al inicio.
-
-### Historial
-
-Cronología de sesiones completadas agrupada por fechas. Puedes abrir el detalle de cada entrada y filtrar por periodo. Es la fuente de verdad para rachas, nivel, logros y perfil atlético.
-
-### Perfil
-
-Tu identidad deportiva: avatar (presets o URL remota), nivel, racha, resumen de sesiones y perfil atlético en radar (fuerza, resistencia, movilidad, etc.) cuando hay entrenamientos reales. Escaparate de logros, accesos a Análisis y Logros completos, historial reciente y meta semanal. Sin historial, los estados vacíos explican qué aparecerá al entrenar.
+Catálogo con búsqueda, filtros (zona, intensidad, duración, tipo) y listas propias. Cada rutina muestra imagen, duración y nivel. El detalle explica el objetivo y permite iniciar la sesión. Durante el entrenamiento avanzas por calentamiento, ejercicios y descansos; al completar, ves un resumen antes de volver.
 
 ### Análisis
 
-Pantalla dedicada al rendimiento: media por sesión, minutos de la semana, mejor día, barras de actividad semanal y progreso de meta. Complementa al Perfil sin duplicar la identidad visual del usuario.
+Rendimiento y cuerpo: peso con objetivo y gráfico (el valor se arrastra los días sin registro), picker de periodo y una lectura de constancia. Las tarjetas de peso informan; no son atajos a otra pantalla. Complementa al Inicio y al Perfil sin copiarlos.
 
-### Logros
+### Historial
 
-Catálogo de hitos desbloqueables por constancia, volumen y variedad. Desde Perfil puedes equipar logros en el escaparate.
+No es una pestaña del menú inferior. Se abre desde Perfil. Calendario por día (como en Análisis), por defecto hoy: eliges una fecha y ves las sesiones de ese día. Es la fuente de verdad para rachas, nivel y logros.
 
-### Ajustes
+### Perfil
 
-Nombre visible, notificaciones, unidades, meta semanal con stepper, idioma de la app, reinicio del onboarding y cierre de sesión. Google Sign-In disponible si está configurado en el dispositivo; registro e inicio con email y contraseña funcionan sin backend externo.
+Tu cuenta y los ajustes en un solo sitio: avatar, nombre, correo, idioma, unidades, avisos, preferencias de entreno, meta semanal, objetivo de peso, datos y cierre de sesión. Desde aquí entras al historial. Sin duplicar Análisis ni un cajón de logros aparte.
 
 ### Onboarding
 
-Tras registrarte, un asistente recoge objetivo fitness, nivel de actividad, sesiones semanales, ubicación preferida y horario. Esas preferencias alimentan recomendaciones y metas sin bloquear el acceso a la app principal.
+Tras registrarte, el asistente explica el producto y recoge categorías del catálogo, nivel, dónde entrenas, horario, meta semanal y cómo funcionan los anillos. Esas preferencias alimentan recomendaciones, metas diarias y recordatorios.
 
 ### Actividad en segundo plano
 
@@ -56,10 +48,10 @@ Con permiso de reconocimiento de actividad, la app actualiza pasos y métricas d
 
 ## Por qué Vigorly y no “otra app de fitness”
 
-- **Un solo viaje de usuario**: de “me registro” a “veo mi día”, “entreno”, “reviso historial” y “entiendo mi evolución” sin exportar datos a otra herramienta.
-- **Perfil y análisis separados con sentido**: identidad y logros en Perfil; números y tendencias en Análisis. Misma base de datos, distinta pregunta respondida.
-- **Datos honestos**: el perfil atlético y las estadísticas se calculan del historial; una cuenta nueva no muestra gráficos rellenos de mentira.
-- **Experiencia cuidada**: anillos de actividad, tipografía propia, tarjetas con jerarquía clara, splash y navegación por pestañas (Inicio · Entrenos · Historial · Perfil).
+- **Un solo viaje de usuario**: de “me registro” a “veo mi día”, “entreno”, “reviso el historial” y “entiendo el peso y el periodo” sin exportar datos a otra herramienta.
+- **Cada pestaña una pregunta**: Inicio (qué hago hoy), Entrenar (con qué), Análisis (cómo voy), Perfil (quién soy y cómo está configurada la app). El historial responde “qué hice aquel día”, no “quién soy”.
+- **Datos honestos**: nivel, racha y tendencias se calculan del historial; una cuenta nueva no muestra gráficos rellenos de mentira.
+- **Experiencia cuidada**: anillos, tipografía propia (Bebas Neue + texto de sistema), cristal sobre aurora, splash con wordmark y navegación por cuatro tabs (Inicio · Entrenar · Análisis · Perfil).
 - **Rendimiento como decisión de diseño**: fondo ligero en el shell principal, animaciones decorativas desactivadas en uso diario y persistencia de actividad espaciada para mantener scroll y transiciones fluidos.
 
 ## UI y UX: diseño, flujo y patrones
@@ -74,44 +66,46 @@ Las apps de fitness suelen competir por pantallas llenas de gradientes, animacio
 
 ```text
 Splash → (Login | Registro) → Setup → Shell principal (4 tabs)
-                                              │
-                    ┌─────────────────────────┼─────────────────────────┐
-                    ▼                         ▼                         ▼
-              Detalle actividad          Detalle entreno            Ajustes / Logros / Análisis
-              (desde Dashboard)          → Sesión activa → Resumen   (desde top bar o Perfil)
+         Inicio | Entrenar | Análisis | Perfil
+              │         │         │         │
+              ▼         ▼         ▼         ▼
+     Detalle actividad  Detalle   Periodo   Historial (calendario)
+     → métrica del día  entreno   y peso    → detalle de sesión
+                        → Sesión → Resumen
 ```
 
-- **Auth y onboarding** usan fondo con gradiente completo: marca la entrada y diferencia el “antes” del “después” de tener cuenta.
+- **Auth y onboarding** usan fondo aurora: marca la entrada y diferencia el “antes” del “después” de tener cuenta.
 - **Shell principal** (tabs) usa un fondo más ligero y top bar contextual: menos GPU, más scroll cómodo.
-- **Pantallas de detalle** comparten barra superior con retroceso y, cuando aplica, acceso a Ajustes — patrón predecible para no perder al usuario en rutas profundas.
+- **Pantallas de detalle** comparten barra superior con retroceso — patrón predecible para no perder al usuario en rutas profundas.
 - **Bottom bar** con cuatro destinos fijos y estado restaurado al cambiar de tab: el usuario puede alternar entre “¿cómo va mi día?” y “¿qué entreno?” sin perder contexto.
 
-### Separación Perfil vs Análisis
+### Separación Perfil vs Análisis vs Historial
 
 Fue una decisión explícita de UX, no solo de carpetas:
 
 | Pregunta del usuario | Dónde vive | Por qué |
 |----------------------|------------|---------|
-| ¿Quién soy como deportista? ¿Qué he desbloqueado? | **Perfil** | Identidad, avatar, nivel, escaparate, radar atlético |
-| ¿Cómo voy esta semana? ¿Cuál fue mi mejor día? | **Análisis** | Métricas agregadas, barras semanales, progreso de meta |
+| ¿Quién soy y cómo está configurada la app? | **Perfil** | Cuenta, avatar, idioma, prefs, meta semanal |
+| ¿Cómo voy de peso y de periodo? | **Análisis** | Gráfico, objetivo, constancia; las cards no navegan |
+| ¿Qué entrené aquel día? | **Historial** | Calendario diario, desde Perfil, no como quinta tab |
 
-Antes, insights y ajustes mezclaban accesos duplicados. Ahora cada pantalla tiene una sola responsabilidad narrativa: Perfil cuenta tu historia; Análisis responde “¿cómo voy?”.
+Antes, insights, ajustes y logros mezclaban accesos duplicados. Ahora cada superficie tiene una sola responsabilidad narrativa.
 
 ### Patrones de interfaz
 
-- **Anillos de actividad** como ancla visual del dashboard — referencia directa al lenguaje de los anillos de actividad diaria, pero con datos propios (movimiento, ejercicio, estar activo).
-- **Tarjetas métricas** en grid 2×2: escaneo rápido sin tablas ni gráficos sobrecargados.
+- **Anillos de actividad** como ancla visual del dashboard — lenguaje de anillos diarios, con datos propios (movimiento, ejercicio, pie).
+- **Wordmark** con la V en aurora fijo (gris y rosa); el resto del nombre en blanco.
+- **Cristal sobre aurora**: tarjetas semitransparentes que dejan ver el fondo sin lavarlo.
 - **Estados vacíos con copy útil**: en lugar de ocultar secciones, se explica qué aparecerá al completar el primer entrenamiento.
-- **Radar atlético** solo con datos reales: si no hay historial, no se dibuja un perfil falso — coherencia con la confianza del usuario.
-- **Tipografía escalonada** (`DisplayStat`, `HeadlineLgMobile`, `LabelCaps`): números grandes para lo importante, etiquetas en mayúsculas para contexto — ritmo visual constante en Dashboard, Perfil y Análisis.
+- **Tipografía escalonada** (`DisplayStat`, `HeadlineLgMobile`, `LabelCaps`): números grandes para lo importante, etiquetas en mayúsculas para contexto.
 - **Test tags** en nodos clave: la UI está pensada también para pruebas E2E sin acoplar la experiencia humana a identificadores visibles.
 
 ### Rendimiento y percepción de fluidez
 
 `UiPerformance` centraliza dos decisiones:
 
-- `decorativeMotionEnabled = false` — sin bucles de animación en anillos, radar o fondos en el uso diario.
-- `useLightMainBackground = true` — gradiente completo reservado para auth; tabs con fondo más simple.
+- `decorativeMotionEnabled = false` — sin bucles de animación en anillos o fondos en el uso diario.
+- Fondo aurora completo reservado para auth; tabs con cierre a negro para no competir con el contenido.
 
 La actividad del día se actualiza en memoria al momento y se escribe en DataStore cada pocos segundos (o al forzar en sesión/stop), para que el scroll no compita con I/O. En release, R8 y reglas ProGuard protegen modelos y ViewModels sin sacrificar depuración de crashes.
 
@@ -151,9 +145,9 @@ gradlew.bat :app:testDebugUnitTest
 gradlew.bat :app:connectedDebugAndroidTest
 ```
 
-Los **unitarios** cubren validación de auth, codecs de persistencia, calculadoras de actividad, rachas, nivel, perfil atlético, recomendador de entrenos, navegación (`NavigationUiState`) y más (~35 clases de test).
+Los **unitarios** cubren validación de auth, unicidad de cuenta, codecs de persistencia, calculadoras de actividad, rachas, nivel, recomendador, filtros, sesión, tips, navegación (`NavigationUiState`) y flujos del repositorio.
 
-Los **instrumentados** (`VigorlyAppInstrumentedTest`) validan flujo de sesión, navegación por las cuatro tabs, ajustes, perfil con accesos a Análisis y Logros, persistencia de locale y arranque sin crash. Usan harness con semilla de cuenta, tags de UI y `clearPackageData` entre ejecuciones.
+Los **instrumentados** (`VigorlyAppInstrumentedTest`) validan login hasta dashboard, las cuatro tabs, historial desde Perfil, stepper de meta semanal, persistencia de locale y arranque sin crash. Usan harness con semilla de cuenta, tags de UI y `clearPackageData` entre ejecuciones.
 
 ## Detalle técnico (opcional)
 
@@ -163,9 +157,9 @@ Si te interesa el cómo está hecha:
 |------|------------|
 | UI | Kotlin, Jetpack Compose, Material 3 |
 | Arquitectura | MVVM, `presentation/` por feature, `vigorlyNavGraph` |
-| Datos | DataStore Preferences, codecs JSON para cuentas, historial y sesión |
+| Datos | DataStore Preferences, codecs JSON para cuentas, historial, peso y playlists |
 | Actividad | Reconocimiento de actividad + tracker diario en memoria |
-| Auth | Email/contraseña local, Google Sign-In (Credentials / Google ID) |
+| Auth | Email/contraseña local (unicidad de usuario y correo), Google Sign-In opcional |
 | Navegación | Navigation Compose, `NavigationUiState` derivado de ruta |
 | DI | `VigorlyApplication` + `AppViewModelFactory` (instancia única de repositorio) |
 | Build release | R8, shrink resources, reglas ProGuard específicas |
@@ -173,8 +167,8 @@ Si te interesa el cómo está hecha:
 
 **Estructura de paquetes resumida:** `presentation/` (ViewModels y grafo de navegación), `data/` (repositorio, modelos, activity tracker, catálogo), `ui/` (pantallas y componentes Compose), `navigation/`, `util/`, `core/testing/`, `auth/`.
 
-**Versión actual de referencia:** 1.0 (`versionCode` 1).
+**Versión actual de referencia:** 2.0 (`versionCode` 2).
 
 ---
 
-**Vigorly:** del primer paso al perfil atlético, con entrenos, historial y análisis en un solo sitio.
+**Vigorly:** del primer paso al cierre de sesión, con entrenos, historial y análisis en un solo sitio.
