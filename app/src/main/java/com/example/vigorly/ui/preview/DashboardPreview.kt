@@ -1,17 +1,15 @@
 package com.example.vigorly.ui.preview
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.vigorly.data.model.DailyGoals
-import com.example.vigorly.data.model.WeeklyGoal
 import com.example.vigorly.ui.components.ActivityRings
 import com.example.vigorly.ui.components.GlassCard
-import com.example.vigorly.ui.components.StreakCard
-import com.example.vigorly.ui.theme.VigorlyTheme
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import com.example.vigorly.ui.theme.Dimens
+import com.example.vigorly.ui.theme.VigorlyTheme
 
 private val previewGoals = DailyGoals(
     moveProgress = 0.75f,
@@ -39,23 +37,5 @@ fun DashboardRingsPreview() {
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF121317)
-@Composable
-fun StreakCardPreview() {
-    VigorlyTheme {
-        StreakCard(streakDays = 14)
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF121317)
-@Composable
-fun WeeklyGoalCardPreview() {
-    VigorlyTheme {
-        com.example.vigorly.ui.components.WeeklyGoalCard(
-            goal = WeeklyGoal(targetSessions = 5, completedSessions = 3)
-        )
     }
 }

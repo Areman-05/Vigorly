@@ -65,7 +65,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.vigorly.R
 import com.example.vigorly.ui.components.GlassSurface
-import com.example.vigorly.ui.settings.SettingsWeeklyStepper
 import com.example.vigorly.ui.setup.SetupStepIcons
 import com.example.vigorly.ui.theme.BodyMd
 import com.example.vigorly.ui.theme.DisplayStat
@@ -1398,7 +1397,7 @@ private fun WeeklyGoalSheet(
                     }
                 }
                 Spacer(Modifier.height(22.dp))
-                SettingsWeeklyStepper(
+                WeeklyGoalStepper(
                     targetSessions = target,
                     onDecrease = { onChange((target - 1).coerceAtLeast(1)) },
                     onIncrease = { onChange((target + 1).coerceAtMost(14)) }
