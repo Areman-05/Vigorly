@@ -17,6 +17,7 @@ import com.example.vigorly.data.local.WorkoutPlaylistCodec
 import com.example.vigorly.data.model.CoachingTip
 import com.example.vigorly.data.model.SessionSummary
 import com.example.vigorly.data.model.WorkoutType
+import com.example.vigorly.data.model.AccountUniqueness
 import com.example.vigorly.data.model.AuthError
 import com.example.vigorly.data.model.AuthResult
 import com.example.vigorly.data.model.UserAccount
@@ -209,6 +210,7 @@ class VigorlyRepository(context: Context) {
     val appLocale: StateFlow<String> = _appLocale.asStateFlow()
 
     private val _accounts = MutableStateFlow<List<UserAccount>>(emptyList())
+    val accounts: StateFlow<List<UserAccount>> = _accounts.asStateFlow()
 
     val currentAccount: StateFlow<UserAccount?> = combine(
         preferences.currentUserId,
@@ -1020,21 +1022,11 @@ class VigorlyRepository(context: Context) {
         return completeLogin(account, isNewUser = true)
     }
 
-    private fun isEmailTaken(email: String, exceptId: String? = null): Boolean {
-        return _accounts.value.any { account ->
-            (exceptId == null || account.id != exceptId) &&
-                account.email.equals(email, ignoreCase = true)
-        }
-    }
+    private fun isEmailTaken(email: String, exceptId: String? = null): Boolean =
+        AccountUniqueness.isEmailTaken(_accounts.value, email, exceptId)
 
-    private fun isUsernameTaken(username: String, exceptId: String? = null): Boolean {
-        val needle = username.trim()
-        if (needle.isEmpty()) return false
-        return _accounts.value.any { account ->
-            (exceptId == null || account.id != exceptId) &&
-                account.username.equals(needle, ignoreCase = true)
-        }
-    }
+    private fun isUsernameTaken(username: String, exceptId: String? = null): Boolean =
+        AccountUniqueness.isUsernameTaken(_accounts.value, username, exceptId)
 
     private fun uniqueUsername(base: String): String {
         val seed = base.trim().ifBlank { "user" }.take(28)
@@ -1066,6 +1058,7 @@ class VigorlyRepository(context: Context) {
         val validationError = AuthValidator.validateRegistration(email, password, username, birthDate)
         if (validationError != null) return AuthResult.Error(validationError)
 
+        _accounts.value = preferences.registeredAccounts.first()
         val normalizedEmail = email.trim().lowercase()
         val cleanUsername = username.trim()
         if (isEmailTaken(normalizedEmail)) {

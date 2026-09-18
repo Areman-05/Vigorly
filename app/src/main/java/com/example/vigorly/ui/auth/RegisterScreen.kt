@@ -23,6 +23,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vigorly.R
 import com.example.vigorly.core.testing.VigorlyTestTags
+import com.example.vigorly.data.model.AccountUniqueness
 import com.example.vigorly.data.model.AuthError
 import com.example.vigorly.data.model.AuthResult
 import com.example.vigorly.data.repository.VigorlyRepository
@@ -86,15 +88,26 @@ fun RegisterScreen(
     val birthDateFormatted = BirthDateFormatter.toFormatted(birthDateDigits)
     val birthDateComplete = birthDateDigits.length == 8
     val passwordChecks = AuthValidator.passwordRequirementsMet(password)
+    val accounts by repository.accounts.collectAsState()
+    val usernameTaken = remember(username, accounts) {
+        AuthValidator.validateUsername(username) == null &&
+            AccountUniqueness.isUsernameTaken(accounts, username)
+    }
+    val emailTaken = remember(email, accounts) {
+        AuthValidator.validateEmail(email) == null &&
+            AccountUniqueness.isEmailTaken(accounts, email)
+    }
     val usernameError = authError == AuthError.INVALID_USERNAME ||
-        authError == AuthError.USERNAME_ALREADY_EXISTS
+        authError == AuthError.USERNAME_ALREADY_EXISTS ||
+        usernameTaken
     val emailError = authError == AuthError.INVALID_EMAIL ||
-        authError == AuthError.EMAIL_ALREADY_EXISTS
+        authError == AuthError.EMAIL_ALREADY_EXISTS ||
+        emailTaken
     val passwordWeak = authError == AuthError.PASSWORD_WEAK
     val showPasswordRules = passwordFocused || password.isNotEmpty() || passwordWeak
 
     fun submit() {
-        if (submitting) return
+        if (submitting || usernameTaken || emailTaken) return
         focusManager.clearFocus()
         val error = AuthValidator.validateRegistration(
             email, password, username, birthDateFormatted
@@ -161,7 +174,9 @@ fun RegisterScreen(
                 ),
                 keyboardActions = KeyboardActions(onNext = { emailFocus.requestFocus() })
             )
-            if (usernameError) {
+            if (usernameTaken) {
+                FieldError(authErrorMessage(AuthError.USERNAME_ALREADY_EXISTS))
+            } else if (usernameError && authError != null) {
                 FieldError(authErrorMessage(authError!!))
             }
 
@@ -181,7 +196,9 @@ fun RegisterScreen(
                 ),
                 keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() })
             )
-            if (emailError) {
+            if (emailTaken) {
+                FieldError(authErrorMessage(AuthError.EMAIL_ALREADY_EXISTS))
+            } else if (emailError && authError != null) {
                 FieldError(authErrorMessage(authError!!))
             }
 
@@ -274,7 +291,7 @@ fun RegisterScreen(
 
             Button(
                 onClick = { submit() },
-                enabled = !submitting,
+                enabled = !submitting && !usernameTaken && !emailTaken,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 28.dp)

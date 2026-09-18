@@ -19,6 +19,34 @@ sealed class AuthResult {
     data class Error(val messageKey: AuthError) : AuthResult()
 }
 
+object AccountUniqueness {
+    fun isEmailTaken(
+        accounts: List<UserAccount>,
+        email: String,
+        exceptId: String? = null
+    ): Boolean {
+        val needle = email.trim()
+        if (needle.isEmpty()) return false
+        return accounts.any { account ->
+            (exceptId == null || account.id != exceptId) &&
+                account.email.equals(needle, ignoreCase = true)
+        }
+    }
+
+    fun isUsernameTaken(
+        accounts: List<UserAccount>,
+        username: String,
+        exceptId: String? = null
+    ): Boolean {
+        val needle = username.trim()
+        if (needle.isEmpty()) return false
+        return accounts.any { account ->
+            (exceptId == null || account.id != exceptId) &&
+                account.username.equals(needle, ignoreCase = true)
+        }
+    }
+}
+
 enum class AuthError {
     INVALID_CREDENTIALS,
     EMAIL_ALREADY_EXISTS,
